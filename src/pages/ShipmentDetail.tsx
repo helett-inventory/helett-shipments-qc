@@ -11,6 +11,8 @@ import { DateInput } from '../components/DateInput'
 import { SignaturePad } from '../components/SignaturePad'
 import { usePeople } from '../hooks/usePeople'
 import { getSkus } from '../services/lookups'
+import { changeDeadline, hoursText, urgency } from '../lib/deadline'
+import { DeadlineBadge, useNow } from '../components/DeadlineBadge'
 import { invalidateAll } from '../lib/cache'
 import { DISPATCH_MODES, FULFILMENT_CENTRES, TRANSPORTS, needsAppointment, needsBoxLabels, needsTransport, type DispatchMode } from '../data/options'
 import { ConfirmModal, ReviewStep, type Change } from '../components/ReasonModal'
@@ -81,12 +83,25 @@ export function ShipmentDetail() {
   const [scanId, setScanId] = useState<string | null>(null)
   const [scanError, setScanError] = useState<string | null>(null)
   const scanning = useRef(false)
+  const nowTick = useNow() // hooks stay above the early returns below
 
   if (loading && !b) return <Loading />
   if (error && !b) return <Page><ErrorBox message={error} /></Page>
   if (!b) return null
 
   const finished = b.status === 'Closed' || b.status === 'Cancelled'
+  const hideDeadline = profile?.role === 'qc' && !profile.is_admin // QC does not manage Amazon deadlines
+  const dl = hideDeadline ? null : changeDeadline(b)
+  const deadlineNote =
+    dl && urgency(dl, nowTick) !== 'ok'
+      ? {
+          level: urgency(dl, nowTick),
+          text:
+            urgency(dl, nowTick) === 'passed'
+              ? `Amazon deadline passed (${hoursText(dl, nowTick).replace('Passed ', '')}). Cancelling or rescheduling now counts against account health.`
+              : `${hoursText(dl, nowTick).replace(' to go', ' left')} to cancel or reschedule without affecting account health.`
+        }
+      : null
   const boxesSent = b.dispatches.reduce((n, d) => n + d.boxes_sent, 0)
   const boxChecksDone = !needsBoxLabels(b.dispatch_mode ?? '') || (b.box_label_checks.length > 0 && b.box_label_checks.every((c) => c.scanned !== null))
   const sortedBoxes = [...b.box_label_checks].sort((x, y) => x.sample_no - y.sample_no)
@@ -136,6 +151,7 @@ export function ShipmentDetail() {
       />
 
       {scanError && <Notice tone="fail">{scanError}</Notice>}
+      {deadlineNote && <Notice tone={deadlineNote.level === 'passed' ? 'fail' : 'warn'}>{deadlineNote.text}</Notice>}
       {b.on_hold && (
         <Notice tone="fail">
           <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -338,6 +354,14 @@ export function ShipmentDetail() {
           <Panel title="Details">
             <dl className="space-y-3 text-sm">
               <Fact k="Mode of dispatch" v={b.dispatch_mode ?? ''} />
+              {dl && (
+                <div>
+                  <dt className="text-[13px] text-muted">Time left to cancel or reschedule</dt>
+                  <dd className="mt-1">
+                    <DeadlineBadge shipment={b} />
+                  </dd>
+                </div>
+              )}
               <Fact k="Appointment" v={needsAppointment(b.dispatch_mode ?? '') ? (b.appointment_at ? fmtDateTime(b.appointment_at) : '') : 'Not needed'} />
               <Fact k="Transport" v={needsTransport(b.dispatch_mode ?? '') ? b.transport ?? '' : (b.dispatch_mode === 'Bluedart' ? 'Collected by Bluedart' : 'Collected by Amazon')} />
               <Fact k="Dispatch date" v={fmtDate(b.dispatch_date)} />
@@ -390,7 +414,7 @@ export function ShipmentDetail() {
       {modal?.kind === 'cancelShipment' && (
         <ConfirmModal
           title="Cancel shipment"
-          intro="All lines are cancelled. This cannot be undone."
+          intro={dl && urgency(dl) === 'passed' ? "All lines are cancelled. Amazon's deadline has passed, so this will count against account health. This cannot be undone." : "All lines are cancelled. This cannot be undone."}
           confirmLabel="Cancel shipment"
           tone="danger"
           onClose={close}

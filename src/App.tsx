@@ -59,11 +59,10 @@ function Gate() {
       </div>
     )
   }
-  const home = profile.role === 'qc' ? '/qc' : '/shipments'
   return (
     <Routes>
       <Route element={<AppShell />}>
-        <Route path="/" element={profile.role === 'qc' ? <Navigate to={home} replace /> : <Shipments />} />
+        <Route path="/" element={<Shipments />} />
         <Route path="/shipments" element={<Shipments />} />
         <Route path="/shipments/new" element={(profile.role === 'inventory' || !!profile.is_admin) ? <ShipmentNew /> : <Navigate to="/" replace />} />
         <Route path="/shipments/:id" element={<ShipmentDetail />} />

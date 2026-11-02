@@ -69,3 +69,11 @@ export function fmtDayLong(s: string): string {
   const wd = d.toLocaleDateString('en-GB', { weekday: 'short' })
   return `${wd} ${pad(d.getDate())} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`
 }
+
+// "28 Oct, 14:00" (no year), for tight spaces.
+export function fmtShortDateTime(s: string | null | undefined): string {
+  if (!s) return ''
+  const d = new Date(s)
+  if (isNaN(d.getTime())) return ''
+  return `${pad(d.getDate())} ${MONTHS[d.getMonth()]}, ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}

@@ -17,6 +17,7 @@ const NETWORK_FAILURE = /failed to fetch|networkerror|load failed|network reques
 export function errText(e: unknown): string {
   const raw = e && typeof e === 'object' && 'message' in e ? String((e as { message: unknown }).message) : String(e)
   if (NETWORK_FAILURE.test(raw)) return 'Could not reach the server. Check your connection and press the button again.'
+  if (/shipments_fba_id_key/.test(raw)) return 'Another shipment already uses this FBA shipment ID. Open it from the list (check Finished too), or use a different ID.'
   return raw
 }
 

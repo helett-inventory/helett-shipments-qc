@@ -8,6 +8,7 @@ export function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [show, setShow] = useState(false)
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -32,14 +33,28 @@ export function Login() {
           />
         </Field>
         <Field label="Password">
-          <input
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={inputCls}
-          />
+          <div className="relative">
+            <input
+              type={show ? 'text' : 'password'}
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={`${inputCls} pr-16`}
+            />
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setShow((v) => !v)
+              }}
+              aria-pressed={show}
+              className="absolute right-1 top-1/2 -translate-y-1/2 min-h-[40px] px-3 rounded-md text-sm font-medium text-muted hover:text-ink"
+            >
+              {show ? 'Hide' : 'Show'}
+            </button>
+          </div>
         </Field>
         {error && (
           <p role="alert" className="text-fail text-sm mb-3">

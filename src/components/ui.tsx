@@ -80,7 +80,7 @@ export function Choice<T extends string>({
 /* ------------------------------------------------------------ layout */
 
 export function Page({ children, wide }: { children: React.ReactNode; wide?: boolean }) {
-  return <div className={`mx-auto px-4 lg:px-8 py-5 lg:py-8 ${wide ? 'max-w-6xl' : 'max-w-4xl'}`}>{children}</div>
+  return <div className={`mx-auto px-4 py-5 lg:py-8 ${wide ? 'max-w-[1760px] lg:px-6' : 'max-w-4xl lg:px-8'}`}>{children}</div>
 }
 
 export function PageTitle({

@@ -4,6 +4,8 @@ import { useAuth } from '../auth/AuthProvider'
 import { useLive } from '../hooks/useLive'
 import { supabase } from '../lib/supabase'
 import { needsAppointment, needsBoxLabels } from '../data/options'
+import { changeDeadline, withinWatch } from '../lib/deadline'
+import { DeadlineBadge } from '../components/DeadlineBadge'
 import { addDaysISO, fmtDate, fmtDateTime, fmtDayLong, todayISO } from '../lib/format'
 import { Chip, Empty, ErrorBox, HoldStamp, Loading, Page, PageTitle, StatusStamp } from '../components/ui'
 import type { Dispatch, Shipment, ShipmentLine } from '../types/db'
@@ -14,10 +16,11 @@ type Row = Shipment & {
   box_label_checks: { scanned: string | null }[]
 }
 
-type Filter = 'all' | 'today' | 'tomorrow' | 'ready' | 'finished'
+type Filter = 'all' | 'deadline' | 'today' | 'tomorrow' | 'ready' | 'finished'
 
 const FILTERS: { id: Filter; label: string }[] = [
   { id: 'all', label: 'All' },
+  { id: 'deadline', label: 'Deadline soon' },
   { id: 'today', label: 'Dispatch today' },
   { id: 'tomorrow', label: 'Dispatch tomorrow' },
   { id: 'ready', label: 'Ready to dispatch' },
@@ -28,6 +31,8 @@ const isFinished = (s: Row) => s.status === 'Closed' || s.status === 'Cancelled'
 
 function matches(s: Row, f: Filter, today: string, tomorrow: string): boolean {
   switch (f) {
+    case 'deadline':
+      return withinWatch(changeDeadline(s))
     case 'today':
       return !isFinished(s) && s.dispatch_date === today
     case 'tomorrow':
@@ -50,7 +55,12 @@ interface Group {
 }
 
 // Upcoming days first (soonest at the top), then overdue, then undated, then finished.
-function buildGroups(rows: Row[], today: string, tomorrow: string): Group[] {
+function buildGroups(rows: Row[], today: string, tomorrow: string, filter: Filter): Group[] {
+  // Deadline view: one list, closest deadline first (already-passed ones at the very top).
+  if (filter === 'deadline') {
+    const when = (s: Row) => changeDeadline(s)?.getTime() ?? Infinity
+    return rows.length ? [{ key: 'deadline', title: 'Closest deadline first', note: 'Cancel or reschedule before it passes', rows: [...rows].sort((a, b) => when(a) - when(b)) }] : []
+  }
   const byApp = (a: Row, b: Row) => (a.appointment_at ?? '').localeCompare(b.appointment_at ?? '')
   const overdue: Row[] = []
   const days = new Map<string, Row[]>()
@@ -105,6 +115,8 @@ export function Shipments() {
     ['shipments', 'shipment_lines', 'dispatches'],
     'shipments-list'
   )
+  const showDeadlines = !(profile?.role === 'qc' && !profile.is_admin) // QC does not manage Amazon deadlines
+  const filters = showDeadlines ? FILTERS : FILTERS.filter((f) => f.id !== 'deadline')
   const [filter, setFilter] = useState<Filter>('all')
   const [query, setQuery] = useState('')
 
@@ -126,8 +138,10 @@ export function Shipments() {
           !q ||
           [s.fba_id, s.warehouse, ...s.shipment_lines.map((l) => l.product_name)].some((v) => v.toLowerCase().includes(q))
       )
-    return buildGroups(rows, today, tomorrow)
+    return buildGroups(rows, today, tomorrow, filter)
   }, [data, filter, query, today, tomorrow])
+
+  const needDecision = useMemo(() => (data ?? []).filter((s) => withinWatch(changeDeadline(s))).length, [data])
 
   return (
     <Page wide>
@@ -152,7 +166,7 @@ export function Shipments() {
           className="w-full lg:w-80 min-h-[44px] px-3 rounded-lg border border-line bg-surface focus:border-ink focus:outline-none"
         />
         <div className="no-scrollbar flex gap-1.5 overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 lg:min-w-0" role="tablist" aria-label="Filter shipments">
-          {FILTERS.map((f) => (
+          {filters.map((f) => (
             <button
               key={f.id}
               role="tab"
@@ -169,47 +183,76 @@ export function Shipments() {
         </div>
       </div>
 
+      {showDeadlines && needDecision > 0 && filter !== 'deadline' && (
+        <div role="alert" className="mb-4 rounded-lg border border-warn bg-surface px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+          <span className="text-[15px] font-medium text-warn">
+            {needDecision} shipment{needDecision > 1 ? 's' : ''} need a decision in the next 48 hours: cancel or reschedule to protect account health.
+          </span>
+          <button type="button" onClick={() => setFilter('deadline')} className="min-h-[40px] px-4 rounded-lg bg-ink text-white text-sm font-medium">
+            Show them
+          </button>
+        </div>
+      )}
       {error && <ErrorBox message={error} />}
       {loading && !data && <Loading />}
       {data && groups.length === 0 && <Empty>No shipments match.</Empty>}
 
       {groups.length > 0 && (
-        <div className="bg-surface border border-line rounded-xl overflow-hidden">
-          <div className={`hidden lg:grid ${COLS} gap-x-4 px-5 py-2.5 border-b border-line text-[13px] text-muted font-medium`}>
-            <span>Shipment</span>
-            <span>Warehouse</span>
-            <span>Products</span>
-            <span>Dispatch date</span>
-            <span>Appointment</span>
-            <span>Status</span>
+        <div>
+          <div className="hidden lg:grid grid-cols-[152px_1fr] mb-2 text-[13px] text-muted font-medium">
+            <span />
+            <div className={`grid ${COLS} gap-x-4 px-5`}>
+              <span>Shipment</span>
+              <span>Warehouse</span>
+              <span>Products</span>
+              <span>Dispatch date</span>
+              <span>Appointment</span>
+              <span>Status</span>
+            </div>
           </div>
 
-          {groups.map((g) => (
-            <section key={g.key} aria-label={g.title}>
+          <div className="space-y-4">
+          {groups.map((g) => {
+            const isDay = /^\d{4}-\d{2}-\d{2}$/.test(g.key)
+            const [wd, dd, mon, yr] = isDay ? fmtDayLong(g.key).split(' ') : []
+            const isToday = g.key === today
+            const count = `${g.rows.length} shipment${g.rows.length > 1 ? 's' : ''}`
+            return (
+            <section key={g.key} aria-label={g.title} className="bg-surface border border-line rounded-xl overflow-hidden lg:grid lg:grid-cols-[152px_1fr]">
               <div
-                className={`flex items-baseline justify-between gap-3 px-4 lg:px-5 py-2 bg-canvas border-b border-line ${
-                  g.key === groups[0].key ? '' : 'border-t'
+                className={`px-4 lg:px-5 py-3 lg:py-5 border-b lg:border-b-0 lg:border-r border-line flex items-baseline justify-between lg:block ${
+                  isToday ? 'bg-ink text-white border-ink' : 'bg-canvas'
                 }`}
               >
-                <h2 className={`text-sm font-semibold ${g.tone === 'fail' ? 'text-fail' : ''}`}>
-                  {g.title}
-                  {g.note && <span className="ml-2 font-normal text-muted">{g.note}</span>}
-                </h2>
-                <span className="text-[13px] text-muted">
-                  {g.rows.length} shipment{g.rows.length > 1 ? 's' : ''}
-                </span>
+                {isDay ? (
+                  <div className="flex items-baseline gap-2.5 lg:block">
+                    <div className="text-2xl lg:text-[40px] font-semibold leading-none tracking-tight">{dd}</div>
+                    <div className={`lg:mt-1.5 text-sm ${isToday ? 'text-white/75' : 'text-muted'}`}>
+                      {wd} · {mon} {yr}
+                    </div>
+                    {(g.key === today || g.key === tomorrow) && (
+                      <div className={`text-sm font-semibold lg:mt-2 ${isToday ? 'text-white' : 'text-ink'}`}>{g.title}</div>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <h2 className={`text-base font-semibold ${g.tone === 'fail' ? 'text-fail' : ''}`}>{g.title}</h2>
+                    {g.note && <div className="text-sm text-muted mt-0.5">{g.note}</div>}
+                  </div>
+                )}
+                <span className={`text-[13px] lg:block lg:mt-3 ${isToday ? 'text-white/75' : 'text-muted'}`}>{count}</span>
               </div>
-              <ul>
+              <ul className="divide-y divide-line min-w-0">
                 {g.rows.map((s) => {
                   const units = s.shipment_lines.reduce((n, l) => n + l.unit_qty, 0)
                   const first = s.shipment_lines[0]?.product_name ?? ''
                   const more = s.shipment_lines.length - 1
                   const awaiting = s.dispatches.some((d) => !d.wm_approved_at)
                   return (
-                    <li key={s.id} className="border-t first:border-t-0 border-line">
+                    <li key={s.id}>
                       <Link
                         to={`/shipments/${s.id}`}
-                        className={`grid grid-cols-[1fr_auto] ${COLS} gap-x-4 gap-y-1 px-4 lg:px-5 py-3.5 items-center hover:bg-canvas ${
+                        className={`grid grid-cols-[1fr_auto] ${COLS} gap-x-4 gap-y-1 px-4 lg:px-5 py-4 lg:py-5 items-center hover:bg-canvas ${
                           s.on_hold ? 'bg-fail/[0.04]' : ''
                         }`}
                       >
@@ -245,6 +288,9 @@ export function Shipments() {
                           ) : (
                             needsAppointment(s.dispatch_mode ?? '') ? 'No appointment' : '—'
                           )}
+                          <div className="mt-1">
+                            {showDeadlines && <DeadlineBadge shipment={s} />}
+                          </div>
                         </div>
                       </Link>
                     </li>
@@ -252,7 +298,9 @@ export function Shipments() {
                 })}
               </ul>
             </section>
-          ))}
+            )
+          })}
+          </div>
         </div>
       )}
     </Page>
