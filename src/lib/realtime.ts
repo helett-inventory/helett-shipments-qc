@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase, wake } from './supabase'
 import { invalidateAll, invalidateTables } from './cache'
 
 const TABLES = ['shipments', 'shipment_lines', 'inspections', 'fnsku_checks', 'box_label_checks', 'dispatches', 'dispatch_lines']
@@ -39,9 +39,9 @@ export function startRealtime(): () => void {
   let hiddenAt = 0
   const onVisible = () => {
     if (document.visibilityState === 'hidden') hiddenAt = Date.now()
-    else if (hiddenAt && Date.now() - hiddenAt > 30_000) invalidateAll()
+    else if (hiddenAt && Date.now() - hiddenAt > 30_000) wake().then(invalidateAll)
   }
-  const onOnline = () => invalidateAll()
+  const onOnline = () => wake().then(invalidateAll)
   document.addEventListener('visibilitychange', onVisible)
   window.addEventListener('online', onOnline)
 

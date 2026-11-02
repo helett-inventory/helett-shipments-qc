@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { useLive } from '../hooks/useLive'
-import { errText, supabase } from '../lib/supabase'
+import { errText, supabase, callRpc } from '../lib/supabase'
 import { uploadSignature } from '../lib/signatures'
 import { todayISO } from '../lib/format'
 import { ALL_ITEMS } from '../data/checklist'
@@ -134,8 +134,8 @@ export function QCRecord() {
     try {
       const { error: err } =
         t.kind === 'fn'
-          ? await supabase.rpc('scan_fnsku', { p_check: t.id, p_code: code })
-          : await supabase.rpc('scan_box_label', { p_check: t.id, p_code: code })
+          ? await callRpc('scan_fnsku', { p_check: t.id, p_code: code })
+          : await callRpc('scan_box_label', { p_check: t.id, p_code: code })
       if (err) throw err
       invalidateAll()
     } catch (e) {
@@ -179,7 +179,7 @@ export function QCRecord() {
     setSubmitError(null)
     try {
       const sign_path = await uploadSignature(qcSign, 'qc')
-      const { error: err } = await supabase.rpc('submit_inspection', { p_id: data.insp.id, p: { ...draft, accepted_qty: Math.max(0, draft.inspected_qty - draft.rejected_qty), sign_path } })
+      const { error: err } = await callRpc('submit_inspection', { p_id: data.insp.id, p: { ...draft, accepted_qty: Math.max(0, draft.inspected_qty - draft.rejected_qty), sign_path } })
       if (err) throw err
       try {
         localStorage.removeItem(draftKey(data.insp.id))
@@ -311,7 +311,7 @@ export function QCRecord() {
           confirmLabel="Reopen"
           onClose={() => setReopen(false)}
           onConfirm={async () => {
-            const { error: err } = await supabase.rpc('reopen_inspection', { p_id: data.insp.id })
+            const { error: err } = await callRpc('reopen_inspection', { p_id: data.insp.id })
             if (err) throw err
             invalidateAll()
           }}

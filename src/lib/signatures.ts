@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase, wakeIfIdle } from './supabase'
 
 const BUCKET = 'signatures'
 
@@ -14,6 +14,7 @@ function uuid(): string {
 }
 
 export async function uploadSignature(dataUrl: string, folder: string): Promise<string> {
+  await wakeIfIdle()
   const blob = await (await fetch(dataUrl)).blob()
   const path = `${folder}/${uuid()}.png`
   const { error } = await supabase.storage.from(BUCKET).upload(path, blob, { contentType: 'image/png' })

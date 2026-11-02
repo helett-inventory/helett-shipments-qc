@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { useLive } from '../hooks/useLive'
-import { errText, supabase } from '../lib/supabase'
+import { errText, supabase, callRpc } from '../lib/supabase'
 import { uploadSignature } from '../lib/signatures'
 import { fmtDate, fmtDateTime, fromLocalInput, toLocalInput } from '../lib/format'
 import { BackLink, Btn, Choice, Chip, ErrorBox, Field, HoldStamp, Loading, Modal, Notice, Page, PageTitle, Panel, StatusStamp, inputCls } from '../components/ui'
@@ -101,7 +101,7 @@ export function ShipmentDetail() {
     setScanId(null)
     setScanError(null)
     try {
-      const { error: err } = await supabase.rpc('scan_box_label', { p_check: id, p_code: code })
+      const { error: err } = await callRpc('scan_box_label', { p_check: id, p_code: code })
       if (err) throw err
       invalidateAll()
     } catch (e) {
@@ -112,7 +112,7 @@ export function ShipmentDetail() {
   }
 
   async function rpc(name: string, args: Record<string, unknown>) {
-    const { error } = await supabase.rpc(name, args)
+    const { error } = await callRpc(name, args)
     if (error) throw error
     invalidateAll() // refetches this page and marks the lists stale
   }
@@ -367,7 +367,7 @@ export function ShipmentDetail() {
           fbaId={b.fba_id}
           onClose={close}
           onDelete={async () => {
-            const { data: paths, error: err } = await supabase.rpc('delete_shipment', { p_ship: b.id })
+            const { data: paths, error: err } = await callRpc('delete_shipment', { p_ship: b.id })
             if (err) throw err
             // remove the signature files too (best effort; the database rows are already gone)
             const files = (paths ?? []) as string[]

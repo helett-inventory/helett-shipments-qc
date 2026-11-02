@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase, errText } from '../lib/supabase'
+import { supabase, errText, callRpc } from '../lib/supabase'
 import { fromLocalInput, todayISO } from '../lib/format'
 import { SearchableSelect } from '../components/SearchableSelect'
 import { DateInput } from '../components/DateInput'
@@ -73,7 +73,7 @@ export function ShipmentNew() {
     if (new Set(lines.map((l) => l.product)).size !== lines.length) return setError('Each product can appear once. Merge duplicate lines.')
 
     setBusy(true)
-    const { data, error: err } = await supabase.rpc('create_shipment', {
+    const { data, error: err } = await callRpc('create_shipment', {
       p: {
         fba_id: fba,
         warehouse,
