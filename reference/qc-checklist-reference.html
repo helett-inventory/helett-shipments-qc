@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Helett QC Inspection Record - reference</title>
+<style>
+  @page { size: A4; margin: 0; }
+  :root {
+    --paper: #fbfaf6;
+    --ink: #1b2430;
+    --rule: #1b2430;
+    --faint: #b9bdc2;
+    --fail: #b3261e;
+    --ok: #1f5d3a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #d9d9d6; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: var(--ink); font-size: 9.5pt; }
+  .page {
+    width: 210mm; height: 297mm; margin: 0 auto 8mm; padding: 11mm 12mm;
+    background: var(--paper); position: relative; overflow: hidden;
+    page-break-after: always;
+  }
+  .page:last-child { page-break-after: auto; margin-bottom: 0; }
+  .sans-c { font-family: Bahnschrift, "Arial Narrow", "Segoe UI", sans-serif; font-stretch: condensed; }
+
+  /* masthead */
+  .mast { display: grid; grid-template-columns: 1fr auto; border: 1.6px solid var(--rule); }
+  .mast .title { padding: 3mm 4mm; border-right: 1.6px solid var(--rule); }
+  .mast h1 { margin: 0; font-family: Bahnschrift, "Arial Narrow", sans-serif; font-weight: 700; font-size: 19pt; letter-spacing: .2px; line-height: 1.05; }
+  .mast .sub { font-size: 8.5pt; margin-top: 1mm; color: #3c4653; }
+  .mast .docno { padding: 2mm 4mm; min-width: 46mm; font-size: 8pt; }
+  .mast .docno b { display: block; font-family: Bahnschrift, sans-serif; font-size: 13pt; font-weight: 600; margin-top: .5mm; }
+
+  /* meta grid */
+  table { border-collapse: collapse; width: 100%; }
+  .meta td { border: 1px solid var(--rule); padding: 1.3mm 2mm; vertical-align: top; }
+  .meta { margin-top: -1.6px; border: 1.6px solid var(--rule); }
+  .meta .k { display: block; font-size: 7pt; color: #4a5461; }
+  .meta .v { display: block; font-size: 10.5pt; font-weight: 600; min-height: 4.4mm; }
+  .hand { font-family: "Segoe Print", "Bradley Hand ITC", "Ink Free", cursive; font-weight: 400; color: #1c3c8f; }
+
+  /* checklist */
+  .sec { margin-top: 4.2mm; }
+  .sec-h { display: flex; align-items: baseline; gap: 3mm; background: var(--ink); color: #fff; padding: 1mm 2.5mm; }
+  .sec-h .n { font-family: Bahnschrift, sans-serif; font-weight: 700; font-size: 10.5pt; }
+  .sec-h .t { font-family: Bahnschrift, sans-serif; font-size: 10.5pt; font-weight: 600; letter-spacing: .3px; }
+  .sec-h .s { margin-left: auto; font-size: 7.5pt; opacity: .85; }
+  .chk { border: 1px solid var(--rule); border-top: none; }
+  .chk th { font-family: Bahnschrift, sans-serif; font-weight: 600; font-size: 7.5pt; text-align: center; padding: .8mm 1mm; border: 1px solid var(--rule); background: #ecebe4; }
+  .chk th.l { text-align: left; padding-left: 2mm; }
+  .chk td { border: 1px solid var(--faint); border-color: #8d949c; padding: 1.15mm 1.6mm; height: 6.4mm; }
+  .chk td.no { width: 8mm; text-align: center; font-family: Bahnschrift, sans-serif; color: #4a5461; }
+  .chk td.c { width: 13mm; text-align: center; padding: 0; }
+  .chk td.rem { width: 52mm; font-size: 8.5pt; }
+  .chk tr.fail td { background: #f8e9e7; }
+  .box { display: inline-block; width: 4mm; height: 4mm; border: 1.2px solid var(--rule); vertical-align: middle; position: relative; background: #fff; }
+  .box.on::after { content: ""; position: absolute; left: .7mm; top: -.5mm; width: 1.5mm; height: 3.2mm; border: solid var(--ok); border-width: 0 1.5px 1.5px 0; transform: rotate(40deg); }
+  .box.x::before, .box.x::after { content: ""; position: absolute; left: 1.6mm; top: -.4mm; width: 1.4px; height: 4.6mm; background: var(--fail); transform: rotate(45deg); }
+  .box.x::after { transform: rotate(-45deg); }
+  .box.dash::after { content: ""; position: absolute; left: .7mm; top: 1.6mm; width: 2.2mm; height: 1.3px; background: #4a5461; }
+
+  /* scan tables */
+  .scan td { height: 6.4mm; }
+  .scan td.code { font-family: Consolas, "Courier New", monospace; font-size: 8.8pt; }
+  .stamp { display: inline-block; font-family: Bahnschrift, sans-serif; font-weight: 700; font-size: 8pt; letter-spacing: .6px; padding: 0 1.6mm; border: 1.3px solid; line-height: 4.2mm; }
+  .stamp.ok { color: var(--ok); border-color: var(--ok); }
+  .stamp.bad { color: var(--fail); border-color: var(--fail); }
+
+  /* totals + result */
+  .tot { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--rule); border-top: none; }
+  .tot div { padding: 1.4mm 2.5mm; border-right: 1px solid var(--rule); }
+  .tot div:last-child { border-right: none; }
+  .tot .k { font-size: 7pt; color: #4a5461; display: block; }
+  .tot .v { font-family: Bahnschrift, sans-serif; font-size: 14pt; font-weight: 600; }
+
+  .result { display: grid; grid-template-columns: 1fr 1fr 1fr; border: 1px solid var(--rule); border-top: none; }
+  .result > div { padding: 1.6mm 2.5mm; border-right: 1px solid var(--rule); }
+  .result > div:last-child { border-right: none; }
+  .result .k { font-size: 7pt; color: #4a5461; display: block; margin-bottom: 1mm; }
+  .opt { display: inline-flex; align-items: center; gap: 1.4mm; margin-right: 4mm; font-size: 9pt; }
+
+  .remarks { border: 1px solid var(--rule); border-top: none; padding: 1.6mm 2.5mm; min-height: 15mm; }
+  .remarks .k { font-size: 7pt; color: #4a5461; display: block; }
+
+  /* signatures */
+  .sigs { display: grid; grid-template-columns: repeat(3, 1fr); border: 1.6px solid var(--rule); margin-top: 4.2mm; }
+  .sig { border-right: 1px solid var(--rule); padding: 1.8mm 2.5mm 1.5mm; height: 33mm; position: relative; }
+  .sig:last-child { border-right: none; }
+  .sig .role { font-family: Bahnschrift, sans-serif; font-weight: 600; font-size: 8.5pt; }
+  .sig .need { font-size: 7pt; color: #4a5461; }
+  .sig svg { position: absolute; left: 4mm; top: 9mm; width: 46mm; height: 14mm; }
+  .sig .line { position: absolute; left: 2.5mm; right: 2.5mm; bottom: 9mm; border-bottom: 1px solid var(--rule); }
+  .sig .who { position: absolute; left: 2.5mm; bottom: 4.2mm; font-size: 8pt; font-weight: 600; }
+  .sig .when { position: absolute; left: 2.5mm; bottom: 1.2mm; font-size: 7pt; color: #4a5461; }
+
+  .foot { position: absolute; left: 12mm; right: 12mm; bottom: 7mm; display: flex; justify-content: space-between; font-size: 7pt; color: #5a636e; border-top: 1px solid var(--faint); padding-top: 1.2mm; }
+  .note { font-size: 7.5pt; color: #4a5461; margin-top: 1.2mm; }
+
+  .flag { margin-top: 3mm; border: 1.6px solid var(--fail); padding: 1.6mm 2.5mm; display: flex; gap: 3mm; align-items: center; color: var(--fail); }
+  .flag b { font-family: Bahnschrift, sans-serif; font-size: 10pt; letter-spacing: .4px; }
+  .flag span { color: var(--ink); font-size: 8.5pt; }
+
+  @media print { html, body { background: none; } .page { margin: 0; } }
+</style>
+</head>
+<body>
+
+<!-- ===================== PAGE 1 ===================== -->
+<section class="page">
+  <div class="mast">
+    <div class="title">
+      <div class="sub" style="margin:0 0 .8mm;font-weight:600;color:var(--ink);letter-spacing:.3px">Helett Enterprises</div>
+      <h1>QC Inspection Record</h1>
+      <div class="sub">Outbound shipment</div>
+    </div>
+    <div class="docno">Record no.<b>QC-26-00418</b></div>
+  </div>
+
+  <table class="meta">
+    <tr>
+      <td colspan="2"><span class="k">FBA shipment ID</span><span class="v">FBA15K7T2QX9</span></td>
+      <td><span class="k">Inspection date</span><span class="v">31 Oct 2026</span></td>
+      <td><span class="k">Appointment</span><span class="v">02 Nov 2026, 11:30</span></td>
+    </tr>
+    <tr>
+      <td colspan="2"><span class="k">Product</span><span class="v">HT20 PRO</span></td>
+      <td><span class="k">SKU</span><span class="v">HT20-PRO-BLK</span></td>
+      <td><span class="k">Warehouse</span><span class="v">DEL4 Delhi</span></td>
+    </tr>
+    <tr>
+      <td><span class="k">Units received</span><span class="v">240</span></td>
+      <td><span class="k">Units inspected</span><span class="v">240</span></td>
+      <td><span class="k">Boxes (this SKU)</span><span class="v">12</span></td>
+      <td><span class="k">Model dispatched</span><span class="v">ATS &nbsp;/&nbsp; Drop In</span></td>
+    </tr>
+  </table>
+
+  <div class="sec">
+    <div class="sec-h"><span class="n">A</span><span class="t">OUTER CARTON</span></div>
+    <table class="chk">
+      <tr><th style="width:8mm">#</th><th class="l">Check</th><th style="width:13mm">OK</th><th style="width:13mm">Not OK</th><th style="width:13mm">N/A</th><th class="l" style="width:52mm">Remarks</th></tr>
+      <tr><td class="no">1</td><td>Carton clean, no dents, tears or water marks</td><td class="c"><span class="box on"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="rem"></td></tr>
+      <tr><td class="no">2</td><td>Carton sealed with tape, no re-taping</td><td class="c"><span class="box on"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="rem"></td></tr>
+      <tr class="fail"><td class="no">3</td><td>Carton label legible, stuck flat, not covered</td><td class="c"><span class="box"></span></td><td class="c"><span class="box x"></span></td><td class="c"><span class="box"></span></td><td class="rem hand">box 7 label creased</td></tr>
+    </table>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h"><span class="n">B</span><span class="t">LABELS</span></div>
+    <table class="chk">
+      <tr><th style="width:8mm">#</th><th class="l">Check</th><th style="width:13mm">OK</th><th style="width:13mm">Not OK</th><th style="width:13mm">N/A</th><th class="l" style="width:52mm">Remarks</th></tr>
+      <tr><td class="no">4</td><td>FNSKU label present and scannable</td><td class="c"><span class="box on"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="rem">See FNSKU check below</td></tr>
+      <tr><td class="no">5</td><td>Label barcode matches product</td><td class="c"><span class="box on"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="rem"></td></tr>
+      <tr><td class="no">6</td><td>MRP printed</td><td class="c"><span class="box on"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="rem"></td></tr>
+      <tr><td class="no">7</td><td>Serial number present</td><td class="c"><span class="box on"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="rem"></td></tr>
+      <tr><td class="no">8</td><td>Shipping label present</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="box dash"></span></td><td class="rem hand">box label stage</td></tr>
+    </table>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h"><span class="n">C</span><span class="t">PRODUCT AND PACKING</span></div>
+    <table class="chk">
+      <tr><th style="width:8mm">#</th><th class="l">Check</th><th style="width:13mm">OK</th><th style="width:13mm">Not OK</th><th style="width:13mm">N/A</th><th class="l" style="width:52mm">Remarks</th></tr>
+      <tr><td class="no">9</td><td>Product condition: no scratches, cracks, dead units</td><td class="c"><span class="box on"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="rem"></td></tr>
+      <tr><td class="no">10</td><td>Inner packaging in good condition</td><td class="c"><span class="box on"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="rem"></td></tr>
+      <tr><td class="no">11</td><td>Polybag / seal intact</td><td class="c"><span class="box on"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="rem"></td></tr>
+      <tr><td class="no">12</td><td>Accessories included as per BOM</td><td class="c"><span class="box on"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="rem"></td></tr>
+    </table>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h"><span class="n">D</span><span class="t">QUANTITY</span></div>
+    <div class="tot">
+      <div><span class="k">Inspected</span><span class="v hand">240</span></div>
+      <div><span class="k">Accepted</span><span class="v hand">236</span></div>
+      <div><span class="k">Rejected</span><span class="v hand">4</span></div>
+      <div><span class="k">Rejection rate</span><span class="v">1.7 %</span></div>
+    </div>
+  </div>
+
+  <div class="foot"><span>Helett Enterprises | HT20-PRO-BLK | FBA15K7T2QX9</span><span>Page 1 of 2</span></div>
+</section>
+
+<!-- ===================== PAGE 2 ===================== -->
+<section class="page">
+  <div class="sec" style="margin-top:0">
+    <div class="sec-h"><span class="n">E</span><span class="t">FNSKU CHECK</span></div>
+    <table class="chk scan">
+      <tr><th style="width:8mm">#</th><th class="l" style="width:28mm">Unit to scan</th><th class="l">Scanned code</th><th style="width:26mm">Result</th><th class="l" style="width:36mm">Time</th></tr>
+      <tr><td class="no">1</td><td>Unit 14 of 240</td><td class="code">X002K9QH4D</td><td class="c"><span class="stamp ok">FNSKU OK</span></td><td>10:42:07</td></tr>
+      <tr><td class="no">2</td><td>Unit 97 of 240</td><td class="code">X002K9QH4D</td><td class="c"><span class="stamp ok">FNSKU OK</span></td><td>10:43:31</td></tr>
+      <tr><td class="no">3</td><td>Unit 203 of 240</td><td class="code">X002K9QH4D</td><td class="c"><span class="stamp ok">FNSKU OK</span></td><td>10:44:12</td></tr>
+    </table>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h"><span class="n">F</span><span class="t">BOX LABEL CHECK</span></div>
+    <table class="chk scan">
+      <tr><th style="width:8mm">#</th><th class="l" style="width:28mm">Box to scan</th><th class="l">Scanned carton ID</th><th style="width:26mm">Result</th><th class="l" style="width:36mm">Time</th></tr>
+      <tr><td class="no">1</td><td>Box 3 of 12</td><td class="code">FBA15K7T2QX9U000003</td><td class="c"><span class="stamp ok">LABEL OK</span></td><td>10:51:20</td></tr>
+      <tr><td class="no">2</td><td>Box 7 of 12</td><td class="code">FBA15K7T2QX9U000007</td><td class="c"><span class="stamp ok">LABEL OK</span></td><td>10:52:02</td></tr>
+      <tr><td class="no">3</td><td>Box 11 of 12</td><td class="code">FBA15K7T2QX9U000011</td><td class="c"><span class="stamp ok">LABEL OK</span></td><td>10:52:44</td></tr>
+    </table>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h"><span class="n">G</span><span class="t">RESULT</span></div>
+    <div class="result">
+      <div><span class="k">Overall result</span>
+        <span class="opt"><span class="box on"></span> Good</span>
+        <span class="opt"><span class="box"></span> Satisfactory</span>
+        <span class="opt"><span class="box"></span> Bad</span></div>
+      <div><span class="k">Product condition</span>
+        <span class="opt"><span class="box on"></span> Good</span>
+        <span class="opt"><span class="box"></span> Bad</span></div>
+      <div><span class="k">Packaging quality</span>
+        <span class="opt"><span class="box on"></span> Good</span>
+        <span class="opt"><span class="box"></span> Bad</span></div>
+    </div>
+    <div class="remarks"><span class="k">QC remarks</span><span class="hand" style="font-size:10pt">4 units rejected: dead on power-up. Box 7 label creased, relabel before dispatch.</span></div>
+  </div>
+
+  <div class="sec" style="margin-top:4.2mm">
+    <div class="sec-h"><span class="n">H</span><span class="t">DISPATCH</span></div>
+    <table class="chk scan">
+      <tr><th style="width:8mm">#</th><th class="l" style="width:24mm">Date</th><th class="l">Transport</th><th style="width:20mm">Boxes sent</th><th style="width:20mm">Units</th><th style="width:26mm">Total so far</th></tr>
+      <tr><td class="no">1</td><td class="hand">02 Nov</td><td class="hand">Own truck DL1LX 4471</td><td class="c hand">12</td><td class="c hand">236</td><td class="c">12 of 12</td></tr>
+      <tr><td class="no">2</td><td></td><td></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>
+    </table>
+  </div>
+
+  <div class="sigs">
+    <div class="sig">
+      <div class="role">QC</div>
+      <svg viewBox="0 0 180 56" fill="none" stroke="#1c3c8f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 38 C16 8, 30 6, 28 30 C27 46, 40 14, 52 22 C60 28, 56 44, 68 30 C78 18, 86 32, 96 28 C112 20, 120 40, 150 24"/></svg>
+      <div class="line"></div><div class="who">Aditi Rao</div>
+    </div>
+    <div class="sig">
+      <div class="role">Dispatch</div>
+      <svg viewBox="0 0 180 56" fill="none" stroke="#1c3c8f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 40 C20 6, 34 10, 30 36 C28 50, 44 8, 58 18 C66 24, 62 46, 80 30 C92 20, 100 34, 118 22 C130 14, 140 36, 160 30"/></svg>
+      <div class="line"></div><div class="who">Amal Helett</div>
+    </div>
+    <div class="sig">
+      <div class="role">Final Confirmation</div>
+      <svg viewBox="0 0 180 56" fill="none" stroke="#1c3c8f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 34 C22 14, 28 14, 34 34 C38 48, 46 20, 60 18 C74 16, 70 44, 86 36 C100 28, 108 14, 124 26 C136 36, 146 22, 164 20"/></svg>
+      <div class="line"></div><div class="who">R. Kumar</div>
+    </div>
+  </div>
+
+  <div class="foot"><span>Status: CLOSED &nbsp;|&nbsp; Reference layout, sample data only</span><span>Page 2 of 2</span></div>
+</section>
+
+</body>
+</html>

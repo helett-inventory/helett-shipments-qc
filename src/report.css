@@ -1,0 +1,100 @@
+/* Printed QC Inspection Report (A4). Hidden on screen; QCRecord shows it for print only. */
+
+.rpt {
+  --ink: #12161c;
+  --muted: #5f6975;
+  --rule: #cfd3d8;
+  --soft: #f4f5f6;
+  --ok: #15803d;
+  --warn: #b45309;
+  --fail: #c2261b;
+  font-family: 'Instrument Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: 9pt;
+  line-height: 1.35;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.rpt .sheet {
+  position: relative;
+  width: 210mm;
+  height: 297mm;
+  padding: 13mm 15mm 16mm;
+  box-sizing: border-box;
+  background: #fff;
+  overflow: hidden;
+  page-break-after: always;
+}
+.rpt .sheet:last-child { page-break-after: auto; }
+
+.rpt .mono { font-family: 'IBM Plex Mono', Consolas, monospace; font-size: 8.5pt; }
+.rpt .muted { color: var(--muted); }
+
+/* letterhead */
+.rpt .head { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 4mm; border-bottom: 2px solid var(--ink); }
+.rpt .brand { font-size: 15pt; font-weight: 700; letter-spacing: -0.2px; line-height: 1; }
+.rpt .doctype { font-size: 9.5pt; color: var(--muted); margin-top: 1.5mm; }
+.rpt .ref { text-align: right; font-size: 8.5pt; color: var(--muted); }
+.rpt .ref b { display: block; font-size: 11pt; color: var(--ink); font-weight: 600; }
+
+/* title + outcome */
+.rpt .title { display: flex; justify-content: space-between; align-items: flex-start; gap: 8mm; margin: 6mm 0 5mm; }
+.rpt .title h1 { margin: 0; font-size: 19pt; font-weight: 600; letter-spacing: -0.4px; line-height: 1.1; }
+.rpt .title .sub { margin-top: 1.5mm; color: var(--muted); font-size: 9.5pt; }
+.rpt .outcome { border: 1.6px solid; border-radius: 1.5mm; padding: 2mm 4mm; text-align: center; min-width: 38mm; }
+.rpt .outcome small { display: block; font-size: 7.5pt; color: var(--muted); font-weight: 500; }
+.rpt .outcome b { display: block; font-size: 11pt; font-weight: 700; line-height: 1.2; }
+.rpt .outcome.ok { color: var(--ok); border-color: var(--ok); }
+.rpt .outcome.warn { color: var(--warn); border-color: var(--warn); }
+.rpt .outcome.fail { color: var(--fail); border-color: var(--fail); }
+
+/* key facts */
+.rpt .facts { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); }
+.rpt .facts > div { padding: 2mm 3mm; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.rpt .facts dt { font-size: 7.5pt; color: var(--muted); }
+.rpt .facts dd { margin: 0.5mm 0 0; font-size: 9.5pt; font-weight: 600; }
+
+/* figures */
+.rpt .figs { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 5mm; background: var(--soft); border-radius: 1.5mm; }
+.rpt .figs > div { padding: 3mm 4mm; border-left: 1px solid var(--rule); }
+.rpt .figs > div:first-child { border-left: 0; }
+.rpt .figs .n { font-size: 16pt; font-weight: 600; line-height: 1.1; }
+.rpt .figs .l { font-size: 7.5pt; color: var(--muted); }
+
+/* sections */
+.rpt h2 { margin: 6mm 0 2mm; font-size: 10.5pt; font-weight: 600; padding-bottom: 1.2mm; border-bottom: 1px solid var(--ink); display: flex; justify-content: space-between; align-items: baseline; }
+.rpt h2 span { font-size: 8pt; font-weight: 400; color: var(--muted); }
+.rpt h2:first-of-type { margin-top: 0; }
+
+.rpt table { width: 100%; border-collapse: collapse; font-size: 8.8pt; }
+.rpt th { text-align: left; font-weight: 600; font-size: 7.8pt; color: var(--muted); padding: 1.2mm 2mm; border-bottom: 1px solid var(--rule); }
+.rpt td { padding: 1.55mm 2mm; border-bottom: 1px solid #e6e8eb; vertical-align: top; }
+.rpt td.num, .rpt th.num { text-align: right; }
+.rpt td.ref-no { width: 8mm; color: var(--muted); }
+.rpt tr.group td { padding: 2.2mm 2mm 1mm; font-weight: 600; font-size: 8.3pt; border-bottom: 1px solid var(--rule); background: var(--soft); }
+.rpt tr.fail td { background: #fdf2f1; }
+.rpt .res { font-weight: 600; white-space: nowrap; }
+.rpt .res.ok { color: var(--ok); }
+.rpt .res.fail { color: var(--fail); }
+.rpt .res.na { color: var(--muted); font-weight: 500; }
+.rpt .note { color: var(--fail); }
+
+/* disposition */
+.rpt .dispo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--rule); }
+.rpt .dispo > div { padding: 2.2mm 3mm; border-left: 1px solid var(--rule); }
+.rpt .dispo > div:first-child { border-left: 0; }
+.rpt .dispo dt { font-size: 7.5pt; color: var(--muted); }
+.rpt .dispo dd { margin: 0.5mm 0 0; font-weight: 600; font-size: 10pt; }
+.rpt .remarks { border: 1px solid var(--rule); border-top: 0; padding: 2.2mm 3mm; min-height: 12mm; }
+.rpt .remarks small { display: block; font-size: 7.5pt; color: var(--muted); margin-bottom: 0.8mm; }
+
+/* authorisation */
+.rpt .auth { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6mm; margin-top: 2mm; }
+.rpt .auth .box { height: 22mm; border-bottom: 1px solid var(--ink); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 1mm; }
+.rpt .auth .box img { max-height: 20mm; max-width: 100%; object-fit: contain; }
+.rpt .auth .role { font-size: 7.8pt; color: var(--muted); margin-top: 1.2mm; }
+.rpt .auth .who { font-weight: 600; font-size: 9.5pt; }
+.rpt .auth .when { font-size: 8pt; color: var(--muted); }
+
+/* footer */
+.rpt .foot { position: absolute; left: 15mm; right: 15mm; bottom: 8mm; display: flex; justify-content: space-between; border-top: 1px solid var(--rule); padding-top: 1.8mm; font-size: 7.5pt; color: var(--muted); }
