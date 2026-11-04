@@ -156,26 +156,24 @@ export function Shipments() {
           )
         }
       />
-      </StickyHead>
-
-      <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-4">
+      <div className="flex flex-col lg:flex-row lg:items-center gap-3 pt-1 pb-3">
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search FBA ID, product, warehouse"
           aria-label="Search shipments"
-          className="w-full lg:w-80 min-h-[44px] px-3 rounded-lg bg-surface shadow-card focus:ring-2 focus:ring-ink focus:outline-none"
+          className="w-full lg:w-80 min-h-[44px] px-3 rounded-lg bg-surface ring-1 ring-[#cfd4da] focus:ring-2 focus:ring-ink focus:outline-none"
         />
-        <div className="no-scrollbar flex gap-1.5 overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 lg:min-w-0" role="tablist" aria-label="Filter shipments">
+        <div className="no-scrollbar flex gap-1.5 overflow-x-auto -mx-4 px-4 py-1 lg:mx-0 lg:px-1 lg:min-w-0" role="tablist" aria-label="Filter shipments">
           {filters.map((f) => (
             <button
               key={f.id}
               role="tab"
               aria-selected={filter === f.id}
               onClick={() => setFilter(f.id)}
-              className={`shrink-0 min-h-[40px] px-3 rounded-full text-sm font-medium ${
-                filter === f.id ? 'bg-ink text-white' : 'bg-surface shadow-card text-muted hover:text-ink'
+              className={`shrink-0 min-h-[44px] px-4 rounded-full text-sm font-medium ${
+                filter === f.id ? 'bg-ink text-white' : 'bg-surface ring-1 ring-[#cfd4da] text-muted hover:text-ink'
               }`}
             >
               {f.label}
@@ -184,6 +182,7 @@ export function Shipments() {
           ))}
         </div>
       </div>
+      </StickyHead>
 
       {showDeadlines && needDecision > 0 && filter !== 'deadline' && (
         <div role="alert" className="mb-4 rounded-lg bg-[#fdeedb] px-4 py-3 flex items-center justify-between gap-3 flex-wrap">

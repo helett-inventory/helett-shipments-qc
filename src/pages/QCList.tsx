@@ -63,7 +63,7 @@ export function QCList() {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search product, FBA ID, record"
           aria-label="Search QC cases"
-          className="w-full lg:w-80 min-h-[44px] px-3 rounded-lg bg-surface shadow-card focus:ring-2 focus:ring-ink focus:outline-none"
+          className="w-full lg:w-80 min-h-[44px] px-3 rounded-lg bg-surface ring-1 ring-[#cfd4da] focus:ring-2 focus:ring-ink focus:outline-none"
         />
         <div className="flex gap-1.5" role="tablist" aria-label="Case status">
           {TABS.map((t) => (
@@ -73,7 +73,7 @@ export function QCList() {
               aria-selected={tab === t.id}
               onClick={() => setTab(t.id)}
               className={`flex-1 lg:flex-none min-h-[40px] px-4 rounded-full text-sm font-medium ${
-                tab === t.id ? 'bg-ink text-white' : 'bg-surface shadow-card text-muted hover:text-ink'
+                tab === t.id ? 'bg-ink text-white' : 'bg-surface ring-1 ring-[#cfd4da] text-muted hover:text-ink'
               }`}
             >
               {t.label}
