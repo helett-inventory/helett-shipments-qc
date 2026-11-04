@@ -9,6 +9,7 @@ import { ALL_ITEMS } from '../data/checklist'
 import { BackLink, Btn, ErrorBox, HoldStamp, Loading, Modal, Notice, Page, StatusStamp } from '../components/ui'
 import { ConfirmModal } from '../components/ReasonModal'
 import { QCFillForm } from '../components/QCFillForm'
+import { printAs } from '../lib/printName'
 import { usePeople } from '../hooks/usePeople'
 import { invalidateAll } from '../lib/cache'
 import { RecordView } from '../components/RecordView'
@@ -298,7 +299,7 @@ export function QCRecord() {
           </Btn>
         )}
         {data.insp.status !== 'Open' && (
-          <Btn onClick={() => window.print()}>Print or save PDF</Btn>
+          <Btn onClick={() => printAs(data.ship.fba_id, 'QC-Record', data.insp.record_no)}>Print or save PDF</Btn>
         )}
       </div>
 

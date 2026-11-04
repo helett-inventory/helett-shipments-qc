@@ -130,7 +130,7 @@ export function Panel({
 export function StickyHead({ wide, children }: { wide?: boolean; children: React.ReactNode }) {
   return (
     <div
-      className={`sticky top-14 lg:top-0 z-20 bg-canvas -mx-4 px-4 pb-1 print:static ${
+      className={`sticky top-14 lg:top-0 z-20 bg-canvas -mx-4 px-4 pt-3 -mt-3 pb-1 print:static ${
         wide ? 'lg:-mx-6 lg:px-6' : 'lg:-mx-8 lg:px-8'
       } [&_.page-title]:!mb-3`}
     >
@@ -272,6 +272,26 @@ export function Chip({ tone, children }: { tone: Tone; children: React.ReactNode
 export function StatusStamp({ status }: { status: string }) {
   // A new shipment is simply "Open" to people; the stored status stays "Created".
   return <Chip tone={STATUS_TONE[status] ?? 'gray'}>{status === 'Created' ? 'Open' : status}</Chip>
+}
+
+// Dispatch mode label: each mode has its own colour so a list can be scanned by type.
+const MODE_PILL: Record<string, string> = {
+  ATS: 'bg-[#dfe6fd] text-[#2b3fa8]',
+  'Drop In': 'bg-[#d3f1ee] text-[#0b6b63]',
+  Bluedart: 'bg-[#fbe0ec] text-[#9d174d]'
+}
+
+export function ModePill({ mode }: { mode: string | null | undefined }) {
+  const label = mode || 'No mode'
+  return (
+    <span
+      className={`inline-flex items-center h-6 px-2.5 rounded-full text-[12px] leading-none font-semibold whitespace-nowrap ${
+        MODE_PILL[label] ?? 'bg-[#eceef2] text-muted'
+      }`}
+    >
+      {label}
+    </span>
+  )
 }
 
 export function HoldStamp() {

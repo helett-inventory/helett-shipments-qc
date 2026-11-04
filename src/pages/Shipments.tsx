@@ -7,7 +7,7 @@ import { needsAppointment, needsBoxLabels } from '../data/options'
 import { changeDeadline, withinWatch } from '../lib/deadline'
 import { DeadlineBadge } from '../components/DeadlineBadge'
 import { addDaysISO, fmtDate, fmtDateTime, fmtDayLong, todayISO } from '../lib/format'
-import { Chip, Empty, ErrorBox, HoldStamp, Loading, Page, StickyHead, PageTitle, StatusStamp } from '../components/ui'
+import { Chip, ModePill, Empty, ErrorBox, HoldStamp, Loading, Page, StickyHead, PageTitle, StatusStamp } from '../components/ui'
 import type { Dispatch, Shipment, ShipmentLine } from '../types/db'
 
 type Row = Shipment & {
@@ -259,7 +259,9 @@ export function Shipments() {
                       >
                         <div className="min-w-0 lg:col-start-1 lg:row-start-1">
                           <div className="font-mono font-medium truncate">{s.fba_id}</div>
-                          <div className="text-sm text-muted truncate">{s.dispatch_mode ?? 'No mode'}</div>
+                          <div className="mt-1">
+                            <ModePill mode={s.dispatch_mode} />
+                          </div>
                         </div>
                         <div className="flex flex-wrap justify-end gap-1.5 lg:justify-start lg:col-start-6 lg:row-start-1">
                           {s.on_hold && <HoldStamp />}

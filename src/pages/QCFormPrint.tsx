@@ -5,6 +5,7 @@ import { useLive } from '../hooks/useLive'
 import { supabase } from '../lib/supabase'
 import { fmtDate, fmtDateTime } from '../lib/format'
 import { CHECK_SECTIONS } from '../data/checklist'
+import { printAs } from '../lib/printName'
 import { qrPayload } from '../lib/manualQc'
 import { Btn, ErrorBox, Loading } from '../components/ui'
 import type { Shipment, ShipmentLine } from '../types/db'
@@ -233,7 +234,7 @@ export function QCFormPrint() {
           <Link to={`/shipments/${data.id}`} className="min-h-[44px] px-4 rounded-lg bg-[#eceef1] hover:bg-[#e1e4e8] font-medium flex items-center">
             Back
           </Link>
-          <Btn onClick={() => window.print()}>Print or save PDF</Btn>
+          <Btn onClick={() => printAs(data.fba_id, 'QC-Form')}>Print or save PDF</Btn>
         </div>
       </div>
       </div>

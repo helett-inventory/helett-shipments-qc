@@ -5,7 +5,7 @@ import { useLive } from '../hooks/useLive'
 import { errText, supabase, callRpc } from '../lib/supabase'
 import { uploadSignature } from '../lib/signatures'
 import { fmtDate, fmtDateTime, fromLocalInput, toLocalInput } from '../lib/format'
-import { BackLink, Btn, Choice, Chip, ErrorBox, Field, HoldStamp, Loading, Modal, Notice, Page, StickyHead, PageTitle, Panel, StatusStamp, inputCls } from '../components/ui'
+import { BackLink, Btn, ModePill, Choice, Chip, ErrorBox, Field, HoldStamp, Loading, Modal, Notice, Page, StickyHead, PageTitle, Panel, StatusStamp, inputCls } from '../components/ui'
 import { SearchableSelect } from '../components/SearchableSelect'
 import { DateInput } from '../components/DateInput'
 import { SignaturePad } from '../components/SignaturePad'
@@ -142,6 +142,9 @@ export function ShipmentDetail() {
         sub={
           <>
             {b.ref} · {b.warehouse}
+            <span className="ml-2 align-middle">
+              <ModePill mode={b.dispatch_mode} />
+            </span>
             {(isInv || isWm) && <CopyInvoiceData fbaId={b.fba_id} fc={b.warehouse} lines={b.shipment_lines.filter((l) => l.status !== 'Cancelled')} />}
           </>
         }

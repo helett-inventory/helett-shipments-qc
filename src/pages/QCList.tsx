@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLive } from '../hooks/useLive'
 import { supabase } from '../lib/supabase'
-import { Empty, ErrorBox, HoldStamp, Loading, Page, StickyHead, PageTitle, StatusStamp } from '../components/ui'
+import { ModePill, Empty, ErrorBox, HoldStamp, Loading, Page, StickyHead, PageTitle, StatusStamp } from '../components/ui'
 import type { Inspection, Shipment, ShipmentLine } from '../types/db'
 
 type Row = Pick<Inspection, 'id' | 'record_no' | 'status' | 'needs_recheck'> & {
@@ -54,9 +54,7 @@ export function QCList() {
     <Page wide>
       <StickyHead wide>
         <PageTitle title="QC cases" />
-      </StickyHead>
-
-      <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-4">
+      <div className="flex flex-col lg:flex-row lg:items-center gap-3 pt-1 pb-3">
         <input
           type="search"
           value={query}
@@ -65,14 +63,14 @@ export function QCList() {
           aria-label="Search QC cases"
           className="w-full lg:w-80 min-h-[44px] px-3 rounded-lg bg-surface ring-1 ring-[#cfd4da] focus:ring-2 focus:ring-ink focus:outline-none"
         />
-        <div className="flex gap-1.5" role="tablist" aria-label="Case status">
+        <div className="flex gap-1.5 p-1 -m-1" role="tablist" aria-label="Case status">
           {TABS.map((t) => (
             <button
               key={t.id}
               role="tab"
               aria-selected={tab === t.id}
               onClick={() => setTab(t.id)}
-              className={`flex-1 lg:flex-none min-h-[40px] px-4 rounded-full text-sm font-medium ${
+              className={`flex-1 lg:flex-none min-h-[44px] px-4 rounded-full text-sm font-medium ${
                 tab === t.id ? 'bg-ink text-white' : 'bg-surface ring-1 ring-[#cfd4da] text-muted hover:text-ink'
               }`}
             >
@@ -84,6 +82,7 @@ export function QCList() {
           ))}
         </div>
       </div>
+      </StickyHead>
 
       {error && <ErrorBox message={error} />}
       {loading && !data && <Loading />}
@@ -120,7 +119,12 @@ export function QCList() {
                     </div>
                     <div className="col-span-2 text-sm lg:col-span-1 lg:col-start-2 lg:row-start-1">
                       <span className="font-mono">{s.fba_id}</span>
-                      <span className="text-muted"> · {s.warehouse}{s.dispatch_mode ? ` · ${s.dispatch_mode}` : ""}</span>
+                      <span className="text-muted"> · {s.warehouse}</span>
+                      {s.dispatch_mode && (
+                        <span className="ml-2 align-middle">
+                          <ModePill mode={s.dispatch_mode} />
+                        </span>
+                      )}
                     </div>
                     <div className="col-span-2 text-sm text-muted lg:text-ink lg:col-span-1 lg:col-start-3 lg:row-start-1">
                       {l.unit_qty} units
