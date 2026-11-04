@@ -4,7 +4,7 @@ import { supabase, errText, callRpc } from '../lib/supabase'
 import { fromLocalInput, todayISO } from '../lib/format'
 import { SearchableSelect } from '../components/SearchableSelect'
 import { DateInput } from '../components/DateInput'
-import { BackLink, Btn, Choice, ErrorBox, Field, Page, PageTitle, Panel, inputCls } from '../components/ui'
+import { BackLink, Btn, Choice, ErrorBox, Field, Page, StickyHead, PageTitle, Panel, inputCls } from '../components/ui'
 import type { SkuRow } from '../types/db'
 import { getSkus } from '../services/lookups'
 import { invalidateAll } from '../lib/cache'
@@ -94,8 +94,10 @@ export function ShipmentNew() {
 
   return (
     <Page>
-      <BackLink to="/">Shipments</BackLink>
-      <PageTitle title="New shipment" sub="QC cases open automatically for each SKU line." />
+      <StickyHead>
+        <BackLink to="/">Shipments</BackLink>
+        <PageTitle title="New shipment" sub="QC cases open automatically for each SKU line." />
+      </StickyHead>
 
       <form onSubmit={submit} className="space-y-5">
         <Panel title="Shipment">

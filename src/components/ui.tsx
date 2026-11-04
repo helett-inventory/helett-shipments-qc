@@ -92,7 +92,7 @@ export function PageTitle({
   action?: React.ReactNode
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 mb-5">
+    <div className="page-title flex items-start justify-between gap-3 mb-5">
       <div className="min-w-0">
         <h1 className="text-2xl lg:text-[28px] font-semibold tracking-tight leading-tight break-words">{title}</h1>
         {sub && <div className="text-sm text-muted mt-1">{sub}</div>}
@@ -123,6 +123,19 @@ export function Panel({
       )}
       <div className={flush ? '' : 'p-4'}>{children}</div>
     </section>
+  )
+}
+
+// Back link + title stay pinned under the mobile top bar (and at the very top on desktop) while the page scrolls.
+export function StickyHead({ wide, children }: { wide?: boolean; children: React.ReactNode }) {
+  return (
+    <div
+      className={`sticky top-14 lg:top-0 z-20 bg-canvas -mx-4 px-4 pb-1 print:static ${
+        wide ? 'lg:-mx-6 lg:px-6' : 'lg:-mx-8 lg:px-8'
+      } [&_.page-title]:!mb-3`}
+    >
+      {children}
+    </div>
   )
 }
 

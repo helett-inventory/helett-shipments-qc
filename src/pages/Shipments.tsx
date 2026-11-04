@@ -7,7 +7,7 @@ import { needsAppointment, needsBoxLabels } from '../data/options'
 import { changeDeadline, withinWatch } from '../lib/deadline'
 import { DeadlineBadge } from '../components/DeadlineBadge'
 import { addDaysISO, fmtDate, fmtDateTime, fmtDayLong, todayISO } from '../lib/format'
-import { Chip, Empty, ErrorBox, HoldStamp, Loading, Page, PageTitle, StatusStamp } from '../components/ui'
+import { Chip, Empty, ErrorBox, HoldStamp, Loading, Page, StickyHead, PageTitle, StatusStamp } from '../components/ui'
 import type { Dispatch, Shipment, ShipmentLine } from '../types/db'
 
 type Row = Shipment & {
@@ -145,6 +145,7 @@ export function Shipments() {
 
   return (
     <Page wide>
+      <StickyHead wide>
       <PageTitle
         title="Shipments"
         action={
@@ -155,6 +156,7 @@ export function Shipments() {
           )
         }
       />
+      </StickyHead>
 
       <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-4">
         <input

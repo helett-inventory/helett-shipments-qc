@@ -5,7 +5,7 @@ import { useLive } from '../hooks/useLive'
 import { errText, supabase, callRpc } from '../lib/supabase'
 import { uploadSignature } from '../lib/signatures'
 import { fmtDate, fmtDateTime, fromLocalInput, toLocalInput } from '../lib/format'
-import { BackLink, Btn, Choice, Chip, ErrorBox, Field, HoldStamp, Loading, Modal, Notice, Page, PageTitle, Panel, StatusStamp, inputCls } from '../components/ui'
+import { BackLink, Btn, Choice, Chip, ErrorBox, Field, HoldStamp, Loading, Modal, Notice, Page, StickyHead, PageTitle, Panel, StatusStamp, inputCls } from '../components/ui'
 import { SearchableSelect } from '../components/SearchableSelect'
 import { DateInput } from '../components/DateInput'
 import { SignaturePad } from '../components/SignaturePad'
@@ -135,6 +135,7 @@ export function ShipmentDetail() {
 
   return (
     <Page wide>
+      <StickyHead wide>
       <BackLink to="/">Shipments</BackLink>
       <PageTitle
         title={b.fba_id}
@@ -151,6 +152,7 @@ export function ShipmentDetail() {
           </div>
         }
       />
+      </StickyHead>
 
       {scanError && <Notice tone="fail">{scanError}</Notice>}
       {deadlineNote && <Notice tone={deadlineNote.level === 'passed' ? 'fail' : 'warn'}>{deadlineNote.text}</Notice>}
@@ -756,7 +758,7 @@ function DispatchModal({
   const [transport, setTransport] = useState(b.transport ?? '')
   const [remarks, setRemarks] = useState('')
   const { profile } = useAuth()
-  const people = usePeople((p) => p.role === 'inventory' || !!p.is_admin, [profile?.name ?? ''])
+  const people = usePeople((p) => p.role === 'inventory' || !!p.is_admin, [profile?.name ?? '', 'MHD Anas'])
   const [by, setBy] = useState(profile?.name ?? '')
   const [sign, setSign] = useState('')
   const [busy, setBusy] = useState(false)

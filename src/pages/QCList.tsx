@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLive } from '../hooks/useLive'
 import { supabase } from '../lib/supabase'
-import { Empty, ErrorBox, HoldStamp, Loading, Page, PageTitle, StatusStamp } from '../components/ui'
+import { Empty, ErrorBox, HoldStamp, Loading, Page, StickyHead, PageTitle, StatusStamp } from '../components/ui'
 import type { Inspection, Shipment, ShipmentLine } from '../types/db'
 
 type Row = Pick<Inspection, 'id' | 'record_no' | 'status' | 'needs_recheck'> & {
@@ -52,7 +52,9 @@ export function QCList() {
 
   return (
     <Page wide>
-      <PageTitle title="QC cases" />
+      <StickyHead wide>
+        <PageTitle title="QC cases" />
+      </StickyHead>
 
       <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-4">
         <input

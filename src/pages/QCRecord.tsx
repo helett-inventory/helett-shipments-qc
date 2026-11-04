@@ -6,7 +6,7 @@ import { errText, supabase, callRpc } from '../lib/supabase'
 import { uploadSignature } from '../lib/signatures'
 import { todayISO } from '../lib/format'
 import { ALL_ITEMS } from '../data/checklist'
-import { BackLink, Btn, ErrorBox, HoldStamp, Loading, Modal, Notice, Page, StatusStamp } from '../components/ui'
+import { BackLink, StickyHead, Btn, ErrorBox, HoldStamp, Loading, Modal, Notice, Page, StatusStamp } from '../components/ui'
 import { ConfirmModal } from '../components/ReasonModal'
 import { QCFillForm } from '../components/QCFillForm'
 import { usePeople } from '../hooks/usePeople'
@@ -199,8 +199,9 @@ export function QCRecord() {
   return (
     <div>
       <div className={`no-print mx-auto px-4 lg:px-8 pt-4 max-w-2xl lg:max-w-6xl`}>
+        <StickyHead>
         <BackLink to="/qc">QC cases</BackLink>
-        <div className="flex items-start justify-between gap-3 mt-1 mb-4">
+        <div className="flex items-start justify-between gap-3 mt-1 mb-2">
           <div className="min-w-0">
             <h1 className="text-2xl font-semibold tracking-tight leading-tight break-words">{data.line.product_name}</h1>
             <p className="text-sm text-muted mt-1">
@@ -212,8 +213,24 @@ export function QCRecord() {
             <StatusStamp status={data.insp.status} />
           </span>
         </div>
+        </StickyHead>
 
-        {data.ship.on_hold && <Notice tone="fail">On hold: {data.ship.hold_reason}. Only Inventory can clear this.</Notice>}
+        {data.ship.on_hold && (
+          <Notice tone="fail">
+            On hold: {data.ship.hold_reason}.{' '}
+            {profile?.role === 'inventory' || !!profile?.is_admin ? (
+              <>
+                Clear it with “Clear hold” on the{' '}
+                <Link to={`/shipments/${data.ship.id}`} className="underline">
+                  shipment page
+                </Link>
+                .
+              </>
+            ) : (
+              'Only Inventory can clear this.'
+            )}
+          </Notice>
+        )}
         {scanError && <Notice tone="fail">{scanError}</Notice>}
         {data.insp.needs_recheck && <Notice tone="warn">Shipment quantity changed after QC. Recheck this case.</Notice>}
         {submitErrors.length > 0 && (
