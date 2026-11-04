@@ -96,7 +96,7 @@ export function QCRecord() {
   }, [draft, data, editing])
 
   // Inspector is picked from the people who have an account, never typed.
-  const people = usePeople((p) => p.role === 'qc' || p.role === 'inventory' || !!p.is_admin, [profile?.name ?? ''])
+  const people = usePeople((p) => p.role === 'qc' || p.role === 'inventory' || !!p.is_admin, [profile?.name ?? '', 'Suhail K', 'MHD Shafi'])
 
   // The 'fix before submitting' list goes away as soon as the case is edited.
   useEffect(() => {

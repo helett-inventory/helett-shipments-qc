@@ -868,7 +868,7 @@ function DispatchModal({
 
 function ApproveModal({ onClose, onSave }: { onClose: () => void; onSave: (signDataUrl: string, name: string) => Promise<void> }) {
   const { profile } = useAuth()
-  const people = usePeople((p) => p.role === 'wm' || !!p.is_admin, [profile?.name ?? ''])
+  const people = usePeople((p) => p.role === 'wm' || !!p.is_admin, [profile?.name ?? '', 'Mohammed Misbahudeen'])
   const [by, setBy] = useState(profile?.name ?? '')
   const [sign, setSign] = useState('')
   const [busy, setBusy] = useState(false)

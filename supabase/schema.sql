@@ -676,7 +676,7 @@
     -- After creating users in Authentication > Users, add their profile rows, e.g.:
     --   insert into profiles(id, name, role) values ('<uuid>', 'Amal Anilkumar', 'inventory');
     --   insert into profiles(id, name, role) values ('<uuid>', 'Suhail K', 'qc');
-    --   insert into profiles(id, name, role) values ('<uuid>', 'Mohammed Misbahudeen KC', 'wm');
+    --   insert into profiles(id, name, role) values ('<uuid>', 'Mohammed Misbahudeen', 'wm');
 
 -- ---------------------------------------------------------------- manual (paper) QC (patch_018)
 alter table inspections add column if not exists manual boolean not null default false;
