@@ -140,13 +140,13 @@ export function ShipmentDetail() {
       <PageTitle
         title={b.fba_id}
         sub={
-          <>
-            {b.ref} · {b.warehouse}
-            <span className="ml-2 align-middle">
-              <ModePill mode={b.dispatch_mode} />
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
+            <span>
+              {b.ref} · {b.warehouse}
             </span>
+            <ModePill mode={b.dispatch_mode} />
             {(isInv || isWm) && <CopyInvoiceData fbaId={b.fba_id} fc={b.warehouse} lines={b.shipment_lines.filter((l) => l.status !== 'Cancelled')} />}
-          </>
+          </div>
         }
         action={
           <div className="flex gap-1.5 items-center flex-wrap justify-end">
@@ -950,7 +950,7 @@ function CopyInvoiceData({ fbaId, fc, lines }: { fbaId: string; fc: string; line
       onClick={copy}
       disabled={state === 'busy'}
       title="Copies FBA number, ASIN, SKU, FNSKU, box qty and qty for every SKU, tab separated, ready to paste into a spreadsheet"
-      className={`ml-3 inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-[13px] font-semibold align-middle ${
+      className={`inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-[13px] font-semibold ${
         state === 'done' ? 'bg-[#d8f2e0] text-[#0f6b32]' : state === 'failed' ? 'bg-[#fde8e6] text-fail' : 'bg-[#eceef1] text-ink hover:bg-[#e1e4e8]'
       }`}
     >
