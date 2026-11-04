@@ -264,10 +264,10 @@ export function SignaturePad({ value, onChange, readOnly }: SignaturePadProps) {
         alt="Signature"
         loading="lazy"
         decoding="async"
-        className="w-full h-36 object-contain border border-line rounded-lg bg-white"
+        className="w-full h-36 object-contain rounded-lg bg-[#f6f7f8]"
       />
     ) : (
-      <div className="w-full h-36 flex items-center justify-center border border-line rounded-lg bg-canvas text-muted text-sm">
+      <div className="w-full h-36 flex items-center justify-center rounded-lg bg-[#f6f7f8] text-muted text-sm">
         No signature
       </div>
     )
@@ -291,8 +291,8 @@ export function SignaturePad({ value, onChange, readOnly }: SignaturePadProps) {
         // drawing a stroke. touch-action (via the Tailwind classes below)
         // doesn't cover this; it's a separate, WebKit-specific behavior.
         style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}
-        className={`w-full h-36 border rounded-lg bg-white ${
-          active ? 'touch-none border-ink' : 'touch-pan-y border-line'
+        className={`w-full h-36 rounded-lg bg-[#f6f7f8] ${
+          active ? 'touch-none ring-2 ring-ink bg-white' : 'touch-pan-y'
         }`}
       />
       {!active && (
@@ -304,7 +304,7 @@ export function SignaturePad({ value, onChange, readOnly }: SignaturePadProps) {
           }}
           className="absolute inset-0 flex items-end justify-center pb-2"
         >
-          <span className="text-xs font-medium text-muted bg-white/90 px-2.5 py-1 rounded-full border border-line">
+          <span className="text-xs font-medium text-muted bg-white/90 px-2.5 py-1 rounded-full">
             {hasContent ? 'Tap to expand & edit' : 'Tap to expand & sign'}
           </span>
         </button>

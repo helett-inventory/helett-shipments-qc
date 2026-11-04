@@ -109,8 +109,21 @@
 .rpt .figs .n.blank { border-bottom: 1px solid var(--ink); margin-bottom: 1mm; }
 .rpt .facts dd.blank { height: 5mm; }
 
-.rpt.qcform-sheets .sheet { break-after: page; page-break-after: always; }
+.rpt .keyband { display: grid; grid-template-columns: 1.4fr 1fr; gap: 0; background: var(--soft); border-radius: 1.5mm; margin-bottom: 4mm; }
+.rpt .keyband > div { padding: 2.6mm 4mm; }
+.rpt .keyband > div + div { border-left: 1px solid var(--rule); }
+.rpt .keyband small { display: block; font-size: 7.5pt; color: var(--muted); }
+.rpt .keyband b { display: block; margin-top: 0.5mm; font-size: 12pt; font-weight: 700; }
+.rpt .keyband b.mono { font-size: 11pt; }
+.rpt .facts > div.wide { grid-column: 1 / -1; }
+
+/* One sheet = exactly one printed page. A hair under 297mm so rounding never spills a blank 3rd page. */
+.rpt.qcform-sheets .sheet { height: 296mm; break-after: page; page-break-after: always; }
 .rpt.qcform-sheets > .contents:last-child > .sheet:last-child { break-after: auto; page-break-after: auto; }
 @media screen {
   .rpt.qcform-sheets .sheet { margin: 0 auto 6mm; box-shadow: 0 0 0 1px #cfd3d8; }
+}
+@media print {
+  .rpt.qcform-sheets, .qcform-preview { margin: 0 !important; padding: 0 !important; display: block; overflow: visible !important; }
+  .rpt.qcform-sheets .sheet { margin: 0 !important; box-shadow: none; }
 }

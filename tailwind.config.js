@@ -14,6 +14,7 @@ export default {
         fail: '#c2261b',
         info: '#2456c8'
       },
+      boxShadow: { card: '0 1px 2px rgba(16,24,40,.06), 0 0 0 1px rgba(16,24,40,.03)' },
       fontFamily: {
         sans: ['"Instrument Sans"', 'system-ui', '"Segoe UI"', 'sans-serif'],
         mono: ['"IBM Plex Mono"', 'Consolas', 'monospace']

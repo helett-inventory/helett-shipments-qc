@@ -217,7 +217,7 @@ export function QCRecord() {
         {scanError && <Notice tone="fail">{scanError}</Notice>}
         {data.insp.needs_recheck && <Notice tone="warn">Shipment quantity changed after QC. Recheck this case.</Notice>}
         {submitErrors.length > 0 && (
-          <div role="alert" className="border border-fail/30 bg-fail/5 text-fail rounded-lg px-4 py-3 mb-4 text-sm">
+          <div role="alert" className="bg-[#fde8e6] text-fail rounded-lg px-4 py-3 mb-4 text-sm">
             <b className="font-semibold">Fix before submitting</b>
             <ul className="list-disc pl-5 mt-1">
               {submitErrors.map((e) => (

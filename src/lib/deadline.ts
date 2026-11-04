@@ -64,3 +64,12 @@ export function hoursText(deadline: Date, now = Date.now()): string {
   const clock = `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
   return ms < 0 ? `Passed ${clock} hrs ago` : `${clock} hrs to go`
 }
+
+// Same, with seconds, for the live countdown on the shipment page: "72:20:05 hrs to go".
+export function hmsText(deadline: Date, now = Date.now()): string {
+  const ms = deadline.getTime() - now
+  const total = Math.floor(Math.abs(ms) / 1000)
+  const p2 = (n: number) => String(n).padStart(2, '0')
+  const clock = `${Math.floor(total / 3600)}:${p2(Math.floor((total % 3600) / 60))}:${p2(total % 60)}`
+  return ms < 0 ? `Passed ${clock} hrs ago` : `${clock} hrs to go`
+}

@@ -40,7 +40,7 @@ export function ReviewStep({
   return (
     <div>
       {changes.length > 0 && (
-        <ul className="border border-line rounded-lg bg-surface mb-4 overflow-hidden">
+        <ul className="rounded-lg bg-[#f6f7f8] mb-4 overflow-hidden">
           {changes.map((c) => (
             <li key={c.label} className="px-3 py-2.5 border-t first:border-t-0 border-line text-sm">
               <span className="block text-muted text-[13px]">{c.label}</span>

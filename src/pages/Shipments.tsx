@@ -163,7 +163,7 @@ export function Shipments() {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search FBA ID, product, warehouse"
           aria-label="Search shipments"
-          className="w-full lg:w-80 min-h-[44px] px-3 rounded-lg border border-line bg-surface focus:border-ink focus:outline-none"
+          className="w-full lg:w-80 min-h-[44px] px-3 rounded-lg bg-surface shadow-card focus:ring-2 focus:ring-ink focus:outline-none"
         />
         <div className="no-scrollbar flex gap-1.5 overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 lg:min-w-0" role="tablist" aria-label="Filter shipments">
           {filters.map((f) => (
@@ -172,8 +172,8 @@ export function Shipments() {
               role="tab"
               aria-selected={filter === f.id}
               onClick={() => setFilter(f.id)}
-              className={`shrink-0 min-h-[40px] px-3 rounded-full text-sm font-medium border ${
-                filter === f.id ? 'bg-ink text-white border-ink' : 'bg-surface border-line text-muted hover:text-ink'
+              className={`shrink-0 min-h-[40px] px-3 rounded-full text-sm font-medium ${
+                filter === f.id ? 'bg-ink text-white' : 'bg-surface shadow-card text-muted hover:text-ink'
               }`}
             >
               {f.label}
@@ -184,7 +184,7 @@ export function Shipments() {
       </div>
 
       {showDeadlines && needDecision > 0 && filter !== 'deadline' && (
-        <div role="alert" className="mb-4 rounded-lg border border-warn bg-surface px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+        <div role="alert" className="mb-4 rounded-lg bg-[#fdeedb] px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
           <span className="text-[15px] font-medium text-warn">
             {needDecision} shipment{needDecision > 1 ? 's' : ''} need a decision in the next 48 hours: cancel or reschedule to protect account health.
           </span>
@@ -218,10 +218,10 @@ export function Shipments() {
             const isToday = g.key === today
             const count = `${g.rows.length} shipment${g.rows.length > 1 ? 's' : ''}`
             return (
-            <section key={g.key} aria-label={g.title} className="bg-surface border border-line rounded-xl overflow-hidden lg:grid lg:grid-cols-[152px_1fr]">
+            <section key={g.key} aria-label={g.title} className="bg-surface shadow-card rounded-xl overflow-hidden lg:grid lg:grid-cols-[152px_1fr]">
               <div
-                className={`px-4 lg:px-5 py-3 lg:py-5 border-b lg:border-b-0 lg:border-r border-line flex items-baseline justify-between lg:block ${
-                  isToday ? 'bg-ink text-white border-ink' : 'bg-canvas'
+                className={`px-4 lg:px-5 py-3 lg:py-5 flex items-baseline justify-between lg:block ${
+                  isToday ? 'bg-ink text-white' : 'bg-[#eef0f2]'
                 }`}
               >
                 {isDay ? (

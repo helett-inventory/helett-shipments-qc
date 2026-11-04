@@ -171,7 +171,7 @@ export function SearchableSelect({
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
         aria-label={ariaLabel}
-        className="w-full min-h-[44px] px-3 rounded-lg border border-line text-[15px] text-left flex items-center justify-between gap-2 bg-surface focus:border-ink focus:outline-none disabled:bg-canvas disabled:text-muted"
+        className="w-full min-h-[44px] px-3 rounded-lg text-[15px] text-left flex items-center justify-between gap-2 bg-[#f0f2f4] focus:bg-surface focus:ring-2 focus:ring-ink focus:outline-none disabled:bg-canvas disabled:text-muted"
       >
         <span className={`truncate ${value ? 'text-ink' : 'text-muted'}`}>{value || placeholder}</span>
         <svg className="w-4 h-4 text-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -181,7 +181,7 @@ export function SearchableSelect({
 
       {open && !disabled && (
         <div
-          className={`absolute z-30 w-full bg-surface border border-line rounded-lg shadow-lg overflow-hidden ${
+          className={`absolute z-30 w-full bg-surface rounded-lg shadow-lg ring-1 ring-black/5 overflow-hidden ${
             up ? 'bottom-full mb-1' : 'mt-1'
           }`}
         >
@@ -202,7 +202,7 @@ export function SearchableSelect({
                 aria-controls={listId}
                 aria-activedescendant={rows.length ? `${uid}-opt-${Math.min(active, rows.length - 1)}` : undefined}
                 aria-autocomplete="list"
-                className="w-full min-h-[44px] px-3 rounded-lg border border-line text-[15px] focus:border-ink focus:outline-none"
+                className="w-full min-h-[44px] px-3 rounded-lg bg-[#f0f2f4] focus:bg-surface focus:ring-2 focus:ring-ink text-[15px] focus:outline-none"
               />
             </div>
           )}

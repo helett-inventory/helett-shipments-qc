@@ -133,7 +133,7 @@ export function RecordView({ data, draft, onScanBox }: { data: RecordBundle; dra
             ].map((s) => (
               <div key={s.role}>
                 <div className="text-sm font-medium mb-2">{s.role}</div>
-                <div className="h-24 rounded-lg border border-line bg-surface flex items-center justify-center overflow-hidden">
+                <div className="h-24 rounded-lg bg-[#f6f7f8] flex items-center justify-center overflow-hidden">
                   {s.path ? <SignImg path={s.path} className="max-h-full max-w-full object-contain" /> : <span className="text-sm text-muted">Pending</span>}
                 </div>
                 <div className="text-sm mt-1.5 font-medium">{s.name}</div>

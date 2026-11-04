@@ -14,7 +14,7 @@ import { QCFormPrint } from './pages/QCFormPrint'
 function Setup() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-md bg-surface border border-line rounded-xl p-6">
+      <div className="max-w-md bg-surface shadow-card rounded-xl p-6">
         <h1 className="text-xl font-semibold mb-2">Connect Supabase</h1>
         <p className="text-sm text-muted">
           Copy <code className="font-mono">.env.example</code> to <code className="font-mono">.env</code> and set{' '}
@@ -32,14 +32,14 @@ function Gate() {
   if (problem && !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-md bg-surface border border-line rounded-xl p-6">
+        <div className="max-w-md bg-surface shadow-card rounded-xl p-6">
           <h1 className="text-xl font-semibold mb-2">Could not load your account</h1>
           <p className="text-sm text-muted mb-4">{problem}</p>
           <div className="flex gap-2">
             <button type="button" onClick={retry} className="min-h-[44px] px-4 rounded-lg bg-ink text-white font-medium">
               Try again
             </button>
-            <button type="button" onClick={signOut} className="min-h-[44px] px-4 rounded-lg border border-line font-medium">
+            <button type="button" onClick={signOut} className="min-h-[44px] px-4 rounded-lg bg-[#eceef1] font-medium">
               Sign out
             </button>
           </div>
@@ -50,10 +50,10 @@ function Gate() {
   if (!profile) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-md bg-surface border border-line rounded-xl p-6">
+        <div className="max-w-md bg-surface shadow-card rounded-xl p-6">
           <h1 className="text-xl font-semibold mb-2">No role assigned</h1>
           <p className="text-sm text-muted mb-4">You are signed in, but your account has no role yet. Ask Inventory to add it, then sign in again.</p>
-          <button type="button" onClick={signOut} className="min-h-[44px] px-4 rounded-lg border border-line font-medium">
+          <button type="button" onClick={signOut} className="min-h-[44px] px-4 rounded-lg bg-[#eceef1] font-medium">
             Sign out
           </button>
         </div>

@@ -125,7 +125,7 @@ export default function BarcodeScanner({ onScan: onScanProp, onClose, title, hin
 
           {mode === 'camera' ? (
             error ? (
-              <div className="rounded-lg border border-line p-4 text-sm">
+              <div className="rounded-lg bg-[#f6f7f8] p-4 text-sm">
                 <p className="mb-3">{error}</p>
                 <button type="button" onClick={() => setMode('manual')} className="min-h-[44px] px-4 rounded-lg bg-ink text-white font-medium">
                   Type or scan instead
@@ -160,7 +160,7 @@ export default function BarcodeScanner({ onScan: onScanProp, onClose, title, hin
                 spellCheck={false}
                 enterKeyHint="done"
                 placeholder="Type, or scan with a handheld scanner"
-                className="w-full min-h-[52px] px-3 rounded-lg border border-line bg-surface font-mono text-lg uppercase focus:border-ink focus:outline-none"
+                className="w-full min-h-[52px] px-3 rounded-lg bg-[#f0f2f4] focus:bg-surface focus:ring-2 focus:ring-ink font-mono text-lg uppercase focus:outline-none"
               />
               <p className="text-[13px] text-muted mt-1.5 mb-4">A handheld scanner types the code and presses Enter for you.</p>
               <button

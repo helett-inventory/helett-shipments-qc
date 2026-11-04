@@ -6,15 +6,14 @@ import { signedUrl } from '../lib/signatures'
 type BtnTone = 'ink' | 'line' | 'lineDanger' | 'lineWarn' | 'danger' | 'warn' | 'ok'
 
 const TONES: Record<BtnTone, string> = {
-  ink: 'bg-ink text-white border border-ink hover:bg-ink/90',
-  line: 'bg-surface text-ink border border-line hover:bg-canvas',
-  // same white button as 'line', only the border carries the colour
-  lineDanger: 'bg-surface text-ink border border-fail hover:bg-fail/5',
-  lineWarn: 'bg-surface text-ink border border-warn hover:bg-warn/5',
-  danger: 'bg-fail text-white border border-fail hover:bg-fail/90',
-  ok: 'bg-ok text-white border border-ok hover:bg-ok/90',
+  ink: 'bg-ink text-white hover:bg-ink/90',
+  line: 'bg-[#eceef1] text-ink hover:bg-[#e1e4e8]',
+  lineDanger: 'bg-[#fde8e6] text-fail hover:bg-[#fbd8d4]',
+  lineWarn: 'bg-[#fdeedb] text-warn hover:bg-[#fbe2c3]',
+  danger: 'bg-fail text-white hover:bg-fail/90',
+  ok: 'bg-ok text-white hover:bg-ok/90',
   // Colour actions are solid: red = removes or releases, orange = cancels, green = approves, black = the main action
-  warn: 'bg-warn text-white border border-warn hover:bg-warn/90'
+  warn: 'bg-warn text-white hover:bg-warn/90'
 }
 
 export function Btn({
@@ -44,7 +43,7 @@ export function Field({ label, hint, children }: { label: string; hint?: string;
 }
 
 export const inputCls =
-  'w-full min-h-[44px] px-3 rounded-lg border border-line bg-surface text-[15px] focus:border-ink focus:outline-none disabled:bg-canvas disabled:text-muted'
+  'w-full min-h-[44px] px-3 rounded-lg bg-[#f0f2f4] focus:bg-surface focus:ring-2 focus:ring-ink focus:outline-none text-[15px] disabled:bg-canvas disabled:text-muted'
 
 // Pick one of a few options (replaces native radios).
 export function Choice<T extends string>({
@@ -66,8 +65,8 @@ export function Choice<T extends string>({
           type="button"
           aria-pressed={o === value}
           onClick={() => onChange(o)}
-          className={`flex-1 min-h-[44px] px-3 rounded-lg border text-[15px] font-medium ${
-            o === value ? 'bg-ink text-white border-ink' : 'bg-surface border-line hover:bg-canvas'
+          className={`flex-1 min-h-[44px] px-3 rounded-lg text-[15px] font-medium ${
+            o === value ? 'bg-ink text-white' : 'bg-[#eceef1] hover:bg-[#e1e4e8]'
           }`}
         >
           {o}
@@ -115,7 +114,7 @@ export function Panel({
   flush?: boolean
 }) {
   return (
-    <section className={`bg-surface border border-line rounded-xl ${flush ? 'overflow-hidden' : ''}`}>
+    <section className={`bg-surface shadow-card rounded-xl ${flush ? 'overflow-hidden' : ''}`}>
       {title && (
         <div className="flex items-center justify-between gap-3 px-4 min-h-[48px] border-b border-line">
           <h2 className="font-semibold">{title}</h2>
@@ -268,16 +267,16 @@ export function HoldStamp() {
 
 export function ErrorBox({ message }: { message: string }) {
   return (
-    <div role="alert" className="border border-fail/30 bg-fail/5 text-fail rounded-lg px-3 py-2.5 text-sm my-3">
+    <div role="alert" className="bg-[#fde8e6] text-fail rounded-lg px-3 py-2.5 text-sm my-3">
       {message}
     </div>
   )
 }
 
 export function Notice({ tone, children }: { tone: 'fail' | 'warn'; children: React.ReactNode }) {
-  const cls = tone === 'fail' ? 'border-fail/30 bg-fail/5 text-fail' : 'border-warn/30 bg-warn/5 text-warn'
+  const cls = tone === 'fail' ? 'bg-[#fde8e6] text-fail' : 'bg-[#fdeedb] text-warn'
   return (
-    <div role="alert" className={`border rounded-lg px-4 py-3 mb-4 text-[15px] font-medium ${cls}`}>
+    <div role="alert" className={`rounded-lg px-4 py-3 mb-4 text-[15px] font-medium ${cls}`}>
       {children}
     </div>
   )

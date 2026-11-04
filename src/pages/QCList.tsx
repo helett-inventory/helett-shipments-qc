@@ -61,7 +61,7 @@ export function QCList() {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search product, FBA ID, record"
           aria-label="Search QC cases"
-          className="w-full lg:w-80 min-h-[44px] px-3 rounded-lg border border-line bg-surface focus:border-ink focus:outline-none"
+          className="w-full lg:w-80 min-h-[44px] px-3 rounded-lg bg-surface shadow-card focus:ring-2 focus:ring-ink focus:outline-none"
         />
         <div className="flex gap-1.5" role="tablist" aria-label="Case status">
           {TABS.map((t) => (
@@ -70,8 +70,8 @@ export function QCList() {
               role="tab"
               aria-selected={tab === t.id}
               onClick={() => setTab(t.id)}
-              className={`flex-1 lg:flex-none min-h-[40px] px-4 rounded-full text-sm font-medium border ${
-                tab === t.id ? 'bg-ink text-white border-ink' : 'bg-surface border-line text-muted hover:text-ink'
+              className={`flex-1 lg:flex-none min-h-[40px] px-4 rounded-full text-sm font-medium ${
+                tab === t.id ? 'bg-ink text-white' : 'bg-surface shadow-card text-muted hover:text-ink'
               }`}
             >
               {t.label}
@@ -88,7 +88,7 @@ export function QCList() {
       {data && rows.length === 0 && <Empty>{tab === 'Open' ? 'Nothing to inspect right now.' : 'No cases here.'}</Empty>}
 
       {rows.length > 0 && (
-        <div className="bg-surface border border-line rounded-xl overflow-hidden">
+        <div className="bg-surface shadow-card rounded-xl overflow-hidden">
           <div className={`hidden lg:grid ${COLS} gap-x-4 px-5 py-2.5 border-b border-line text-[13px] text-muted font-medium`}>
             <span>Product</span>
             <span>Shipment</span>

@@ -21,7 +21,7 @@ interface Props {
 
 function Card({ title, aside, className = '', children }: { title: string; aside?: string; className?: string; children: React.ReactNode }) {
   return (
-    <section className={`bg-surface rounded-xl border border-line mb-4 overflow-visible ${className}`}>
+    <section className={`bg-surface rounded-xl shadow-card mb-4 overflow-visible ${className}`}>
       <div className="flex items-center justify-between gap-3 px-4 min-h-[48px] border-b border-line">
         <h2 className="font-semibold">{title}</h2>
         {aside && <span className="text-[13px] text-muted">{aside}</span>}
@@ -61,8 +61,8 @@ function Segmented<T extends string>({
             disabled={disabled}
             aria-pressed={active}
             onClick={() => onChange(opt)}
-            className={`flex-1 min-h-[48px] px-2 rounded-lg border text-sm font-medium disabled:opacity-60 ${
-              active ? colors?.[opt] ?? 'bg-ink text-white border-ink' : 'bg-surface text-ink border-line'
+            className={`flex-1 min-h-[48px] px-2 rounded-lg text-sm font-medium disabled:opacity-60 ${
+              active ? colors?.[opt] ?? 'bg-ink text-white' : 'bg-[#eceef1] text-ink'
             }`}
           >
             {opt}
@@ -81,7 +81,7 @@ function Stepper({ value, onChange, disabled, label }: { value: number; onChange
         aria-label={`Decrease ${label}`}
         disabled={disabled}
         onClick={() => onChange(Math.max(0, value - 1))}
-        className="w-12 h-12 rounded-lg border border-line text-xl font-semibold text-ink disabled:opacity-50"
+        className="w-12 h-12 rounded-lg bg-[#eceef1] text-xl font-semibold text-ink disabled:opacity-50"
       >
         −
       </button>
@@ -95,14 +95,14 @@ function Stepper({ value, onChange, disabled, label }: { value: number; onChange
           const n = parseInt(e.target.value, 10)
           onChange(isNaN(n) ? 0 : Math.max(0, n))
         }}
-        className="w-20 h-12 text-center text-lg font-medium rounded-lg border border-line disabled:bg-canvas"
+        className="w-20 h-12 text-center text-lg font-medium rounded-lg bg-[#f0f2f4] focus:bg-surface focus:ring-2 focus:ring-ink focus:outline-none disabled:bg-canvas"
       />
       <button
         type="button"
         aria-label={`Increase ${label}`}
         disabled={disabled}
         onClick={() => onChange(value + 1)}
-        className="w-12 h-12 rounded-lg border border-line text-xl font-semibold text-ink disabled:opacity-50"
+        className="w-12 h-12 rounded-lg bg-[#eceef1] text-xl font-semibold text-ink disabled:opacity-50"
       >
         +
       </button>
@@ -113,9 +113,9 @@ function Stepper({ value, onChange, disabled, label }: { value: number; onChange
 const SECTION_ORDER: Record<string, string> = { A: 'order-3', B: 'order-4', C: 'order-5' }
 
 const GOOD_BAD = {
-  Good: 'bg-ok text-white border-ok',
-  Bad: 'bg-fail text-white border-fail',
-  Satisfactory: 'bg-warn text-white border-warn'
+  Good: 'bg-ok text-white',
+  Bad: 'bg-fail text-white',
+  Satisfactory: 'bg-warn text-white'
 }
 
 function ScanRow({
@@ -135,9 +135,9 @@ function ScanRow({
   readOnly: boolean
   onScan: () => void
 }) {
-  const box = ok === true ? 'border-ok/40 bg-ok/5' : ok === false ? 'border-fail/40 bg-fail/5' : 'border-line'
+  const box = ok === true ? 'bg-ok/10' : ok === false ? 'bg-fail/10' : 'bg-[#f6f7f8]'
   return (
-    <div className={`rounded-lg border p-3 mb-2 last:mb-0 ${box}`}>
+    <div className={`rounded-lg p-3 mb-2 last:mb-0 ${box}`}>
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <div className="font-medium">{title}</div>
@@ -205,9 +205,9 @@ export function QCFillForm({ data, draft, readOnly, setDraft, qcSign, setQcSign,
   }
 
   const MARK_STYLE: Record<Mark, string> = {
-    ok: 'bg-ok text-white border-ok',
-    no: 'bg-fail text-white border-fail',
-    na: 'bg-ink text-white border-ink'
+    ok: 'bg-ok text-white',
+    no: 'bg-fail text-white',
+    na: 'bg-ink text-white'
   }
   const MARK_LABEL: Record<Mark, string> = { ok: 'OK', no: 'Not OK', na: 'N/A' }
 
@@ -233,8 +233,8 @@ export function QCFillForm({ data, draft, readOnly, setDraft, qcSign, setQcSign,
                       disabled={readOnly}
                       aria-pressed={c?.r === m}
                       onClick={() => setCheck(item.no, { r: m })}
-                      className={`flex-1 min-h-[48px] lg:min-h-[40px] rounded-lg border text-sm font-medium disabled:opacity-60 ${
-                        c?.r === m ? MARK_STYLE[m] : 'bg-surface text-ink border-line'
+                      className={`flex-1 min-h-[48px] lg:min-h-[40px] rounded-lg text-sm font-medium disabled:opacity-60 ${
+                        c?.r === m ? MARK_STYLE[m] : 'bg-[#eceef1] text-ink'
                       }`}
                     >
                       {MARK_LABEL[m]}
@@ -250,8 +250,8 @@ export function QCFillForm({ data, draft, readOnly, setDraft, qcSign, setQcSign,
                     onChange={(e) => setCheck(item.no, { n: e.target.value })}
                     placeholder="What is wrong? (required)"
                     aria-label={`Item ${item.no} remark`}
-                    className={`mt-2 w-full h-12 px-3 rounded-lg border text-sm disabled:bg-canvas ${
-                      c.n?.trim() ? 'border-line' : 'border-fail'
+                    className={`mt-2 w-full h-12 px-3 rounded-lg text-sm disabled:bg-canvas focus:outline-none focus:ring-2 ${
+                      c.n?.trim() ? 'bg-[#f0f2f4] focus:ring-ink' : 'bg-[#fde8e6] focus:ring-fail'
                     }`}
                   />
                 )}
@@ -370,7 +370,7 @@ export function QCFillForm({ data, draft, readOnly, setDraft, qcSign, setQcSign,
             value={draft.qc_remarks}
             onChange={(e) => setDraft({ qc_remarks: e.target.value })}
             rows={3}
-            className="w-full px-3 py-2 rounded-lg border border-line disabled:bg-canvas"
+            className="w-full px-3 py-2 rounded-lg bg-[#f0f2f4] focus:bg-surface focus:ring-2 focus:ring-ink focus:outline-none disabled:bg-canvas"
           />
         </div>
       </Card>

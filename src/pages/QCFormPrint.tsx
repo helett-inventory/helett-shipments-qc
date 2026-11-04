@@ -64,42 +64,15 @@ function LineForm({ ship, line, page }: { ship: Shipment; line: ShipmentLine; pa
         </div>
 
         <dl className="facts" style={{ margin: 0 }}>
-          <div>
-            <dt>FBA shipment ID</dt>
-            <dd className="mono">{ship.fba_id}</dd>
-          </div>
-          <div>
-            <dt>ASIN</dt>
-            <dd className="mono">{line.asin}</dd>
-          </div>
-          <div>
-            <dt>Mode of dispatch</dt>
-            <dd>{ship.dispatch_mode ?? '—'}</dd>
-          </div>
-          <div>
-            <dt>Warehouse</dt>
-            <dd>{ship.warehouse}</dd>
-          </div>
-          <div>
-            <dt>Dispatch date</dt>
-            <dd>{ship.dispatch_date ? fmtDate(ship.dispatch_date) : '—'}</dd>
-          </div>
-          <div>
-            <dt>Appointment</dt>
-            <dd>{ship.appointment_at ? fmtDateTime(ship.appointment_at) : '—'}</dd>
-          </div>
-          <div>
-            <dt>Units ordered</dt>
-            <dd>{line.unit_qty}</dd>
-          </div>
-          <div>
-            <dt>Boxes (this SKU)</dt>
-            <dd>{line.box_qty ?? '—'}</dd>
-          </div>
-          <div>
-            <dt>Inspection date</dt>
-            <dd className="blank" />
-          </div>
+          <div><dt>FBA shipment ID</dt><dd className="mono">{ship.fba_id}</dd></div>
+          <div><dt>ASIN</dt><dd className="mono">{line.asin}</dd></div>
+          <div><dt>Mode of dispatch</dt><dd>{ship.dispatch_mode ?? '—'}</dd></div>
+          <div><dt>Warehouse</dt><dd>{ship.warehouse}</dd></div>
+          <div><dt>Dispatch date</dt><dd>{ship.dispatch_date ? fmtDate(ship.dispatch_date) : '—'}</dd></div>
+          <div><dt>Appointment</dt><dd>{ship.appointment_at ? fmtDateTime(ship.appointment_at) : '—'}</dd></div>
+          <div><dt>Units ordered</dt><dd>{line.unit_qty}</dd></div>
+          <div><dt>Boxes (this SKU)</dt><dd>{line.box_qty ?? '—'}</dd></div>
+          <div><dt>Inspection date</dt><dd className="blank" /></div>
         </dl>
 
         <div className="figs">
@@ -257,13 +230,13 @@ export function QCFormPrint() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Link to={`/shipments/${data.id}`} className="min-h-[44px] px-4 rounded-lg border border-line bg-surface font-medium flex items-center">
+          <Link to={`/shipments/${data.id}`} className="min-h-[44px] px-4 rounded-lg bg-[#eceef1] hover:bg-[#e1e4e8] font-medium flex items-center">
             Back
           </Link>
           <Btn onClick={() => window.print()}>Print or save PDF</Btn>
         </div>
       </div>
-      <div className="qcform-preview overflow-x-auto px-4 lg:px-6 pb-10">
+      <div className="qcform-preview overflow-x-auto px-4 lg:px-6 pb-10 print:overflow-visible print:p-0">
         <div className="rpt qcform-sheets">
           {lines.map((l) => (
             <div key={l.id} className="contents">

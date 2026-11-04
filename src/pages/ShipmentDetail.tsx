@@ -141,6 +141,7 @@ export function ShipmentDetail() {
         sub={
           <>
             {b.ref} · {b.warehouse}
+            {(isInv || isWm) && <CopyInvoiceData fbaId={b.fba_id} fc={b.warehouse} lines={b.shipment_lines.filter((l) => l.status !== 'Cancelled')} />}
           </>
         }
         action={
@@ -197,15 +198,21 @@ export function ShipmentDetail() {
                       {i && (
                         <Link
                           to={`/qc/${i.id}`}
-                          className={`min-h-[40px] px-3 rounded-lg border flex items-center text-sm font-medium ${
-                            i.status === 'Open' && canFillQc ? 'bg-ok text-white border-ok hover:bg-ok/90' : 'bg-ink text-white border-ink hover:bg-ink/90'
+                          className={`min-h-[40px] px-3 rounded-lg flex items-center text-sm font-medium ${
+                            i.status === 'Open' && canFillQc ? 'bg-ok text-white hover:bg-ok/90' : 'bg-ink text-white hover:bg-ink/90'
                           }`}
                         >
                           {i.status === 'Open' ? (canFillQc ? 'Open QC case' : 'View QC case') : 'View QC record'}
                         </Link>
                       )}
                       {(isInv || isWm) && !finished && l.status === 'QC Open' && i?.status === 'Open' && (
-                        <Btn tone="line" className="!min-h-[40px] text-sm" onClick={() => setModal({ kind: 'manualQc', line: l })}>
+                        <Btn tone="line" className="!min-h-[40px] text-sm inline-flex items-center gap-2" onClick={() => setModal({ kind: 'manualQc', line: l })}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true">
+                            <rect x="3" y="3" width="7" height="7" rx="1" />
+                            <rect x="14" y="3" width="7" height="7" rx="1" />
+                            <rect x="3" y="14" width="7" height="7" rx="1" />
+                            <path strokeLinecap="round" d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3" />
+                          </svg>
                           Mark QC done
                         </Btn>
                       )}
@@ -296,7 +303,7 @@ export function ShipmentDetail() {
                     {c.scanned && <span className="block font-mono text-xs text-muted break-all">{c.scanned}</span>}
                     {c.ok === false && <span className="block text-sm text-fail">{BOX_REASON[c.reason ?? ''] ?? 'Label does not match this shipment.'}</span>}
                   </span>
-                  <div className="shrink-0 flex flex-col items-end gap-2">
+                  <div className="shrink-0 flex items-center justify-end gap-3">
                     {c.ok === null ? <Chip tone="gray">Not scanned</Chip> : c.ok ? <Chip tone="ok">Label OK</Chip> : <Chip tone="fail">Rejected</Chip>}
                     {isInv && !finished && c.ok !== true && (
                       <Btn className="!min-h-[40px] text-sm" onClick={() => setScanId(c.id)}>
@@ -324,7 +331,7 @@ export function ShipmentDetail() {
               Activity log <span className="text-muted font-normal">{b.audit.length}</span>
             </button>
             {showAudit && (
-              <ul className="bg-surface border border-line rounded-xl text-sm overflow-hidden">
+              <ul className="bg-surface shadow-card rounded-xl text-sm overflow-hidden">
                 {b.audit.length === 0 && <li className="p-4 text-muted">No entries.</li>}
                 {b.audit.map((a) => (
                   <li key={a.id} className="p-4 border-t first:border-t-0 border-line">
@@ -364,7 +371,7 @@ export function ShipmentDetail() {
                 <div>
                   <dt className="text-[13px] text-muted">Time left to cancel or reschedule</dt>
                   <dd className="mt-1">
-                    <DeadlineBadge shipment={b} />
+                    <DeadlineBadge shipment={b} seconds />
                   </dd>
                 </div>
               )}
@@ -377,7 +384,7 @@ export function ShipmentDetail() {
             </dl>
             {(isInv || isWm) && b.status !== 'Cancelled' && (
               <div className="mt-5 pt-4 border-t border-line">
-                <Link to={`/shipments/${b.id}/qc-form`} className="min-h-[44px] px-4 rounded-lg border border-line bg-surface font-medium flex items-center justify-center hover:bg-canvas">
+                <Link to={`/shipments/${b.id}/qc-form`} className="min-h-[44px] px-4 rounded-lg bg-[#eceef1] hover:bg-[#e1e4e8] font-medium flex items-center justify-center">
                   Print QC form
                 </Link>
               </div>
@@ -794,7 +801,7 @@ function DispatchModal({
   return (
     <Modal title={onlyLine ? `Dispatch ${readyLines.find((l) => l.id === onlyLine)?.product_name ?? ""}` : "Confirm dispatch"} onClose={onClose}>
       {blocker && <ErrorBox message={blocker} />}
-      <div className="mb-4 border border-line rounded-lg bg-surface overflow-hidden">
+      <div className="mb-4 rounded-lg bg-[#f6f7f8] overflow-hidden">
         {readyLines.map((l) => (
           <div key={l.id} className="p-3 border-t first:border-t-0 border-line">
             <label className="flex items-start gap-3 min-h-[44px]">
@@ -894,6 +901,65 @@ function ApproveModal({ onClose, onSave }: { onClose: () => void; onSave: (signD
         {busy ? 'Saving…' : 'Approve'}
       </Btn>
     </Modal>
+  )
+}
+
+// Tab-separated rows (one per SKU line) that paste straight into a spreadsheet, for the accounts team's invoice.
+function CopyInvoiceData({ fbaId, fc, lines }: { fbaId: string; fc: string; lines: ShipmentLine[] }) {
+  const [state, setState] = useState<'idle' | 'busy' | 'done' | 'failed'>('idle')
+  async function copy() {
+    setState('busy')
+    try {
+      const skus = await getSkus()
+      const rows = [
+        ['FBA number', 'Destination FC', 'ASIN', 'SKU', 'FNSKU', 'Box qty', 'Qty'],
+        ...lines.map((l) => {
+          const m = skus.find((x) => x.asin === l.asin)
+          return [fbaId, fc, l.asin, m?.sku ?? '', m?.fnsku ?? '', l.box_qty ?? '', l.unit_qty].map(String)
+        })
+      ]
+      const text = rows.map((r) => r.join('\t')).join('\n')
+      try {
+        await navigator.clipboard.writeText(text)
+      } catch {
+        const ta = document.createElement('textarea')
+        ta.value = text
+        ta.style.position = 'fixed'
+        ta.style.opacity = '0'
+        document.body.appendChild(ta)
+        ta.select()
+        const ok = document.execCommand('copy')
+        document.body.removeChild(ta)
+        if (!ok) throw new Error('copy failed')
+      }
+      setState('done')
+    } catch {
+      setState('failed')
+    }
+    window.setTimeout(() => setState('idle'), 2200)
+  }
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      disabled={state === 'busy'}
+      title="Copies FBA number, ASIN, SKU, FNSKU, box qty and qty for every SKU, tab separated, ready to paste into a spreadsheet"
+      className={`ml-3 inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-[13px] font-semibold align-middle ${
+        state === 'done' ? 'bg-[#d8f2e0] text-[#0f6b32]' : state === 'failed' ? 'bg-[#fde8e6] text-fail' : 'bg-[#eceef1] text-ink hover:bg-[#e1e4e8]'
+      }`}
+    >
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        {state === 'done' ? (
+          <path d="M5 12.5 10 17.5 19 7" />
+        ) : (
+          <>
+            <rect x="9" y="9" width="11" height="11" rx="2" />
+            <path d="M5 15V6a2 2 0 0 1 2-2h9" />
+          </>
+        )}
+      </svg>
+      {state === 'done' ? 'Copied' : state === 'failed' ? 'Copy failed' : 'Copy invoice data'}
+    </button>
   )
 }
 

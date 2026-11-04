@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { changeDeadline, hoursText, urgency } from '../lib/deadline'
+import { changeDeadline, hmsText, hoursText, urgency } from '../lib/deadline'
 import { fmtShortDateTime } from '../lib/format'
 import type { Shipment } from '../types/db'
 
@@ -20,17 +20,17 @@ const STYLE = {
 } as const
 
 // "72:20 hrs to go" as plain text. Black normally, orange under 24 hours, red once the deadline has passed. Hover shows the exact time.
-export function DeadlineBadge({ shipment }: { shipment: Pick<Shipment, 'status' | 'dispatch_mode' | 'appointment_at' | 'dispatch_date'> }) {
-  const now = useNow()
+export function DeadlineBadge({ shipment, seconds }: { shipment: Pick<Shipment, 'status' | 'dispatch_mode' | 'appointment_at' | 'dispatch_date'>; seconds?: boolean }) {
+  const now = useNow(seconds ? 1000 : 60_000)
   const d = changeDeadline(shipment)
   if (!d) return null
   const level = urgency(d, now)
   return (
     <span
-      className={`inline-block text-[13px] font-semibold whitespace-nowrap ${STYLE[level]}`}
+      className={`inline-block text-[13px] font-semibold tabular-nums whitespace-nowrap ${STYLE[level]}`}
       title={`Amazon deadline to cancel or reschedule: ${fmtShortDateTime(d.toISOString())}`}
     >
-      {hoursText(d, now)}
+      {seconds ? hmsText(d, now) : hoursText(d, now)}
     </span>
   )
 }

@@ -142,7 +142,7 @@ export function AppShell() {
             {menuOpen && (
               <div
                 id="account-menu"
-                className="absolute right-3 top-[calc(100%-6px)] w-56 bg-surface border border-line rounded-xl shadow-lg p-3"
+                className="absolute right-3 top-[calc(100%-6px)] w-56 bg-surface rounded-xl shadow-lg ring-1 ring-black/5 p-3"
               >
                 <div className="text-sm font-medium truncate">{profile?.name}</div>
                 <div className="text-[13px] text-muted mb-3">{profile?.is_admin ? 'Admin' : profile ? ROLE_LABEL[profile.role] : ''}</div>
