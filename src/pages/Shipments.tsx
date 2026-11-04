@@ -143,20 +143,8 @@ export function Shipments() {
 
   const needDecision = useMemo(() => (data ?? []).filter((s) => withinWatch(changeDeadline(s))).length, [data])
 
-  return (
-    <Page wide>
-      <StickyHead wide>
-      <PageTitle
-        title="Shipments"
-        action={
-          (profile?.role === 'inventory' || !!profile?.is_admin) && (
-            <Link to="/shipments/new" className="min-h-[44px] px-4 rounded-lg bg-ink text-white font-medium flex items-center">
-              New shipment
-            </Link>
-          )
-        }
-      />
-      <div className="flex flex-col lg:flex-row lg:items-center gap-3 pt-1 pb-3">
+  const filterBar = (cls: string) => (
+      <div className={`flex-col lg:flex-row lg:items-center gap-3 pt-1 pb-3 ${cls}`}>
         <input
           type="search"
           value={query}
@@ -182,7 +170,24 @@ export function Shipments() {
           ))}
         </div>
       </div>
+  )
+
+  return (
+    <Page wide>
+      <StickyHead wide>
+      <PageTitle
+        title="Shipments"
+        action={
+          (profile?.role === 'inventory' || !!profile?.is_admin) && (
+            <Link to="/shipments/new" className="min-h-[44px] px-4 rounded-lg bg-ink text-white font-medium flex items-center">
+              New shipment
+            </Link>
+          )
+        }
+      />
+      {filterBar('hidden lg:flex')}
       </StickyHead>
+      {filterBar('flex lg:hidden pt-3')}
 
       {showDeadlines && needDecision > 0 && filter !== 'deadline' && (
         <div role="alert" className="mb-4 rounded-lg bg-[#fdeedb] px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
@@ -253,7 +258,7 @@ export function Shipments() {
                     <li key={s.id}>
                       <Link
                         to={`/shipments/${s.id}`}
-                        className={`grid grid-cols-[1fr_auto] ${COLS} gap-x-4 gap-y-1 px-4 lg:px-5 py-4 lg:py-5 items-center hover:bg-canvas ${
+                        className={`flex flex-col gap-2.5 lg:grid ${COLS} lg:gap-x-4 lg:gap-y-1 px-4 lg:px-5 py-4 lg:py-5 lg:items-center hover:bg-canvas ${
                           s.on_hold ? 'bg-fail/[0.04]' : ''
                         }`}
                       >
@@ -263,15 +268,18 @@ export function Shipments() {
                             <ModePill mode={s.dispatch_mode} />
                           </div>
                         </div>
-                        <div className="flex flex-wrap justify-end gap-1.5 lg:justify-start lg:col-start-6 lg:row-start-1">
+                        <div className="flex flex-wrap gap-1.5 lg:col-start-6 lg:row-start-1">
                           {s.on_hold && <HoldStamp />}
                           {(s.status === 'QC Done' || s.status === 'Partially Dispatched') && needsBoxLabels(s.dispatch_mode ?? '') && s.box_label_checks.some((c) => !c.scanned) && <Chip tone="warn">Box labels pending</Chip>}
                           {awaiting && <StatusStamp status="Awaiting WM" />}
                           <StatusStamp status={s.status} />
                         </div>
-                        <div className="col-span-2 text-sm text-muted lg:text-ink lg:col-span-1 lg:col-start-2 lg:row-start-1">{s.warehouse}</div>
-                        <div className="col-span-2 text-sm lg:col-span-1 lg:col-start-3 lg:row-start-1 min-w-0">
-                          <span className="block truncate">
+                        <div className="text-sm text-muted lg:text-ink lg:col-start-2 lg:row-start-1">
+                          <span className="lg:hidden">Destination FC </span>
+                          <span className="max-lg:font-medium max-lg:text-ink">{s.warehouse}</span>
+                        </div>
+                        <div className="text-sm lg:col-start-3 lg:row-start-1 min-w-0">
+                          <span className="block max-lg:font-medium lg:truncate">
                             {first}
                             {more > 0 && <span className="text-muted"> +{more} more</span>}
                           </span>
@@ -279,22 +287,24 @@ export function Shipments() {
                             {units} units · {s.box_qty_total} boxes
                           </span>
                         </div>
-                        <div className="col-span-2 text-sm text-muted lg:text-ink lg:col-span-1 lg:col-start-4 lg:row-start-1">
-                          <span className="lg:hidden">Dispatch </span>
-                          {s.dispatch_date ? fmtDate(s.dispatch_date) : '—'}
+                        <div className="flex flex-col gap-1.5 max-lg:bg-[#f4f5f6] max-lg:rounded-lg max-lg:px-3 max-lg:py-2.5 lg:contents">
+                        <div className="flex justify-between gap-3 text-sm text-muted lg:text-ink lg:block lg:col-start-4 lg:row-start-1">
+                          <span className="lg:hidden">Dispatch</span>
+                          <span className="max-lg:text-ink max-lg:font-medium">{s.dispatch_date ? fmtDate(s.dispatch_date) : '—'}</span>
                         </div>
-                        <div className="col-span-2 text-sm text-muted lg:col-span-1 lg:col-start-5 lg:row-start-1">
+                        <div className="text-sm text-muted lg:col-start-5 lg:row-start-1">
                           {s.appointment_at ? (
-                            <>
-                              <span className="lg:hidden">Appointment </span>
-                              {fmtDateTime(s.appointment_at)}
-                            </>
+                            <div className="flex justify-between gap-3 lg:block">
+                              <span className="lg:hidden">Appointment</span>
+                              <span className="max-lg:text-ink max-lg:font-medium">{fmtDateTime(s.appointment_at)}</span>
+                            </div>
                           ) : (
                             needsAppointment(s.dispatch_mode ?? '') ? 'No appointment' : '—'
                           )}
                           <div className="mt-1">
                             {showDeadlines && <DeadlineBadge shipment={s} />}
                           </div>
+                        </div>
                         </div>
                       </Link>
                     </li>

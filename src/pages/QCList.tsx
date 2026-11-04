@@ -50,11 +50,8 @@ export function QCList() {
       )
   }, [live, tab, query])
 
-  return (
-    <Page wide>
-      <StickyHead wide>
-        <PageTitle title="QC cases" />
-      <div className="flex flex-col lg:flex-row lg:items-center gap-3 pt-1 pb-3">
+  const filterBar = (cls: string) => (
+      <div className={`flex-col lg:flex-row lg:items-center gap-3 pt-1 pb-3 ${cls}`}>
         <input
           type="search"
           value={query}
@@ -82,7 +79,15 @@ export function QCList() {
           ))}
         </div>
       </div>
+  )
+
+  return (
+    <Page wide>
+      <StickyHead wide>
+        <PageTitle title="QC cases" />
+      {filterBar('hidden lg:flex')}
       </StickyHead>
+      {filterBar('flex lg:hidden pt-3')}
 
       {error && <ErrorBox message={error} />}
       {loading && !data && <Loading />}
