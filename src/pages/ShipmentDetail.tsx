@@ -873,8 +873,9 @@ function DispatchModal({
 
 function ApproveModal({ onClose, onSave }: { onClose: () => void; onSave: (signDataUrl: string, name: string) => Promise<void> }) {
   const { profile } = useAuth()
-  const people = usePeople((p) => p.role === 'wm' || !!p.is_admin, [profile?.name ?? '', 'Mohammed Misbahudeen'])
-  const [by, setBy] = useState(profile?.name ?? '')
+  // Only warehouse managers are listed as approvers, never admins or whoever happens to be logged in.
+  const people = usePeople((p) => p.role === 'wm' && !p.is_admin, ['Mohammed Misbahudeen'])
+  const [by, setBy] = useState(profile?.role === 'wm' && !profile.is_admin ? profile.name : '')
   const [sign, setSign] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
