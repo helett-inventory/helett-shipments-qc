@@ -120,7 +120,7 @@ export function QCList() {
                     </div>
                     <div className="col-span-2 text-sm lg:col-span-1 lg:col-start-2 lg:row-start-1">
                       <span className="font-mono">{s.fba_id}</span>
-                      <span className="text-muted"> · {s.warehouse}</span>
+                      <span className="text-muted"> · {s.warehouse}{s.dispatch_mode ? ` · ${s.dispatch_mode}` : ""}</span>
                     </div>
                     <div className="col-span-2 text-sm text-muted lg:text-ink lg:col-span-1 lg:col-start-3 lg:row-start-1">
                       {l.unit_qty} units

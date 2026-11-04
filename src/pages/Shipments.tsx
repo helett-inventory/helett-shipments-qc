@@ -259,6 +259,7 @@ export function Shipments() {
                       >
                         <div className="min-w-0 lg:col-start-1 lg:row-start-1">
                           <div className="font-mono font-medium truncate">{s.fba_id}</div>
+                          <div className="text-sm text-muted truncate">{s.dispatch_mode ?? 'No mode'}</div>
                         </div>
                         <div className="flex flex-wrap justify-end gap-1.5 lg:justify-start lg:col-start-6 lg:row-start-1">
                           {s.on_hold && <HoldStamp />}
