@@ -9,6 +9,7 @@ import { ShipmentNew } from './pages/ShipmentNew'
 import { ShipmentDetail } from './pages/ShipmentDetail'
 import { QCList } from './pages/QCList'
 import { QCRecord } from './pages/QCRecord'
+import { QCFormPrint } from './pages/QCFormPrint'
 
 function Setup() {
   return (
@@ -66,6 +67,7 @@ function Gate() {
         <Route path="/shipments" element={<Shipments />} />
         <Route path="/shipments/new" element={(profile.role === 'inventory' || !!profile.is_admin) ? <ShipmentNew /> : <Navigate to="/" replace />} />
         <Route path="/shipments/:id" element={<ShipmentDetail />} />
+        <Route path="/shipments/:id/qc-form" element={profile.role === 'qc' && !profile.is_admin ? <Navigate to="/" replace /> : <QCFormPrint />} />
         <Route path="/qc" element={<QCList />} />
         <Route path="/qc/:id" element={<QCRecord />} />
         <Route path="*" element={<Navigate to="/" replace />} />

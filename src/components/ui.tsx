@@ -176,24 +176,68 @@ export function Modal({
 
 /* ------------------------------------------------------------ status */
 
-type Tone = 'gray' | 'warn' | 'info' | 'ok' | 'fail'
+type Tone = 'gray' | 'new' | 'warn' | 'info' | 'ok' | 'fail'
 
-// Badges are labels, not buttons, so none is filled: done states (Closed, Label OK) are a green outline with green text, the rest a black outline.
-const OUTLINE = 'bg-surface text-ink border-ink'
+// Badges are labels, not buttons: a rounded pill with no outline, bold text, and a small coloured glyph that carries the meaning.
+// Done states (Closed, Label OK) also turn the text green.
 const CHIP: Record<Tone, string> = {
-  gray: OUTLINE,
-  warn: OUTLINE,
-  info: OUTLINE,
-  ok: 'bg-surface text-ok border-ok',
-  fail: OUTLINE
+  gray: 'bg-[#eceef2] text-ink',
+  new: 'bg-[#fdf1c4] text-[#6b4a05]', // Created, Open: yellow
+  warn: 'bg-[#eceef2] text-ink',
+  info: 'bg-[#eceef2] text-ink',
+  ok: 'bg-[#d8f2e0] text-[#0f6b32]', // Closed: green
+  fail: 'bg-[#eceef2] text-ink'
+}
+
+function Glyph({ tone }: { tone: Tone }) {
+  const c = { className: 'shrink-0', width: 10, height: 10, viewBox: '0 0 10 10', 'aria-hidden': true } as const
+  switch (tone) {
+    case 'ok':
+      return (
+        <svg {...c} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M1.5 5.5 4 8l4.5-6" />
+        </svg>
+      )
+    case 'warn':
+      return (
+        <svg {...c} className="shrink-0 text-warn">
+          <circle cx="5" cy="5" r="4" fill="none" stroke="currentColor" strokeWidth="1.4" />
+          <path d="M5 1a4 4 0 0 1 0 8z" fill="currentColor" />
+        </svg>
+      )
+    case 'info':
+      return (
+        <svg {...c} className="shrink-0 text-info">
+          <circle cx="5" cy="5" r="4" fill="currentColor" />
+        </svg>
+      )
+    case 'fail':
+      return (
+        <svg {...c} className="shrink-0 text-fail">
+          <path d="M5 1 9.5 9h-9z" fill="currentColor" />
+        </svg>
+      )
+    case 'new':
+      return (
+        <svg {...c}>
+          <circle cx="5" cy="5" r="3.6" fill="none" stroke="currentColor" strokeWidth="1.6" />
+        </svg>
+      )
+    default:
+      return (
+        <svg {...c} className="shrink-0 text-muted">
+          <circle cx="5" cy="5" r="3.6" fill="none" stroke="currentColor" strokeWidth="1.4" />
+        </svg>
+      )
+  }
 }
 
 const STATUS_TONE: Record<string, Tone> = {
-  Created: 'gray',
+  Created: 'new',
   Cancelled: 'gray',
   'QC In Progress': 'warn',
-  'QC Open': 'warn',
-  Open: 'warn',
+  'QC Open': 'new',
+  Open: 'new',
   'Not Dispatched': 'warn',
   'QC Done': 'info',
   'QC Submitted': 'info',
@@ -206,14 +250,16 @@ const STATUS_TONE: Record<string, Tone> = {
 
 export function Chip({ tone, children }: { tone: Tone; children: React.ReactNode }) {
   return (
-    <span className={`inline-flex items-center h-6 px-2.5 rounded-md border text-[13px] leading-none font-medium whitespace-nowrap ${CHIP[tone]}`}>
+    <span className={`inline-flex items-center gap-1.5 h-7 pl-2.5 pr-3 rounded-full text-[13px] leading-none font-semibold whitespace-nowrap ${CHIP[tone]}`}>
+      <Glyph tone={tone} />
       {children}
     </span>
   )
 }
 
 export function StatusStamp({ status }: { status: string }) {
-  return <Chip tone={STATUS_TONE[status] ?? 'gray'}>{status}</Chip>
+  // A new shipment is simply "Open" to people; the stored status stays "Created".
+  return <Chip tone={STATUS_TONE[status] ?? 'gray'}>{status === 'Created' ? 'Open' : status}</Chip>
 }
 
 export function HoldStamp() {

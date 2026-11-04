@@ -61,6 +61,8 @@ export interface Inspection {
   qc_sign_path: string | null
   submitted_at: string | null
   needs_recheck: boolean
+  manual?: boolean
+  manual_by?: string | null
 }
 
 export interface ShipmentLine {

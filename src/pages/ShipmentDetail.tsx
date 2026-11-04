@@ -14,6 +14,7 @@ import { getSkus } from '../services/lookups'
 import { changeDeadline, hoursText, urgency } from '../lib/deadline'
 import { DeadlineBadge, useNow } from '../components/DeadlineBadge'
 import { invalidateAll } from '../lib/cache'
+import { lineFromQr } from '../lib/manualQc'
 import { DISPATCH_MODES, FULFILMENT_CENTRES, TRANSPORTS, needsAppointment, needsBoxLabels, needsTransport, type DispatchMode } from '../data/options'
 import { ConfirmModal, ReviewStep, type Change } from '../components/ReasonModal'
 import type { AuditRow, BoxCheck, Dispatch, Inspection, Shipment, ShipmentLine, SkuRow } from '../types/db'
@@ -58,7 +59,7 @@ export function ShipmentDetail() {
       const { data, error } = await supabase
         .from('shipments')
         .select(
-          '*, shipment_lines(*, inspections(id, record_no, status, accepted_qty, rejected_qty, needs_recheck)), dispatches(*, dispatch_lines(*)), box_label_checks(*)'
+          '*, shipment_lines(*, inspections(id, record_no, status, accepted_qty, rejected_qty, needs_recheck, manual)), dispatches(*, dispatch_lines(*)), box_label_checks(*)'
         )
         .eq('id', id!)
         .single()
@@ -182,7 +183,7 @@ export function ShipmentDetail() {
                         </div>
                         {i && i.status !== 'Open' && (
                           <div className="text-sm mt-1">
-                            Passed {i.accepted_qty} · Failed {i.rejected_qty} · Dispatched {sent}
+                            Passed {i.accepted_qty} · Failed {i.rejected_qty} · Dispatched {sent}{i.manual ? ' · Paper form' : ''}
                           </div>
                         )}
                         {i && i.status !== 'Open' && i.accepted_qty < l.unit_qty && l.status !== 'Cancelled' && (
@@ -202,6 +203,11 @@ export function ShipmentDetail() {
                         >
                           {i.status === 'Open' ? (canFillQc ? 'Open QC case' : 'View QC case') : 'View QC record'}
                         </Link>
+                      )}
+                      {(isInv || isWm) && !finished && l.status === 'QC Open' && i?.status === 'Open' && (
+                        <Btn tone="line" className="!min-h-[40px] text-sm" onClick={() => setModal({ kind: 'manualQc', line: l })}>
+                          Mark QC done
+                        </Btn>
                       )}
                       {isInv && !finished && l.status !== 'Cancelled' && (
                         <>
@@ -369,6 +375,13 @@ export function ShipmentDetail() {
               <Fact k="Created" v={fmtDate(b.created_at)} />
               {b.remarks && <Fact k="Remarks" v={b.remarks} />}
             </dl>
+            {(isInv || isWm) && b.status !== 'Cancelled' && (
+              <div className="mt-5 pt-4 border-t border-line">
+                <Link to={`/shipments/${b.id}/qc-form`} className="min-h-[44px] px-4 rounded-lg border border-line bg-surface font-medium flex items-center justify-center hover:bg-canvas">
+                  Print QC form
+                </Link>
+              </div>
+            )}
             {isInv && !finished && (
               <div className="flex flex-col gap-2 mt-5 pt-4 border-t border-line">
                 <Btn onClick={() => setModal({ kind: 'editShipment' })}>Edit details</Btn>
@@ -446,6 +459,13 @@ export function ShipmentDetail() {
           confirmLabel="Restore line"
           onClose={close}
           onConfirm={() => rpc('set_line_state', { p_line: modal.line!.id, p_state: 'Restore' })}
+        />
+      )}
+      {modal?.kind === 'manualQc' && modal.line && (
+        <ManualQcModal
+          line={modal.line}
+          onClose={close}
+          onSave={(checked, failed, by) => rpc('manual_qc', { p_line: modal.line!.id, p: { checked, failed, by_name: by } })}
         />
       )}
       {modal?.kind === 'editShipment' && <EditShipmentModal b={b} onClose={close} onSave={(c) => rpc('update_shipment', { p_id: b.id, p_changes: c })} />}
@@ -873,6 +893,96 @@ function ApproveModal({ onClose, onSave }: { onClose: () => void; onSave: (signD
       <Btn tone="ok" className="w-full" onClick={go} disabled={busy}>
         {busy ? 'Saving…' : 'Approve'}
       </Btn>
+    </Modal>
+  )
+}
+
+function ManualQcModal({
+  line,
+  onClose,
+  onSave
+}: {
+  line: LineRow
+  onClose: () => void
+  onSave: (checked: number, failed: number, by: string) => Promise<void>
+}) {
+  const { profile } = useAuth()
+  const people = usePeople((p) => p.role === 'wm' || p.role === 'inventory' || !!p.is_admin, [profile?.name ?? ''])
+  const [linked, setLinked] = useState(false)
+  const [scanning, setScanning] = useState(false)
+  const [checked, setChecked] = useState('')
+  const [failed, setFailed] = useState('0')
+  const [by, setBy] = useState(profile?.name ?? '')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const c = parseInt(checked, 10)
+  const f = parseInt(failed, 10)
+  const passed = Number.isFinite(c) && Number.isFinite(f) ? c - f : null
+
+  function onScan(code: string) {
+    setScanning(false)
+    const id = lineFromQr(code)
+    if (!id) return setError('This is not a Helett QC form QR code.')
+    if (id !== line.id) return setError('This QR belongs to a different SKU line or shipment. Scan the form for this line.')
+    setError(null)
+    setLinked(true)
+  }
+
+  async function go() {
+    if (!Number.isFinite(c) || c < 1) return setError('Enter how many units were checked.')
+    if (!Number.isFinite(f) || f < 0) return setError('Enter how many units failed (0 if none).')
+    if (f > c) return setError('Failed cannot be more than checked.')
+    if (!by) return setError('Choose who is entering this.')
+    setBusy(true)
+    setError(null)
+    try {
+      await onSave(c, f, by)
+      onClose()
+    } catch (e) {
+      setError(errText(e))
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Modal title={`Mark QC done: ${line.product_name}`} onClose={onClose}>
+      {!linked ? (
+        <>
+          <p className="text-sm mb-4">Scan the QR code on the filled paper QC form. This links the paper to this SKU line.</p>
+          {error && <ErrorBox message={error} />}
+          <Btn className="w-full" onClick={() => setScanning(true)}>
+            Scan QR code
+          </Btn>
+          {scanning && (
+            <Suspense fallback={null}>
+              <BarcodeScanner title="Scan the QR on the QC form" hint="Code printed under the QR, or use a scanner" onScan={onScan} onClose={() => setScanning(false)} />
+            </Suspense>
+          )}
+        </>
+      ) : (
+        <>
+          <p className="text-sm text-ok font-medium mb-4">Paper form linked to this line. Enter the totals written on it.</p>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Units checked">
+              <input type="number" min={1} inputMode="numeric" value={checked} onChange={(e) => setChecked(e.target.value)} className={inputCls} />
+            </Field>
+            <Field label="Units failed">
+              <input type="number" min={0} inputMode="numeric" value={failed} onChange={(e) => setFailed(e.target.value)} className={inputCls} />
+            </Field>
+          </div>
+          <p className="text-sm text-muted mb-4">
+            Passed: <b className="text-ink">{passed != null && passed >= 0 ? passed : '—'}</b> of {line.unit_qty} ordered
+          </p>
+          <div className="mb-4">
+            <span className="block text-sm font-medium mb-1.5">Entered by</span>
+            <SearchableSelect options={people} value={by} onChange={setBy} placeholder="Choose name" />
+          </div>
+          {error && <ErrorBox message={error} />}
+          <Btn tone="ok" className="w-full" onClick={go} disabled={busy}>
+            {busy ? 'Saving…' : 'Close QC case'}
+          </Btn>
+        </>
+      )}
     </Modal>
   )
 }

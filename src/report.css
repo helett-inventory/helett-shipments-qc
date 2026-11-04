@@ -98,3 +98,19 @@
 
 /* footer */
 .rpt .foot { position: absolute; left: 15mm; right: 15mm; bottom: 8mm; display: flex; justify-content: space-between; border-top: 1px solid var(--rule); padding-top: 1.8mm; font-size: 7.5pt; color: var(--muted); }
+
+/* ---- blank QC form (printed, filled in by hand) ---- */
+.rpt .qrref { display: flex; align-items: flex-end; gap: 4mm; }
+.rpt .qrref b { display: block; font-size: 11pt; color: var(--ink); font-weight: 600; }
+.rpt .qr { width: 22mm; height: 22mm; display: block; image-rendering: pixelated; }
+.rpt .tick { display: inline-block; width: 4.2mm; height: 4.2mm; border: 1.1px solid var(--ink); border-radius: 0.6mm; vertical-align: -1mm; }
+.rpt .blank { border-bottom: 1px solid var(--ink); min-height: 5mm; }
+.rpt td.blank-cell { border-bottom: 1px solid var(--ink); height: 7mm; }
+.rpt .figs .n.blank { border-bottom: 1px solid var(--ink); margin-bottom: 1mm; }
+.rpt .facts dd.blank { height: 5mm; }
+
+.rpt.qcform-sheets .sheet { break-after: page; page-break-after: always; }
+.rpt.qcform-sheets > .contents:last-child > .sheet:last-child { break-after: auto; page-break-after: auto; }
+@media screen {
+  .rpt.qcform-sheets .sheet { margin: 0 auto 6mm; box-shadow: 0 0 0 1px #cfd3d8; }
+}
