@@ -6,7 +6,7 @@ import { errText, supabase, callRpc } from '../lib/supabase'
 import { uploadSignature } from '../lib/signatures'
 import { todayISO } from '../lib/format'
 import { ALL_ITEMS } from '../data/checklist'
-import { BackLink, StickyHead, Btn, ErrorBox, HoldStamp, Loading, Modal, Notice, Page, StatusStamp } from '../components/ui'
+import { BackLink, Btn, ErrorBox, HoldStamp, Loading, Modal, Notice, Page, StatusStamp } from '../components/ui'
 import { ConfirmModal } from '../components/ReasonModal'
 import { QCFillForm } from '../components/QCFillForm'
 import { usePeople } from '../hooks/usePeople'
@@ -198,8 +198,8 @@ export function QCRecord() {
 
   return (
     <div>
-      <div className={`no-print mx-auto px-4 lg:px-8 pt-4 max-w-2xl lg:max-w-6xl`}>
-        <StickyHead>
+      <div className="no-print sticky top-14 lg:top-0 z-20 bg-canvas">
+       <div className="mx-auto px-4 lg:px-8 pt-4 pb-1 max-w-2xl lg:max-w-6xl">
         <BackLink to="/qc">QC cases</BackLink>
         <div className="flex items-start justify-between gap-3 mt-1 mb-2">
           <div className="min-w-0">
@@ -213,7 +213,9 @@ export function QCRecord() {
             <StatusStamp status={data.insp.status} />
           </span>
         </div>
-        </StickyHead>
+       </div>
+      </div>
+      <div className="no-print mx-auto px-4 lg:px-8 pt-2 max-w-2xl lg:max-w-6xl">
 
         {data.ship.on_hold && (
           <Notice tone="fail">

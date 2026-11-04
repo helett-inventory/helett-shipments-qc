@@ -222,7 +222,7 @@ export function QCFormPrint() {
 
   return (
     <div>
-      <div className="no-print mx-auto px-4 lg:px-6 pt-4 pb-3 max-w-[1100px] flex items-center justify-between gap-3 flex-wrap">
+      <div className="no-print sticky top-14 lg:top-0 z-20 bg-canvas"><div className="mx-auto px-4 lg:px-6 pt-4 pb-3 max-w-[1100px] flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-xl font-semibold">QC form</h1>
           <p className="text-sm text-muted">
@@ -235,6 +235,7 @@ export function QCFormPrint() {
           </Link>
           <Btn onClick={() => window.print()}>Print or save PDF</Btn>
         </div>
+      </div>
       </div>
       <div className="qcform-preview overflow-x-auto px-4 lg:px-6 pb-10 print:overflow-visible print:p-0">
         <div className="rpt qcform-sheets">
