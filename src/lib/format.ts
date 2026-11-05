@@ -2,6 +2,10 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
+// 12-hour clock: 22:45 -> "10:45 PM", 00:05 -> "12:05 AM".
+const h12 = (d: Date) => `${d.getHours() % 12 || 12}`
+const ampm = (d: Date) => (d.getHours() < 12 ? 'AM' : 'PM')
+
 // 'YYYY-MM-DD' is a calendar date, not an instant: parse it as local so the
 // day never shifts with the viewer's timezone.
 function parseDateOnly(s: string): Date | null {
@@ -21,14 +25,14 @@ export function fmtTime(s: string | null | undefined): string {
   if (!s) return ''
   const d = new Date(s)
   if (isNaN(d.getTime())) return ''
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`
+  return `${h12(d)}:${pad(d.getMinutes())} ${ampm(d)}`
 }
 
 export function fmtTimeSec(s: string | null | undefined): string {
   if (!s) return ''
   const d = new Date(s)
   if (isNaN(d.getTime())) return ''
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+  return `${h12(d)}:${pad(d.getMinutes())}:${pad(d.getSeconds())} ${ampm(d)}`
 }
 
 export function fmtDateTime(s: string | null | undefined): string {
@@ -75,5 +79,5 @@ export function fmtShortDateTime(s: string | null | undefined): string {
   if (!s) return ''
   const d = new Date(s)
   if (isNaN(d.getTime())) return ''
-  return `${pad(d.getDate())} ${MONTHS[d.getMonth()]}, ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  return `${pad(d.getDate())} ${MONTHS[d.getMonth()]}, ${h12(d)}:${pad(d.getMinutes())} ${ampm(d)}`
 }
