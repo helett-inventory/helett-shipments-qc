@@ -73,6 +73,9 @@ export interface ShipmentLine {
   unit_qty: number
   box_qty: number | null
   status: LineStatus
+  received_qty?: number | null
+  received_at?: string | null
+  received_by?: string | null
 }
 
 export interface FnskuCheck {

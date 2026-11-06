@@ -270,26 +270,17 @@ export function Chip({ tone, children }: { tone: Tone; children: React.ReactNode
 }
 
 export function StatusStamp({ status }: { status: string }) {
-  // A new shipment is simply "Open" to people; the stored status stays "Created".
-  return <Chip tone={STATUS_TONE[status] ?? 'gray'}>{status === 'Created' ? 'Open' : status}</Chip>
+  // A new shipment is simply "Open" to people; the stored status stays "Created". A shipment the manager has approved reads "Dispatched"; the stored status stays "Closed".
+  const label = status === 'Created' ? 'Open' : status === 'Closed' ? 'Dispatched' : status
+  return <Chip tone={STATUS_TONE[status] ?? 'gray'}>{label}</Chip>
 }
 
-// Dispatch mode label: each mode has its own colour so a list can be scanned by type.
-const MODE_PILL: Record<string, string> = {
-  ATS: 'bg-[#dfe6fd] text-[#2b3fa8]',
-  'Drop In': 'bg-[#d3f1ee] text-[#0b6b63]',
-  Bluedart: 'bg-[#fbe0ec] text-[#9d174d]'
-}
-
-export function ModePill({ mode }: { mode: string | null | undefined }) {
-  const label = mode || 'No mode'
+// Dispatch mode label: same neutral pill as the status badges. An optional dot (e.g. Amazon receiving) sits inside it.
+export function ModePill({ mode, dot }: { mode: string | null | undefined; dot?: React.ReactNode }) {
   return (
-    <span
-      className={`inline-flex items-center h-6 px-2.5 rounded-full text-[12px] leading-none font-semibold whitespace-nowrap ${
-        MODE_PILL[label] ?? 'bg-[#eceef2] text-muted'
-      }`}
-    >
-      {label}
+    <span className="inline-flex items-center gap-2 h-7 pl-3 pr-3 rounded-full bg-[#eceef2] text-ink text-[13px] leading-none font-semibold whitespace-nowrap">
+      {mode || 'No mode'}
+      {dot}
     </span>
   )
 }

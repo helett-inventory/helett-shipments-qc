@@ -99,6 +99,14 @@ function buildGroups(rows: Row[], today: string, tomorrow: string, filter: Filte
   return out
 }
 
+// Amazon receiving, per SKU line: a quiet indicator, not a warning.
+// Amazon receiving for the whole shipment: just a dot. Orange = something still pending, green = every SKU fully received.
+function ReceiveDot({ lines }: { lines: { unit_qty: number; received_qty?: number | null }[] }) {
+  const pending = lines.reduce((n, l) => n + Math.max(0, l.unit_qty - (l.received_qty ?? 0)), 0)
+  const label = pending > 0 ? `${pending} units pending at Amazon` : 'Fully received at Amazon'
+  return <span role="img" aria-label={label} title={label} className={`shrink-0 w-2.5 h-2.5 rounded-full ${pending > 0 ? 'bg-[#e5a00d]' : 'bg-ok'}`} />
+}
+
 const COLS = 'lg:grid-cols-[1.3fr_.9fr_1.6fr_1fr_1.2fr_1.2fr]'
 
 export function Shipments() {
@@ -186,6 +194,19 @@ export function Shipments() {
         }
       />
       {filterBar('hidden lg:flex')}
+      {groups.length > 0 && (
+          <div className="hidden lg:grid grid-cols-[152px_1fr] pt-1 pb-2 text-[13px] text-muted font-medium">
+            <span />
+            <div className={`grid ${COLS} gap-x-4 px-5`}>
+              <span>Shipment</span>
+              <span>Warehouse</span>
+              <span>Products</span>
+              <span>Dispatch date</span>
+              <span>Appointment</span>
+              <span>Status</span>
+            </div>
+          </div>
+      )}
       </StickyHead>
       {filterBar('flex lg:hidden pt-3')}
 
@@ -205,17 +226,6 @@ export function Shipments() {
 
       {groups.length > 0 && (
         <div>
-          <div className="hidden lg:grid grid-cols-[152px_1fr] mb-2 text-[13px] text-muted font-medium">
-            <span />
-            <div className={`grid ${COLS} gap-x-4 px-5`}>
-              <span>Shipment</span>
-              <span>Warehouse</span>
-              <span>Products</span>
-              <span>Dispatch date</span>
-              <span>Appointment</span>
-              <span>Status</span>
-            </div>
-          </div>
 
           <div className="space-y-4">
           {groups.map((g) => {
@@ -250,62 +260,71 @@ export function Shipments() {
               </div>
               <ul className="divide-y divide-line min-w-0">
                 {g.rows.map((s) => {
-                  const units = s.shipment_lines.reduce((n, l) => n + l.unit_qty, 0)
-                  const first = s.shipment_lines[0]?.product_name ?? ''
-                  const more = s.shipment_lines.length - 1
+                  const liveLines = s.shipment_lines.filter((l) => l.status !== 'Cancelled')
+                  const units = liveLines.reduce((n, l) => n + l.unit_qty, 0)
+                  const shipped = s.dispatches.length > 0
                   const awaiting = s.dispatches.some((d) => !d.wm_approved_at)
                   return (
                     <li key={s.id}>
                       <Link
                         to={`/shipments/${s.id}`}
-                        className={`flex flex-col gap-2.5 lg:grid ${COLS} lg:gap-x-4 lg:gap-y-1 px-4 lg:px-5 py-4 lg:py-5 lg:items-center hover:bg-canvas ${
+                        className={`flex flex-col gap-3 lg:grid ${COLS} lg:gap-x-4 px-4 lg:px-5 py-4 lg:py-5 lg:items-center hover:bg-canvas ${
                           s.on_hold ? 'bg-fail/[0.04]' : ''
                         }`}
                       >
-                        <div className="min-w-0 lg:col-start-1 lg:row-start-1">
-                          <div className="font-mono font-medium truncate">{s.fba_id}</div>
-                          <div className="mt-1">
-                            <ModePill mode={s.dispatch_mode} />
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap gap-1.5 lg:col-start-6 lg:row-start-1">
-                          {s.on_hold && <HoldStamp />}
-                          {(s.status === 'QC Done' || s.status === 'Partially Dispatched') && needsBoxLabels(s.dispatch_mode ?? '') && s.box_label_checks.some((c) => !c.scanned) && <Chip tone="warn">Box labels pending</Chip>}
-                          {awaiting && <StatusStamp status="Awaiting WM" />}
-                          <StatusStamp status={s.status} />
-                        </div>
-                        <div className="text-sm text-muted lg:text-ink lg:col-start-2 lg:row-start-1">
-                          <span className="lg:hidden">Destination FC </span>
-                          <span className="max-lg:font-medium max-lg:text-ink">{s.warehouse}</span>
-                        </div>
-                        <div className="text-sm lg:col-start-3 lg:row-start-1 min-w-0">
-                          <span className="block max-lg:font-medium lg:truncate">
-                            {first}
-                            {more > 0 && <span className="text-muted"> +{more} more</span>}
-                          </span>
-                          <span className="text-muted">
-                            {units} units · {s.box_qty_total} boxes
-                          </span>
-                        </div>
-                        <div className="flex flex-col gap-1.5 max-lg:bg-[#f4f5f6] max-lg:rounded-lg max-lg:px-3 max-lg:py-2.5 lg:contents">
-                        <div className="flex justify-between gap-3 text-sm text-muted lg:text-ink lg:block lg:col-start-4 lg:row-start-1">
-                          <span className="lg:hidden">Dispatch</span>
-                          <span className="max-lg:text-ink max-lg:font-medium">{s.dispatch_date ? fmtDate(s.dispatch_date) : '—'}</span>
-                        </div>
-                        <div className="text-sm text-muted lg:col-start-5 lg:row-start-1">
-                          {s.appointment_at ? (
-                            <div className="flex justify-between gap-3 lg:block">
-                              <span className="lg:hidden">Appointment</span>
-                              <span className="max-lg:text-ink max-lg:font-medium">{fmtDateTime(s.appointment_at)}</span>
+                        <div className="flex items-start justify-between gap-3 lg:contents">
+                          <div className="min-w-0 lg:col-start-1 lg:row-start-1">
+                            <div className="font-mono font-medium break-all">{s.fba_id}</div>
+                            <div className="mt-1.5">
+                              <ModePill mode={s.dispatch_mode} dot={shipped ? <ReceiveDot lines={liveLines} /> : undefined} />
                             </div>
-                          ) : (
-                            needsAppointment(s.dispatch_mode ?? '') ? 'No appointment' : '—'
-                          )}
-                          <div className="mt-1">
-                            {showDeadlines && <DeadlineBadge shipment={s} />}
+                          </div>
+                          <div className="flex flex-wrap justify-end gap-1.5 lg:justify-start lg:col-start-6 lg:row-start-1">
+                            {s.on_hold && <HoldStamp />}
+                            {(s.status === 'QC Done' || s.status === 'Partially Dispatched') && needsBoxLabels(s.dispatch_mode ?? '') && s.box_label_checks.some((c) => !c.scanned) && <Chip tone="warn">Box labels pending</Chip>}
+                            {awaiting && <StatusStamp status="Awaiting WM" />}
+                            <StatusStamp status={s.status} />
                           </div>
                         </div>
+
+                        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm text-muted lg:contents">
+                          <div className="text-ink lg:col-start-2 lg:row-start-1">{s.warehouse}</div>
+                          <div className="lg:text-ink lg:col-start-4 lg:row-start-1">
+                            <span className="lg:hidden">Dispatch </span>
+                            <span className="font-semibold text-ink">{s.dispatch_date ? fmtDate(s.dispatch_date) : '—'}</span>
+                          </div>
+                          <div className="lg:col-start-5 lg:row-start-1">
+                            {s.appointment_at ? (
+                              <>
+                                <span className="lg:hidden">Appt </span>
+                                {fmtDateTime(s.appointment_at)}
+                              </>
+                            ) : needsAppointment(s.dispatch_mode ?? '') ? (
+                              'No appointment'
+                            ) : (
+                              <span className="max-lg:hidden">—</span>
+                            )}
+                            {showDeadlines && (
+                              <div className="mt-0.5">
+                                <DeadlineBadge shipment={s} />
+                              </div>
+                            )}
+                          </div>
                         </div>
+
+                        <ul className="text-sm min-w-0 space-y-2 lg:col-start-3 lg:row-start-1">
+                          {liveLines.map((l) => (
+                            <li key={l.id}>
+                              {l.product_name}
+                              <span className="text-muted"> · {l.unit_qty}</span>
+                            </li>
+                          ))}
+                          {liveLines.length > 1 && (
+                            <li className="text-[13px] text-muted">
+                              {units} units · {s.box_qty_total} boxes
+                            </li>
+                          )}
+                        </ul>
                       </Link>
                     </li>
                   )

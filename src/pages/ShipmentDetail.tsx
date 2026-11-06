@@ -297,6 +297,40 @@ export function ShipmentDetail() {
             )}
           </Panel>
 
+          <Panel
+            title="Amazon receiving"
+            flush
+            action={
+              isInv && b.dispatches.length > 0 ? (
+                <Btn tone="line" className="!min-h-[36px] text-sm" onClick={() => setModal({ kind: 'receive' })}>
+                  Update received
+                </Btn>
+              ) : undefined
+            }
+          >
+            {b.dispatches.length === 0 ? (
+              <p className="p-4 text-sm text-muted">Opens once something is dispatched. Then enter the units Amazon received for each SKU.</p>
+            ) : (
+              <ul className="divide-y divide-line">
+                {b.shipment_lines
+                  .filter((l) => l.status !== 'Cancelled')
+                  .map((l) => (
+                    <li key={l.id} className="px-4 py-3 flex items-center justify-between gap-3">
+                      <span className="min-w-0">
+                        <span className="block font-medium">{l.product_name}</span>
+                        <span className="block text-[13px] text-muted">
+                          Dispatched {dispatchedUnits(b, l.id)} of {l.unit_qty}
+                          {l.received_qty != null && ` · received ${l.received_qty}`}
+                          {l.received_at && ` · updated ${fmtDate(l.received_at)}`}
+                        </span>
+                      </span>
+                      {l.unit_qty - (l.received_qty ?? 0) > 0 ? <Chip tone="new">Pending {l.unit_qty - (l.received_qty ?? 0)}</Chip> : <Chip tone="ok">All received</Chip>}
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </Panel>
+
           <Panel title="Box label check" flush>
             {needsBoxLabels(b.dispatch_mode ?? '') ? (
               <>
@@ -471,6 +505,15 @@ export function ShipmentDetail() {
           confirmLabel="Restore line"
           onClose={close}
           onConfirm={() => rpc('set_line_state', { p_line: modal.line!.id, p_state: 'Restore' })}
+        />
+      )}
+      {modal?.kind === 'receive' && (
+        <ReceiveModal
+          lines={b.shipment_lines.filter((l) => l.status !== 'Cancelled')}
+          onClose={close}
+          onSave={async (changes) => {
+            for (const c of changes) await rpc('set_received', { p_line: c.id, p_qty: c.qty })
+          }}
         />
       )}
       {modal?.kind === 'manualQc' && modal.line && (
@@ -966,6 +1009,76 @@ function CopyInvoiceData({ fbaId, fc, lines }: { fbaId: string; fc: string; line
       </svg>
       {state === 'done' ? 'Copied' : state === 'failed' ? 'Copy failed' : 'Copy invoice data'}
     </button>
+  )
+}
+
+// Units Amazon checked in, per SKU line. Leave a box empty while it is still pending.
+function ReceiveModal({
+  lines,
+  onClose,
+  onSave
+}: {
+  lines: ShipmentLine[]
+  onClose: () => void
+  onSave: (changes: { id: string; qty: number | null }[]) => Promise<void>
+}) {
+  const [vals, setVals] = useState<Record<string, string>>(() => Object.fromEntries(lines.map((l) => [l.id, l.received_qty == null ? '' : String(l.received_qty)])))
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  async function go() {
+    const changes: { id: string; qty: number | null }[] = []
+    for (const l of lines) {
+      const raw = vals[l.id].trim()
+      const qty = raw === '' ? null : Number(raw)
+      if (qty !== null && (!Number.isInteger(qty) || qty < 0)) return setError(`Enter a whole number for ${l.product_name}.`)
+      if (qty !== (l.received_qty ?? null)) changes.push({ id: l.id, qty })
+    }
+    if (changes.length === 0) return onClose()
+    setBusy(true)
+    try {
+      await onSave(changes)
+      onClose()
+    } catch (e) {
+      setError(errText(e))
+      setBusy(false)
+    }
+  }
+  return (
+    <Modal title="Units received by Amazon" onClose={onClose}>
+      <p className="text-sm text-muted mb-4">Type what Amazon shows as received for each SKU. Leave it empty while it is still pending.</p>
+      <Btn
+        tone="line"
+        className="w-full mb-4"
+        onClick={() => setVals(Object.fromEntries(lines.map((l) => [l.id, String(l.unit_qty)])))}
+      >
+        Received all SKUs
+      </Btn>
+      {lines.map((l) => (
+        <div key={l.id} className="mb-4">
+          <label htmlFor={`recv-${l.id}`} className="block text-sm font-medium mb-1.5">
+            {l.product_name}
+          </label>
+          <div className="flex gap-2">
+            <input
+              id={`recv-${l.id}`}
+              inputMode="numeric"
+              className={inputCls}
+              value={vals[l.id]}
+              placeholder="Pending"
+              onChange={(e) => setVals((v) => ({ ...v, [l.id]: e.target.value.replace(/[^0-9]/g, '') }))}
+            />
+            <Btn tone="line" className="shrink-0" onClick={() => setVals((v) => ({ ...v, [l.id]: String(l.unit_qty) }))}>
+              Received all
+            </Btn>
+          </div>
+          <span className="block text-[13px] text-muted mt-1">Ordered {l.unit_qty}</span>
+        </div>
+      ))}
+      {error && <ErrorBox message={error} />}
+      <Btn className="w-full" onClick={go} disabled={busy}>
+        {busy ? 'Saving…' : 'Save received units'}
+      </Btn>
+    </Modal>
   )
 }
 
