@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLive } from '../hooks/useLive'
 import { supabase } from '../lib/supabase'
-import { ModePill, Empty, ErrorBox, HoldStamp, Loading, Page, StickyHead, PageTitle, StatusStamp } from '../components/ui'
+import { ModePill, Tip, Empty, ErrorBox, Loading, Page, StickyHead, PageTitle } from '../components/ui'
+import { Glyph, TEAL, BLUE, GREEN, AMBER, RED } from '../components/statusIcons'
 import type { Inspection, Shipment, ShipmentLine } from '../types/db'
 
 type Row = Pick<Inspection, 'id' | 'record_no' | 'status' | 'needs_recheck'> & {
@@ -17,7 +18,41 @@ const TABS: { id: Inspection['status']; label: string }[] = [
   { id: 'Closed', label: 'Closed' }
 ]
 
-const COLS = 'lg:grid-cols-[1.6fr_1.2fr_.7fr_1fr_1fr]'
+const COLS = 'lg:grid-cols-[7rem_1.2fr_1.8fr_.6fr_6rem]'
+
+// QC case state as one icon, same language as the shipments list. Hold and recheck sit beside it as small chips.
+function CaseStatus({ status, hold, recheck }: { status: string; hold: boolean; recheck: boolean }) {
+  const main =
+    status === 'Closed'
+      ? { glyph: 'check' as const, label: 'Closed', bg: GREEN }
+      : status === 'Submitted'
+        ? { glyph: 'clipCheck' as const, label: 'Submitted, waiting for manager', bg: BLUE }
+        : { glyph: 'clipCheck' as const, label: 'QC to do', bg: TEAL }
+  const extras = [
+    hold && { key: 'h', glyph: 'pause' as const, label: 'On hold', bg: RED },
+    recheck && { key: 'r', glyph: 'half' as const, label: 'Quantity changed, recheck needed', bg: AMBER }
+  ].filter(Boolean) as { key: string; glyph: 'pause' | 'half'; label: string; bg: string }[]
+  if (extras.length === 0) {
+    return (
+      <Tip label={main.label}>
+        <span role="img" aria-label={main.label} className="inline-flex items-center justify-center h-9 w-20 rounded-full text-white" style={{ background: main.bg }}>
+          <Glyph glyph={main.glyph} size={18} />
+        </span>
+      </Tip>
+    )
+  }
+  return (
+    <span className="inline-flex items-center justify-center gap-1.5 h-9 w-24 rounded-full bg-[#f0f1f3]">
+      {[{ key: 'm', glyph: main.glyph, label: main.label, bg: main.bg }, ...extras].map((it) => (
+        <Tip key={it.key} label={it.label}>
+          <span role="img" aria-label={it.label} className="w-6 h-6 rounded-full flex items-center justify-center text-white shrink-0" style={{ background: it.bg }}>
+            <Glyph glyph={it.glyph} size={14} />
+          </span>
+        </Tip>
+      ))}
+    </span>
+  )
+}
 
 export function QCList() {
   const { data, error, loading } = useLive<Row[]>(
@@ -96,10 +131,10 @@ export function QCList() {
       {rows.length > 0 && (
         <div className="bg-surface shadow-card rounded-xl overflow-hidden">
           <div className={`hidden lg:grid ${COLS} gap-x-4 px-5 py-2.5 border-b border-line text-[13px] text-muted font-medium`}>
-            <span>Product</span>
+            <span>Type</span>
             <span>Shipment</span>
+            <span>Product</span>
             <span>Units</span>
-            <span>Mode</span>
             <span>Status</span>
           </div>
           <ul>
@@ -110,34 +145,30 @@ export function QCList() {
                 <li key={r.id} className="border-t first:border-t-0 border-line">
                   <Link
                     to={`/qc/${r.id}`}
-                    className={`grid grid-cols-[1fr_auto] ${COLS} gap-x-4 gap-y-1 px-4 lg:px-5 py-3.5 items-center hover:bg-canvas ${
+                    className={`flex flex-col gap-2.5 lg:grid ${COLS} lg:gap-x-4 px-4 lg:px-5 py-4 lg:py-3.5 lg:items-center hover:bg-canvas ${
                       s.on_hold ? 'bg-fail/[0.04]' : ''
                     }`}
                   >
-                    <div className="min-w-0 lg:col-start-1 lg:row-start-1">
-                      <div className="font-medium truncate">{l.product_name}</div>
-                      <div className="text-[13px] text-muted">{r.record_no}</div>
+                    <div className="flex items-center justify-between gap-3 lg:contents">
+                      <div className="lg:col-start-1 lg:row-start-1">
+                        <ModePill large mode={s.dispatch_mode} />
+                      </div>
+                      <div className="lg:col-start-5 lg:row-start-1">
+                        <CaseStatus status={r.status} hold={s.on_hold} recheck={r.needs_recheck} />
+                      </div>
                     </div>
-                    <div className="flex flex-wrap justify-end gap-1.5 lg:justify-start lg:col-start-5 lg:row-start-1">
-                      {s.on_hold && <HoldStamp />}
-                      <StatusStamp status={r.status} />
+                    <div className="flex flex-wrap items-baseline gap-x-3 text-sm lg:contents">
+                      <div className="font-mono font-medium lg:col-start-2 lg:row-start-1 lg:text-[15px]">{s.fba_id}</div>
+                                          </div>
+                    <div className="min-w-0 lg:col-start-3 lg:row-start-1">
+                      <div className="font-medium">{l.product_name}</div>
+                      <div className="text-[13px] text-muted">
+                        {r.record_no} · {s.warehouse}
+                        <span className="lg:hidden"> · {l.unit_qty} units</span>
+                      </div>
                     </div>
-                    <div className="col-span-2 text-sm lg:col-span-1 lg:col-start-2 lg:row-start-1">
-                      <span className="font-mono">{s.fba_id}</span>
-                      <span className="text-muted"> · {s.warehouse}</span>
-                      {s.dispatch_mode && (
-                        <span className="ml-2 align-middle">
-                          <ModePill mode={s.dispatch_mode} />
-                        </span>
-                      )}
-                    </div>
-                    <div className="col-span-2 text-sm text-muted lg:text-ink lg:col-span-1 lg:col-start-3 lg:row-start-1">
-                      {l.unit_qty} units
-                    </div>
-                    <div className="col-span-2 text-sm text-muted lg:col-span-1 lg:col-start-4 lg:row-start-1">
-                      {s.dispatch_mode ?? ''}
-                    </div>
-                    {r.needs_recheck && <div className="col-span-2 text-sm text-warn lg:col-span-5">Quantity changed. Recheck needed.</div>}
+                    <div className="hidden lg:block text-sm lg:col-start-4 lg:row-start-1">{l.unit_qty}</div>
+                    {r.needs_recheck && <div className="text-sm text-warn lg:hidden">Quantity changed. Recheck needed.</div>}
                   </Link>
                 </li>
               )

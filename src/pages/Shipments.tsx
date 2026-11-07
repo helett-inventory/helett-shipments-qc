@@ -7,6 +7,7 @@ import { needsAppointment, needsBoxLabels } from '../data/options'
 import { changeDeadline, withinWatch } from '../lib/deadline'
 import { DeadlineBadge } from '../components/DeadlineBadge'
 import { addDaysISO, fmtDate, fmtDateTime, fmtDayLong, todayISO } from '../lib/format'
+import { G, Glyph, INK, BLUE, TEAL, AMBER, YELLOW, GREEN, DEEP_GREEN, RED, GREY } from '../components/statusIcons'
 import { Chip, ModePill, Tip, Empty, ErrorBox, HoldStamp, Loading, Page, StickyHead, PageTitle, StatusStamp } from '../components/ui'
 import type { Dispatch, Shipment, ShipmentLine } from '../types/db'
 
@@ -100,69 +101,6 @@ function buildGroups(rows: Row[], today: string, tomorrow: string, filter: Filte
 }
 
 // Amazon receiving, per SKU line: a quiet indicator, not a warning.
-// ---- Status as icons: one small glyph per state, each in a solid round chip. Hover or long-press for the name. ----
-const G = {
-  ring: <circle cx="8" cy="8" r="4.3" />,
-  half: (
-    <>
-      <circle cx="8" cy="8" r="5" />
-      <path d="M8 3a5 5 0 0 1 0 10z" fill="currentColor" stroke="none" />
-    </>
-  ),
-  clipCheck: (
-    <>
-      <rect x="3.6" y="3" width="8.8" height="10.6" rx="1.6" />
-      <path d="M6 3V2.4h4V3M5.9 8.4l1.6 1.6 2.8-3" />
-    </>
-  ),
-  tag: (
-    <>
-      <path d="M2.8 8.3V3.6a.8.8 0 0 1 .8-.8h4.7l5 5a.8.8 0 0 1 0 1.1l-3.9 3.9a.8.8 0 0 1-1.1 0z" />
-      <circle cx="5.7" cy="5.7" r=".5" fill="currentColor" />
-    </>
-  ),
-  pen: <path d="M3 13l.7-2.8 6.6-6.6a1.4 1.4 0 0 1 2 2l-6.6 6.6zM9.2 4.8l2 2" />,
-  check: <path d="M3.5 8.4 6.5 11.4l6-7" />,
-  truck: (
-    <>
-      <path d="M1.8 4.4h7.4v6.2H1.8zM9.2 6.6h2.6l2 2.2v1.8H9.2" />
-      <circle cx="4.6" cy="11.4" r="1.2" fill="#fff" />
-      <circle cx="11.2" cy="11.4" r="1.2" fill="#fff" />
-    </>
-  ),
-  pause: <path d="M6 4v8M10 4v8" />,
-  x: <path d="M4.6 4.6l6.8 6.8M11.4 4.6l-6.8 6.8" />,
-  up: <path d="M8 12.6V3.8M4.2 7.4 8 3.6l3.8 3.8" />,
-  clock: (
-    <>
-      <circle cx="8" cy="8" r="5.4" />
-      <path d="M8 5.2V8l1.9 1.2" />
-    </>
-  ),
-  dbl: (
-    <>
-      <path d="M1.6 8.4 4.6 11.4l5.6-7" />
-      <path d="M7 10.8l.6.6 6-7.4" />
-    </>
-  )
-}
-
-const INK = '#12161c'
-const BLUE = '#2456c8'
-const TEAL = '#0f766e'
-const AMBER = '#b45309'
-const YELLOW = '#e5a00d'
-const GREEN = '#15803d'
-const DEEP_GREEN = '#0f5f2e'
-const RED = '#c2261b'
-const GREY = '#8a929d'
-
-const Glyph = ({ glyph, size }: { glyph: keyof typeof G; size: number }) => (
-  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    {G[glyph]}
-  </svg>
-)
-
 // A three-light signal: QC, then Dispatch (labels, dispatch and the manager's final confirmation), then Amazon receiving.
 // Only the step that needs attention is lit; finished steps are a quiet green tick, later steps stay dim.
 type Slot = { state: 'done' | 'active' | 'idle'; glyph?: keyof typeof G; label: string; bg?: string }
