@@ -100,14 +100,154 @@ function buildGroups(rows: Row[], today: string, tomorrow: string, filter: Filte
 }
 
 // Amazon receiving, per SKU line: a quiet indicator, not a warning.
-// Amazon receiving for the whole shipment: just a dot. Orange = something still pending, green = every SKU fully received.
-function ReceiveDot({ lines }: { lines: { unit_qty: number; received_qty?: number | null }[] }) {
-  const pending = lines.reduce((n, l) => n + Math.max(0, l.unit_qty - (l.received_qty ?? 0)), 0)
-  const label = pending > 0 ? `${pending} units pending at Amazon` : 'Fully received at Amazon'
-  return <span role="img" aria-label={label} title={label} className={`shrink-0 w-2.5 h-2.5 rounded-full ${pending > 0 ? 'bg-[#e5a00d]' : 'bg-ok'}`} />
+// ---- Status as icons: one small glyph per state, each in a solid round chip. Hover or long-press for the name. ----
+const G = {
+  ring: <circle cx="8" cy="8" r="4.3" />,
+  half: (
+    <>
+      <circle cx="8" cy="8" r="5" />
+      <path d="M8 3a5 5 0 0 1 0 10z" fill="currentColor" stroke="none" />
+    </>
+  ),
+  clipCheck: (
+    <>
+      <rect x="3.6" y="3" width="8.8" height="10.6" rx="1.6" />
+      <path d="M6 3V2.4h4V3M5.9 8.4l1.6 1.6 2.8-3" />
+    </>
+  ),
+  tag: (
+    <>
+      <path d="M2.8 8.3V3.6a.8.8 0 0 1 .8-.8h4.7l5 5a.8.8 0 0 1 0 1.1l-3.9 3.9a.8.8 0 0 1-1.1 0z" />
+      <circle cx="5.7" cy="5.7" r=".5" fill="currentColor" />
+    </>
+  ),
+  pen: <path d="M3 13l.7-2.8 6.6-6.6a1.4 1.4 0 0 1 2 2l-6.6 6.6zM9.2 4.8l2 2" />,
+  check: <path d="M3.5 8.4 6.5 11.4l6-7" />,
+  truck: (
+    <>
+      <path d="M1.8 4.4h7.4v6.2H1.8zM9.2 6.6h2.6l2 2.2v1.8H9.2" />
+      <circle cx="4.6" cy="11.4" r="1.2" fill="#fff" />
+      <circle cx="11.2" cy="11.4" r="1.2" fill="#fff" />
+    </>
+  ),
+  pause: <path d="M6 4v8M10 4v8" />,
+  x: <path d="M4.6 4.6l6.8 6.8M11.4 4.6l-6.8 6.8" />,
+  up: <path d="M8 12.6V3.8M4.2 7.4 8 3.6l3.8 3.8" />,
+  clock: (
+    <>
+      <circle cx="8" cy="8" r="5.4" />
+      <path d="M8 5.2V8l1.9 1.2" />
+    </>
+  ),
+  dbl: (
+    <>
+      <path d="M1.6 8.4 4.6 11.4l5.6-7" />
+      <path d="M7 10.8l.6.6 6-7.4" />
+    </>
+  )
 }
 
-const COLS = 'lg:grid-cols-[1.3fr_.9fr_1.6fr_1fr_1.2fr_1.2fr]'
+const INK = '#12161c'
+const BLUE = '#2456c8'
+const TEAL = '#0f766e'
+const AMBER = '#b45309'
+const YELLOW = '#e5a00d'
+const GREEN = '#15803d'
+const DEEP_GREEN = '#0f5f2e'
+const RED = '#c2261b'
+const GREY = '#8a929d'
+
+const Glyph = ({ glyph, size }: { glyph: keyof typeof G; size: number }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {G[glyph]}
+  </svg>
+)
+
+// A three-light signal: QC, then Dispatch (labels, dispatch and the manager's final confirmation), then Amazon receiving.
+// Only the step that needs attention is lit; finished steps are a quiet green tick, later steps stay dim.
+type Slot = { state: 'done' | 'active' | 'idle'; glyph?: keyof typeof G; label: string; bg?: string }
+
+function StatusIcons({
+  status,
+  hold,
+  labelsPending,
+  awaitingWm,
+  lines
+}: {
+  status: string
+  hold: boolean
+  labelsPending: boolean
+  awaitingWm: boolean
+  lines: { unit_qty: number; received_qty?: number | null }[]
+}) {
+  const holdChip = hold ? (
+    <span role="img" aria-label="On hold" title="On hold" className="w-6 h-6 rounded-full flex items-center justify-center text-white shrink-0" style={{ background: RED }}>
+      <Glyph glyph="pause" size={14} />
+    </span>
+  ) : null
+
+  if (status === 'Cancelled') {
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        {holdChip}
+        <span role="img" aria-label="Cancelled" title="Cancelled" className="inline-flex items-center justify-center h-9 w-24 rounded-full text-white" style={{ background: GREY }}>
+          <Glyph glyph="x" size={18} />
+        </span>
+      </span>
+    )
+  }
+
+  const qcDone = status !== 'Created' && status !== 'QC In Progress'
+  const dispatched = status === 'Closed'
+  const slots: Slot[] = []
+
+  // 1. QC
+  slots.push(
+    qcDone
+      ? { state: 'done', label: 'QC done' }
+      : { state: 'active', glyph: 'clipCheck', label: status === 'QC In Progress' ? 'QC in progress' : 'QC pending', bg: status === 'QC In Progress' ? AMBER : TEAL }
+  )
+
+  // 2. Dispatch, with the single action that is needed right now
+  if (dispatched) slots.push({ state: 'active', glyph: 'check', label: 'Dispatched', bg: GREEN })
+  else if (!qcDone) slots.push({ state: 'idle', glyph: 'truck', label: 'Dispatch: after QC' })
+  else if (awaitingWm) slots.push({ state: 'active', glyph: 'pen', label: 'Awaiting warehouse manager', bg: INK })
+  else if (labelsPending) slots.push({ state: 'active', glyph: 'tag', label: 'Box labels pending', bg: AMBER })
+  else slots.push({ state: 'active', glyph: 'truck', label: status === 'Partially Dispatched' ? 'Partially dispatched' : 'Ready to dispatch', bg: BLUE })
+
+  // 3. Amazon receiving, only once everything is dispatched and confirmed
+  if (dispatched) {
+    const pending = lines.reduce((n, l) => n + Math.max(0, l.unit_qty - (l.received_qty ?? 0)), 0)
+    slots.push(
+      pending > 0
+        ? { state: 'active', glyph: 'clock', label: `Receiving pending: ${pending} units`, bg: AMBER }
+        : { state: 'active', glyph: 'dbl', label: 'Received at Amazon', bg: DEEP_GREEN }
+    )
+  } else slots.push({ state: 'idle', glyph: 'clock', label: 'Receiving: after dispatch' })
+
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      {holdChip}
+      <span className="inline-flex items-center justify-center gap-1.5 h-9 w-24 rounded-full bg-[#f0f1f3]">
+        {slots.map((sl, k) => (
+          <span
+            key={k}
+            role="img"
+            aria-label={sl.label}
+            title={sl.label}
+            className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${sl.state === 'active' ? 'text-white' : sl.state === 'done' ? 'bg-[#d8f2e0] text-[#15803d]' : 'bg-[#e6e9ed] text-[#b4bbc4]'}`}
+            style={sl.state === 'active' ? { background: sl.bg } : undefined}
+          >
+            {sl.state === 'done' && <Glyph glyph="check" size={13} />}
+            {sl.state !== 'done' && sl.glyph && <Glyph glyph={sl.glyph} size={14} />}
+          </span>
+        ))}
+      </span>
+    </span>
+  )
+}
+
+const COLS = 'lg:grid-cols-[1fr_1fr_1.4fr_.7fr_1.7fr_1.2fr_1.1fr]'
 
 export function Shipments() {
   const { profile } = useAuth()
@@ -198,10 +338,11 @@ export function Shipments() {
           <div className="hidden lg:grid grid-cols-[152px_1fr] pt-1 pb-2 text-[13px] text-muted font-medium">
             <span />
             <div className={`grid ${COLS} gap-x-4 px-5`}>
-              <span>Shipment</span>
-              <span>Warehouse</span>
-              <span>Products</span>
               <span>Dispatch date</span>
+              <span>Type</span>
+              <span>Shipment</span>
+              <span>FC</span>
+              <span>Products</span>
               <span>Appointment</span>
               <span>Status</span>
             </div>
@@ -272,28 +413,32 @@ export function Shipments() {
                           s.on_hold ? 'bg-fail/[0.04]' : ''
                         }`}
                       >
-                        <div className="flex items-start justify-between gap-3 lg:contents">
-                          <div className="min-w-0 lg:col-start-1 lg:row-start-1">
-                            <div className="font-mono font-medium break-all">{s.fba_id}</div>
-                            <div className="mt-1.5">
-                              <ModePill mode={s.dispatch_mode} dot={shipped ? <ReceiveDot lines={liveLines} /> : undefined} />
-                            </div>
+                        <div className="flex items-center justify-between gap-3 lg:contents">
+                          <div className="flex items-center lg:col-start-2 lg:row-start-1 lg:self-center">
+                            <ModePill large mode={s.dispatch_mode} />
                           </div>
-                          <div className="flex flex-wrap justify-end gap-1.5 lg:justify-start lg:col-start-6 lg:row-start-1">
-                            {s.on_hold && <HoldStamp />}
-                            {(s.status === 'QC Done' || s.status === 'Partially Dispatched') && needsBoxLabels(s.dispatch_mode ?? '') && s.box_label_checks.some((c) => !c.scanned) && <Chip tone="warn">Box labels pending</Chip>}
-                            {awaiting && <StatusStamp status="Awaiting WM" />}
-                            <StatusStamp status={s.status} />
+                          <div className="flex flex-wrap justify-end gap-1.5 lg:justify-start lg:col-start-7 lg:row-start-1">
+                            <StatusIcons
+                              status={s.status}
+                              hold={s.on_hold}
+                              labelsPending={(s.status === 'QC Done' || s.status === 'Partially Dispatched') && needsBoxLabels(s.dispatch_mode ?? '') && s.box_label_checks.some((c) => !c.scanned)}
+                              awaitingWm={awaiting}
+                              lines={liveLines}
+                            />
                           </div>
                         </div>
 
+                        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 lg:contents">
+                          <div className="font-mono font-medium break-all lg:col-start-3 lg:row-start-1">{s.fba_id}</div>
+                          <div className="text-sm text-muted lg:text-ink lg:col-start-4 lg:row-start-1">{s.warehouse}</div>
+                        </div>
+
                         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm text-muted lg:contents">
-                          <div className="text-ink lg:col-start-2 lg:row-start-1">{s.warehouse}</div>
-                          <div className="lg:text-ink lg:col-start-4 lg:row-start-1">
+                          <div className="lg:col-start-1 lg:row-start-1 lg:text-[15px]">
                             <span className="lg:hidden">Dispatch </span>
                             <span className="font-semibold text-ink">{s.dispatch_date ? fmtDate(s.dispatch_date) : '—'}</span>
                           </div>
-                          <div className="lg:col-start-5 lg:row-start-1">
+                          <div className="lg:col-start-6 lg:row-start-1">
                             {s.appointment_at ? (
                               <>
                                 <span className="lg:hidden">Appt </span>
@@ -312,7 +457,7 @@ export function Shipments() {
                           </div>
                         </div>
 
-                        <ul className="text-sm min-w-0 space-y-2 lg:col-start-3 lg:row-start-1">
+                        <ul className="text-sm min-w-0 space-y-2 lg:col-start-5 lg:row-start-1">
                           {liveLines.map((l) => (
                             <li key={l.id}>
                               {l.product_name}

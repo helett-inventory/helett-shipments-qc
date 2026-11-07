@@ -386,14 +386,14 @@ export function ShipmentDetail() {
             )}
           </div>
 
-          {((isInv && !finished && b.dispatches.length === 0) || isAdmin) && (
+          {isInv && (
             <div className="flex flex-col sm:flex-row gap-2 pt-2 sm:justify-start">
               {isInv && !finished && b.dispatches.length === 0 && (
                 <Btn tone="lineWarn" className="sm:px-6" onClick={() => setModal({ kind: 'cancelShipment' })}>
                   Cancel shipment
                 </Btn>
               )}
-              {isAdmin && (
+              {isInv && (
                 <Btn tone="danger" className="sm:px-6" onClick={() => setModal({ kind: 'deleteShipment' })}>
                   Delete shipment
                 </Btn>

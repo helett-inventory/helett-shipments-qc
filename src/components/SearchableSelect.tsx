@@ -16,10 +16,22 @@ interface SearchableSelectProps {
 // Lists longer than this get a search box; short lists are just a list.
 const SEARCH_FROM = 8
 
-// The one dropdown used across the app. Fully keyboard operable:
-//   closed:  Enter / Space / ArrowDown / ArrowUp open it, typing a letter opens it and starts a search
-//   open:    ArrowUp / ArrowDown / Home / End move, Enter picks, Escape closes (focus returns to the field),
-//            Tab closes and moves on
+// Moves focus to the next (or previous) tabbable control on the page, as the browser's own Tab would.
+function focusSibling(from: HTMLElement | null, back: boolean) {
+  if (!from) return
+  const all = Array.from(
+    document.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]')
+  ).filter((el) => el.tabIndex >= 0 && el.offsetParent !== null)
+  const at = all.indexOf(from)
+  const next = all[at + (back ? -1 : 1)]
+  next?.focus()
+}
+
+// The one dropdown used across the app. Works like a spreadsheet cell:
+//   closed:  just type: a short list jumps straight to the matching option; a long list opens filtered to what you typed.
+//            Enter / Space / ArrowDown / ArrowUp open it.
+//   open:    ArrowUp / ArrowDown / Home / End move, Enter picks, Escape closes (focus returns to the field).
+//            Tab picks the highlighted row and moves on to the next field (Shift+Tab to the previous one).
 export function SearchableSelect({
   options,
   value,
@@ -137,9 +149,15 @@ export function SearchableSelect({
         e.stopPropagation() // do not also close a dialog around this field
         close()
         break
-      case 'Tab':
+      case 'Tab': {
+        // Spreadsheet style: Tab accepts what is highlighted, then moves on.
+        e.preventDefault()
+        if (rows.length > 0) onChange(rows[Math.min(active, last)])
         close(false)
+        const trigger = triggerRef.current
+        focusSibling(trigger, e.shiftKey)
         break
+      }
       default:
         // short lists have no search box: typing jumps to the first row that starts with the letter
         if (!searchable && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
@@ -153,9 +171,18 @@ export function SearchableSelect({
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
       openList()
-    } else if (searchable && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
       e.preventDefault()
-      openList(e.key)
+      if (searchable) {
+        openList(e.key)
+      } else {
+        // Short list: pressing a letter picks the next option that starts with it, no need to open anything.
+        const k = e.key.toLowerCase()
+        const from = options.indexOf(value)
+        const order = [...options.slice(from + 1), ...options.slice(0, from + 1)]
+        const hit = order.find((o) => o.toLowerCase().startsWith(k))
+        if (hit !== undefined) onChange(hit)
+      }
     }
   }
 

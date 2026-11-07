@@ -58,12 +58,28 @@ export function Choice<T extends string>({
   label: string
 }) {
   return (
-    <div className="flex gap-2" role="group" aria-label={label}>
+    <div
+      className="flex gap-2"
+      role="radiogroup"
+      aria-label={label}
+      onKeyDown={(e) => {
+        // Arrow keys move the selection, like a spreadsheet cell: Tab leaves the group.
+        const dir = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0
+        if (!dir) return
+        e.preventDefault()
+        const at = Math.max(0, options.indexOf(value as T))
+        const next = options[(at + dir + options.length) % options.length]
+        onChange(next)
+        ;(e.currentTarget.querySelectorAll('button')[options.indexOf(next)] as HTMLElement | undefined)?.focus()
+      }}
+    >
       {options.map((o) => (
         <button
           key={o}
           type="button"
-          aria-pressed={o === value}
+          role="radio"
+          aria-checked={o === value}
+          tabIndex={o === value || (value === '' && o === options[0]) ? 0 : -1}
           onClick={() => onChange(o)}
           className={`flex-1 min-h-[44px] px-3 rounded-lg text-[15px] font-medium ${
             o === value ? 'bg-ink text-white' : 'bg-[#eceef1] hover:bg-[#e1e4e8]'
@@ -276,11 +292,22 @@ export function StatusStamp({ status }: { status: string }) {
 }
 
 // Dispatch mode label: same neutral pill as the status badges. An optional dot (e.g. Amazon receiving) sits inside it.
-export function ModePill({ mode, dot }: { mode: string | null | undefined; dot?: React.ReactNode }) {
+// Three modes, three clearly different weights from the app's own palette: ATS solid black, Drop In grey, Bluedart soft blue.
+const MODE_LOOK: Record<string, string> = {
+  ATS: 'bg-ink text-white',
+  'Drop In': 'bg-[#e1e4e9] text-ink',
+  Bluedart: 'bg-[#dde7fb] text-[#1d4fb8]'
+}
+
+export function ModePill({ mode, dot, large }: { mode: string | null | undefined; dot?: React.ReactNode; large?: boolean }) {
   return (
-    <span className="inline-flex items-center gap-2 h-7 pl-3 pr-3 rounded-full bg-[#eceef2] text-ink text-[13px] leading-none font-semibold whitespace-nowrap">
+    <span
+      className={`relative inline-flex items-center justify-center rounded-full font-semibold leading-none whitespace-nowrap text-center ${
+        large ? 'h-9 w-28 text-[15px]' : 'h-7 px-3 gap-2 text-[13px]'
+      } ${MODE_LOOK[mode ?? ''] ?? 'bg-[#eceef2] text-muted'}`}
+    >
       {mode || 'No mode'}
-      {dot}
+      {dot && (large ? <span className="absolute right-2.5 top-1/2 -translate-y-1/2 flex">{dot}</span> : dot)}
     </span>
   )
 }
