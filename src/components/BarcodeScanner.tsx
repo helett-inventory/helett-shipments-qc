@@ -33,6 +33,7 @@ export default function BarcodeScanner({ onScan: onScanProp, onClose, title, hin
   const [error, setError] = useState<string | null>(null)
   const [starting, setStarting] = useState(true)
   const [code, setCode] = useState('')
+  const [torch, setTorch] = useState<{ track: MediaStreamTrack; on: boolean } | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -61,12 +62,35 @@ export default function BarcodeScanner({ onScan: onScanProp, onClose, title, hin
           )
           return
         }
-        const { BrowserMultiFormatReader } = await import('@zxing/browser')
+        const [{ BrowserMultiFormatReader }, { BarcodeFormat, DecodeHintType }] = await Promise.all([import('@zxing/browser'), import('@zxing/library')])
         if (cancelled) return
-        const reader = new BrowserMultiFormatReader()
-        const c = await reader.decodeFromVideoDevice(undefined, videoRef.current!, (result) => {
+        // Labels here are linear barcodes (FNSKU, carton IDs) and the odd QR: only look for those, and try hard, so a decode is quick.
+        const hints = new Map<number, unknown>([
+          [DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.CODE_128, BarcodeFormat.CODE_39, BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.ITF, BarcodeFormat.QR_CODE]],
+          [DecodeHintType.TRY_HARDER, true]
+        ])
+        const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 50 })
+        // Rear camera, as sharp as it will go, refocusing on its own: barcodes are small and thin, so resolution and focus decide the speed.
+        const constraints: MediaStreamConstraints = {
+          audio: false,
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ...({ advanced: [{ focusMode: 'continuous' }] } as any)
+          }
+        }
+        const c = await reader.decodeFromConstraints(constraints, videoRef.current!, (result) => {
           // Fires repeatedly with "not found" while nothing is in view; only a result matters.
-          if (result) onScanRef.current(result.getText())
+          if (result) {
+            try {
+              navigator.vibrate?.(60)
+            } catch {
+              /* not supported */
+            }
+            onScanRef.current(result.getText())
+          }
         })
         if (cancelled) {
           c.stop()
@@ -74,6 +98,9 @@ export default function BarcodeScanner({ onScan: onScanProp, onClose, title, hin
         }
         controls = c
         setStarting(false)
+        const track = (videoRef.current?.srcObject as MediaStream | null)?.getVideoTracks()[0]
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (track && (track.getCapabilities?.() as any)?.torch) setTorch({ track, on: false })
       } catch (err) {
         if (cancelled) return
         const name = err instanceof Error ? err.name : ''
@@ -94,6 +121,28 @@ export default function BarcodeScanner({ onScan: onScanProp, onClose, title, hin
     if (mode === 'manual') inputRef.current?.focus()
   }, [mode])
 
+  async function toggleTorch() {
+    if (!torch) return
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await torch.track.applyConstraints({ advanced: [{ torch: !torch.on } as any] })
+      setTorch({ track: torch.track, on: !torch.on })
+    } catch {
+      /* torch not available right now */
+    }
+  }
+
+  // Tap the picture to ask the camera to refocus there.
+  async function refocus() {
+    const track = (videoRef.current?.srcObject as MediaStream | null)?.getVideoTracks()[0]
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await track?.applyConstraints({ advanced: [{ focusMode: 'continuous' } as any] })
+    } catch {
+      /* focus control not supported */
+    }
+  }
+
   function submit(e: React.FormEvent) {
     e.preventDefault()
     const v = code.trim()
@@ -105,7 +154,7 @@ export default function BarcodeScanner({ onScan: onScanProp, onClose, title, hin
 
   return (
     <div className="fixed inset-0 z-50 bg-ink/60 flex items-end sm:items-center justify-center sm:p-6" role="dialog" aria-modal="true" aria-label={title ?? 'Scan'}>
-      <div className="bg-surface w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl overflow-hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <div className="bg-surface w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl overflow-hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="flex items-center justify-between px-5 h-14 border-b border-line">
           <h2 className="font-semibold text-lg">{title ?? 'Scan'}</h2>
           <button type="button" onClick={onClose} aria-label="Close" className="-mr-2 w-11 h-11 text-2xl leading-none text-muted hover:text-ink">
@@ -132,12 +181,33 @@ export default function BarcodeScanner({ onScan: onScanProp, onClose, title, hin
                 </button>
               </div>
             ) : (
-              <div className="relative rounded-lg overflow-hidden bg-black aspect-[4/3]">
+              <div className="relative rounded-lg overflow-hidden bg-black aspect-[4/3] sm:aspect-[16/10]" onClick={refocus}>
                 {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                 <video ref={videoRef} className="w-full h-full object-cover" muted playsInline />
+                {/* A wide frame, because barcodes are long and thin: line the label up inside it and it reads. */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-3/5 aspect-square border-2 border-white/80 rounded-lg" />
+                  <div className="relative w-[92%] h-[42%] rounded-xl shadow-[0_0_0_999px_rgba(0,0,0,0.5)]">
+                    <span className="absolute -top-0.5 -left-0.5 w-7 h-7 border-t-4 border-l-4 border-white rounded-tl-xl" />
+                    <span className="absolute -top-0.5 -right-0.5 w-7 h-7 border-t-4 border-r-4 border-white rounded-tr-xl" />
+                    <span className="absolute -bottom-0.5 -left-0.5 w-7 h-7 border-b-4 border-l-4 border-white rounded-bl-xl" />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-7 h-7 border-b-4 border-r-4 border-white rounded-br-xl" />
+                    <span className="scanline absolute inset-x-3 h-0.5 bg-[#ff4d3d]/80" />
+                  </div>
                 </div>
+                {torch && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleTorch()
+                    }}
+                    aria-pressed={torch.on}
+                    className={`absolute top-3 right-3 h-10 px-4 rounded-full text-sm font-semibold ${torch.on ? 'bg-white text-ink' : 'bg-black/55 text-white'}`}
+                  >
+                    {torch.on ? 'Light on' : 'Light'}
+                  </button>
+                )}
+                {!starting && <p className="absolute bottom-3 inset-x-0 text-center text-white/90 text-[13px] pointer-events-none">Hold the barcode flat inside the frame. Tap to refocus.</p>}
                 {starting && (
                   <div className="absolute bottom-3 inset-x-0 text-center">
                     <span className="text-white text-sm bg-black/60 px-3 py-1.5 rounded-full">Starting camera…</span>

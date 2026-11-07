@@ -50,3 +50,8 @@ input, select, textarea, button {
 .tip { animation: tip-in 0.12s ease-out; }
 @media (prefers-reduced-motion: reduce) { .tip { animation: none; } }
 @media print { .tip { display: none; } }
+
+/* Barcode scanner: a thin line that sweeps the frame so it is clear the camera is looking. */
+@keyframes scanline { 0%, 100% { top: 8%; } 50% { top: 92%; } }
+.scanline { animation: scanline 2.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .scanline { animation: none; } }
