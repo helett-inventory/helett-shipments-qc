@@ -44,3 +44,9 @@ input, select, textarea, button {
   .no-print { display: none !important; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* Custom hover hint (Tip): a quick fade, skipped for people who ask for less motion. */
+@keyframes tip-in { from { opacity: 0; } to { opacity: 1; } }
+.tip { animation: tip-in 0.12s ease-out; }
+@media (prefers-reduced-motion: reduce) { .tip { animation: none; } }
+@media print { .tip { display: none; } }

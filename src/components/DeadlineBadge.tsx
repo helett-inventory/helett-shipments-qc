@@ -1,3 +1,4 @@
+import { Tip } from './ui'
 import { useEffect, useState } from 'react'
 import { changeDeadline, hmsText, hoursText, urgency } from '../lib/deadline'
 import { fmtShortDateTime } from '../lib/format'
@@ -26,11 +27,10 @@ export function DeadlineBadge({ shipment, seconds }: { shipment: Pick<Shipment, 
   if (!d) return null
   const level = urgency(d, now)
   return (
-    <span
-      className={`inline-block text-[13px] font-semibold tabular-nums whitespace-nowrap ${STYLE[level]}`}
-      title={`Amazon deadline to cancel or reschedule: ${fmtShortDateTime(d.toISOString())}`}
-    >
-      {seconds ? hmsText(d, now) : hoursText(d, now)}
-    </span>
+    <Tip label={`Amazon deadline to cancel or reschedule: ${fmtShortDateTime(d.toISOString())}`}>
+      <span className={`inline-block text-[13px] font-semibold tabular-nums whitespace-nowrap ${STYLE[level]}`}>
+        {seconds ? hmsText(d, now) : hoursText(d, now)}
+      </span>
+    </Tip>
   )
 }

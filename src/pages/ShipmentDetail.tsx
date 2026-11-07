@@ -5,7 +5,7 @@ import { useLive } from '../hooks/useLive'
 import { errText, supabase, callRpc } from '../lib/supabase'
 import { uploadSignature } from '../lib/signatures'
 import { fmtDate, fmtDateTime, fromLocalInput, toLocalInput } from '../lib/format'
-import { BackLink, Btn, ModePill, Choice, Chip, ErrorBox, Field, HoldStamp, Loading, Modal, Notice, Page, StickyHead, PageTitle, Panel, StatusStamp, inputCls } from '../components/ui'
+import { BackLink, Btn, ModePill, Tip, Choice, Chip, ErrorBox, Field, HoldStamp, Loading, Modal, Notice, Page, StickyHead, PageTitle, Panel, StatusStamp, inputCls } from '../components/ui'
 import { SearchableSelect } from '../components/SearchableSelect'
 import { DateInput } from '../components/DateInput'
 import { SignaturePad } from '../components/SignaturePad'
@@ -988,27 +988,28 @@ function CopyInvoiceData({ fbaId, fc, lines }: { fbaId: string; fc: string; line
     window.setTimeout(() => setState('idle'), 2200)
   }
   return (
-    <button
-      type="button"
-      onClick={copy}
-      disabled={state === 'busy'}
-      title="Copies FBA number, ASIN, SKU, FNSKU, box qty and qty for every SKU, tab separated, ready to paste into a spreadsheet"
-      className={`inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-[13px] font-semibold ${
-        state === 'done' ? 'bg-[#d8f2e0] text-[#0f6b32]' : state === 'failed' ? 'bg-[#fde8e6] text-fail' : 'bg-[#eceef1] text-ink hover:bg-[#e1e4e8]'
-      }`}
-    >
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        {state === 'done' ? (
-          <path d="M5 12.5 10 17.5 19 7" />
-        ) : (
-          <>
-            <rect x="9" y="9" width="11" height="11" rx="2" />
-            <path d="M5 15V6a2 2 0 0 1 2-2h9" />
-          </>
-        )}
-      </svg>
-      {state === 'done' ? 'Copied' : state === 'failed' ? 'Copy failed' : 'Copy invoice data'}
-    </button>
+    <Tip label="Copies FBA number, destination FC, ASIN, SKU, FNSKU, box qty and qty for every SKU, tab separated, ready to paste into a spreadsheet">
+      <button
+        type="button"
+        onClick={copy}
+        disabled={state === 'busy'}
+        className={`inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-[13px] font-semibold ${
+          state === 'done' ? 'bg-[#d8f2e0] text-[#0f6b32]' : state === 'failed' ? 'bg-[#fde8e6] text-fail' : 'bg-[#eceef1] text-ink hover:bg-[#e1e4e8]'
+        }`}
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          {state === 'done' ? (
+            <path d="M5 12.5 10 17.5 19 7" />
+          ) : (
+            <>
+              <rect x="9" y="9" width="11" height="11" rx="2" />
+              <path d="M5 15V6a2 2 0 0 1 2-2h9" />
+            </>
+          )}
+        </svg>
+        {state === 'done' ? 'Copied' : state === 'failed' ? 'Copy failed' : 'Copy invoice data'}
+      </button>
+    </Tip>
   )
 }
 

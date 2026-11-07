@@ -7,7 +7,7 @@ import { needsAppointment, needsBoxLabels } from '../data/options'
 import { changeDeadline, withinWatch } from '../lib/deadline'
 import { DeadlineBadge } from '../components/DeadlineBadge'
 import { addDaysISO, fmtDate, fmtDateTime, fmtDayLong, todayISO } from '../lib/format'
-import { Chip, ModePill, Empty, ErrorBox, HoldStamp, Loading, Page, StickyHead, PageTitle, StatusStamp } from '../components/ui'
+import { Chip, ModePill, Tip, Empty, ErrorBox, HoldStamp, Loading, Page, StickyHead, PageTitle, StatusStamp } from '../components/ui'
 import type { Dispatch, Shipment, ShipmentLine } from '../types/db'
 
 type Row = Shipment & {
@@ -181,18 +181,22 @@ function StatusIcons({
   lines: { unit_qty: number; received_qty?: number | null }[]
 }) {
   const holdChip = hold ? (
-    <span role="img" aria-label="On hold" title="On hold" className="w-6 h-6 rounded-full flex items-center justify-center text-white shrink-0" style={{ background: RED }}>
-      <Glyph glyph="pause" size={14} />
-    </span>
+    <Tip label="On hold">
+      <span role="img" aria-label="On hold" className="w-6 h-6 rounded-full flex items-center justify-center text-white shrink-0" style={{ background: RED }}>
+        <Glyph glyph="pause" size={14} />
+      </span>
+    </Tip>
   ) : null
 
   if (status === 'Cancelled') {
     return (
       <span className="inline-flex items-center gap-1.5">
         {holdChip}
-        <span role="img" aria-label="Cancelled" title="Cancelled" className="inline-flex items-center justify-center h-9 w-24 rounded-full text-white" style={{ background: GREY }}>
-          <Glyph glyph="x" size={18} />
-        </span>
+        <Tip label="Cancelled">
+          <span role="img" aria-label="Cancelled" className="inline-flex items-center justify-center h-9 w-24 rounded-full text-white" style={{ background: GREY }}>
+            <Glyph glyph="x" size={18} />
+          </span>
+        </Tip>
       </span>
     )
   }
@@ -230,17 +234,17 @@ function StatusIcons({
       {holdChip}
       <span className="inline-flex items-center justify-center gap-1.5 h-9 w-24 rounded-full bg-[#f0f1f3]">
         {slots.map((sl, k) => (
-          <span
-            key={k}
-            role="img"
-            aria-label={sl.label}
-            title={sl.label}
-            className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${sl.state === 'active' ? 'text-white' : sl.state === 'done' ? 'bg-[#d8f2e0] text-[#15803d]' : 'bg-[#e6e9ed] text-[#b4bbc4]'}`}
-            style={sl.state === 'active' ? { background: sl.bg } : undefined}
-          >
-            {sl.state === 'done' && <Glyph glyph="check" size={13} />}
-            {sl.state !== 'done' && sl.glyph && <Glyph glyph={sl.glyph} size={14} />}
-          </span>
+          <Tip key={k} label={sl.label}>
+            <span
+              role="img"
+              aria-label={sl.label}
+              className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${sl.state === 'active' ? 'text-white' : sl.state === 'done' ? 'bg-[#d8f2e0] text-[#15803d]' : 'bg-[#e6e9ed] text-[#b4bbc4]'}`}
+              style={sl.state === 'active' ? { background: sl.bg } : undefined}
+            >
+              {sl.state === 'done' && <Glyph glyph="check" size={13} />}
+              {sl.state !== 'done' && sl.glyph && <Glyph glyph={sl.glyph} size={14} />}
+            </span>
+          </Tip>
         ))}
       </span>
     </span>

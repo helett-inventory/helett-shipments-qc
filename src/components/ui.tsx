@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { signedUrl } from '../lib/signatures'
 
 /* ------------------------------------------------------------ buttons */
@@ -27,6 +28,63 @@ export function Btn({
       {...rest}
       className={`min-h-[44px] px-4 rounded-lg text-[15px] font-medium transition-colors disabled:opacity-45 disabled:cursor-not-allowed ${TONES[tone]} ${className}`}
     />
+  )
+}
+
+/* ------------------------------------------------------------ tooltip */
+
+// The app's own hover hint (replaces the browser's plain title tooltip). Shows on hover, keyboard focus, and a tap on touch screens.
+export function Tip({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const timer = useRef<number | undefined>(undefined)
+  const [pos, setPos] = useState<{ x: number; y: number; below: boolean } | null>(null)
+
+  function show() {
+    const r = ref.current?.getBoundingClientRect()
+    if (!r) return
+    const below = r.top < 64
+    const x = Math.min(Math.max(r.left + r.width / 2, 130), window.innerWidth - 130)
+    setPos({ x, y: below ? r.bottom : r.top, below })
+  }
+  function hide() {
+    window.clearTimeout(timer.current)
+    setPos(null)
+  }
+  useEffect(() => {
+    if (!pos) return
+    const off = () => setPos(null)
+    window.addEventListener('scroll', off, true)
+    return () => window.removeEventListener('scroll', off, true)
+  }, [pos])
+  useEffect(() => () => window.clearTimeout(timer.current), [])
+
+  return (
+    <span
+      ref={ref}
+      className="inline-flex"
+      onMouseEnter={show}
+      onMouseLeave={hide}
+      onFocus={show}
+      onBlur={hide}
+      onTouchStart={() => {
+        show()
+        window.clearTimeout(timer.current)
+        timer.current = window.setTimeout(hide, 1800)
+      }}
+    >
+      {children}
+      {pos &&
+        createPortal(
+          <div
+            role="tooltip"
+            style={{ position: 'fixed', left: pos.x, top: pos.y, transform: pos.below ? 'translate(-50%, 8px)' : 'translate(-50%, calc(-100% - 8px))' }}
+            className="tip z-[60] pointer-events-none w-max max-w-[260px] rounded-lg bg-ink text-white text-[12.5px] font-medium leading-snug px-2.5 py-1.5 shadow-lg text-center"
+          >
+            {label}
+          </div>,
+          document.body
+        )}
+    </span>
   )
 }
 
