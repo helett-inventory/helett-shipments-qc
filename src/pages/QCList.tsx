@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useLive } from '../hooks/useLive'
 import { supabase } from '../lib/supabase'
 import { ModePill, Tip, Empty, ErrorBox, Loading, Page, StickyHead, PageTitle } from '../components/ui'
-import { Glyph, TEAL, BLUE, GREEN, AMBER, RED } from '../components/statusIcons'
+import { Glyph, INK, RED } from '../components/statusIcons'
 import type { Inspection, Shipment, ShipmentLine } from '../types/db'
 
 type Row = Pick<Inspection, 'id' | 'record_no' | 'status' | 'needs_recheck'> & {
@@ -24,18 +24,18 @@ const COLS = 'lg:grid-cols-[7rem_1.2fr_1.8fr_.6fr_6rem]'
 function CaseStatus({ status, hold, recheck }: { status: string; hold: boolean; recheck: boolean }) {
   const main =
     status === 'Closed'
-      ? { glyph: 'check' as const, label: 'Closed', bg: GREEN }
+      ? { glyph: 'check' as const, label: 'Closed', bg: INK, fg: '#fff' }
       : status === 'Submitted'
-        ? { glyph: 'clipCheck' as const, label: 'Submitted, waiting for manager', bg: BLUE }
-        : { glyph: 'clipCheck' as const, label: 'QC to do', bg: TEAL }
+        ? { glyph: 'clipCheck' as const, label: 'Submitted, waiting for manager', bg: INK, fg: '#fff' }
+        : { glyph: 'clipCheck' as const, label: 'QC to do', bg: '#e6e9ed', fg: INK }
   const extras = [
     hold && { key: 'h', glyph: 'pause' as const, label: 'On hold', bg: RED },
-    recheck && { key: 'r', glyph: 'half' as const, label: 'Quantity changed, recheck needed', bg: AMBER }
+    recheck && { key: 'r', glyph: 'half' as const, label: 'Quantity changed, recheck needed', bg: INK }
   ].filter(Boolean) as { key: string; glyph: 'pause' | 'half'; label: string; bg: string }[]
   if (extras.length === 0) {
     return (
       <Tip label={main.label}>
-        <span role="img" aria-label={main.label} className="inline-flex items-center justify-center h-9 w-20 rounded-full text-white" style={{ background: main.bg }}>
+        <span role="img" aria-label={main.label} className="inline-flex items-center justify-center h-9 w-20 rounded-full" style={{ background: main.bg, color: main.fg }}>
           <Glyph glyph={main.glyph} size={18} />
         </span>
       </Tip>
@@ -43,9 +43,9 @@ function CaseStatus({ status, hold, recheck }: { status: string; hold: boolean; 
   }
   return (
     <span className="inline-flex items-center justify-center gap-1.5 h-9 w-24 rounded-full bg-[#f0f1f3]">
-      {[{ key: 'm', glyph: main.glyph, label: main.label, bg: main.bg }, ...extras].map((it) => (
+      {[{ key: 'm', glyph: main.glyph, label: main.label, bg: main.bg, fg: main.fg }, ...extras.map((x) => ({ ...x, fg: '#fff' }))].map((it) => (
         <Tip key={it.key} label={it.label}>
-          <span role="img" aria-label={it.label} className="w-6 h-6 rounded-full flex items-center justify-center text-white shrink-0" style={{ background: it.bg }}>
+          <span role="img" aria-label={it.label} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: it.bg, color: it.fg }}>
             <Glyph glyph={it.glyph} size={14} />
           </span>
         </Tip>

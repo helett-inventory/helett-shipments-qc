@@ -147,23 +147,23 @@ function StatusIcons({
   slots.push(
     qcDone
       ? { state: 'done', label: 'QC done' }
-      : { state: 'active', glyph: 'clipCheck', label: status === 'QC In Progress' ? 'QC in progress' : 'QC pending', bg: status === 'QC In Progress' ? AMBER : TEAL }
+      : { state: 'active', glyph: 'clipCheck', label: status === 'QC In Progress' ? 'QC in progress' : 'QC pending' }
   )
 
   // 2. Dispatch, with the single action that is needed right now
-  if (dispatched) slots.push({ state: 'active', glyph: 'check', label: 'Dispatched', bg: GREEN })
+  if (dispatched) slots.push({ state: 'done', label: 'Dispatched' })
   else if (!qcDone) slots.push({ state: 'idle', glyph: 'truck', label: 'Dispatch: after QC' })
-  else if (awaitingWm) slots.push({ state: 'active', glyph: 'pen', label: 'Awaiting warehouse manager', bg: INK })
-  else if (labelsPending) slots.push({ state: 'active', glyph: 'tag', label: 'Box labels pending', bg: AMBER })
-  else slots.push({ state: 'active', glyph: 'truck', label: status === 'Partially Dispatched' ? 'Partially dispatched' : 'Ready to dispatch', bg: BLUE })
+  else if (awaitingWm) slots.push({ state: 'active', glyph: 'pen', label: 'Awaiting warehouse manager' })
+  else if (labelsPending) slots.push({ state: 'active', glyph: 'tag', label: 'Box labels pending' })
+  else slots.push({ state: 'active', glyph: 'truck', label: status === 'Partially Dispatched' ? 'Partially dispatched' : 'Ready to dispatch' })
 
   // 3. Amazon receiving, only once everything is dispatched and confirmed
   if (dispatched) {
     const pending = lines.reduce((n, l) => n + Math.max(0, l.unit_qty - (l.received_qty ?? 0)), 0)
     slots.push(
       pending > 0
-        ? { state: 'active', glyph: 'clock', label: `Receiving pending: ${pending} units`, bg: AMBER }
-        : { state: 'active', glyph: 'dbl', label: 'Received at Amazon', bg: DEEP_GREEN }
+        ? { state: 'active', glyph: 'clock', label: `Receiving pending: ${pending} units` }
+        : { state: 'done', glyph: 'dbl', label: 'Received at Amazon' }
     )
   } else slots.push({ state: 'idle', glyph: 'clock', label: 'Receiving: after dispatch' })
 
@@ -176,11 +176,9 @@ function StatusIcons({
             <span
               role="img"
               aria-label={sl.label}
-              className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${sl.state === 'active' ? 'text-white' : sl.state === 'done' ? 'bg-[#d8f2e0] text-[#15803d]' : 'bg-[#e6e9ed] text-[#b4bbc4]'}`}
-              style={sl.state === 'active' ? { background: sl.bg } : undefined}
+              className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${sl.state === 'active' ? 'bg-white text-ink shadow-[0_1px_2px_rgba(16,24,40,0.18)]' : sl.state === 'done' ? 'bg-ink text-white' : 'bg-[#e6e9ed] text-[#b4bbc4]'}`}
             >
-              {sl.state === 'done' && <Glyph glyph="check" size={13} />}
-              {sl.state !== 'done' && sl.glyph && <Glyph glyph={sl.glyph} size={14} />}
+              {sl.state === 'done' ? <Glyph glyph={sl.glyph ?? 'check'} size={sl.glyph === 'dbl' ? 14 : 13} /> : sl.glyph && <Glyph glyph={sl.glyph} size={14} />}
             </span>
           </Tip>
         ))}
