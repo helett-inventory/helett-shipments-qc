@@ -292,10 +292,10 @@ export function StatusStamp({ status }: { status: string }) {
 }
 
 // Dispatch mode label: same neutral pill as the status badges. An optional dot (e.g. Amazon receiving) sits inside it.
-// Three modes, three clearly different weights from the app's own palette: ATS solid black, Drop In grey, Bluedart soft blue.
+// Three modes, three clearly different weights from the app's own palette: Drop In solid black, ATS grey, Bluedart soft blue.
 const MODE_LOOK: Record<string, string> = {
-  ATS: 'bg-ink text-white',
-  'Drop In': 'bg-[#e1e4e9] text-ink',
+  ATS: 'bg-[#e1e4e9] text-ink',
+  'Drop In': 'bg-ink text-white',
   Bluedart: 'bg-[#dde7fb] text-[#1d4fb8]'
 }
 
