@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLive } from '../hooks/useLive'
+import { useNeeds } from '../hooks/useNeeds'
+import { NeedsStrip } from '../components/NeedsStrip'
 import { supabase } from '../lib/supabase'
 import { ModePill, Tip, Empty, ErrorBox, Loading, Page, StickyHead, PageTitle } from '../components/ui'
 import { Glyph, INK, RED } from '../components/statusIcons'
@@ -55,6 +57,7 @@ function CaseStatus({ status, hold, recheck }: { status: string; hold: boolean; 
 }
 
 export function QCList() {
+  const needs = useNeeds()
   const { data, error, loading } = useLive<Row[]>(
     async () => {
       const { data, error } = await supabase
@@ -123,6 +126,7 @@ export function QCList() {
       {filterBar('hidden lg:flex')}
       </StickyHead>
       {filterBar('flex lg:hidden pt-3')}
+      <NeedsStrip items={needs.qc} />
 
       {error && <ErrorBox message={error} />}
       {loading && !data && <Loading />}

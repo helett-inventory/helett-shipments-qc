@@ -3,6 +3,8 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { supabase } from '../lib/supabase'
 import { startRealtime } from '../lib/realtime'
+import { useNeeds } from '../hooks/useNeeds'
+import { NavCount } from './NeedsStrip'
 import type { Shipment } from '../types/db'
 
 const ROLE_LABEL = { inventory: 'Inventory', qc: 'QC', wm: 'Warehouse manager' } as const
@@ -86,6 +88,8 @@ export function AppShell() {
     }
   }, [menuOpen])
   const { alerts, dismiss } = useHoldAlerts(profile?.role === 'inventory' || !!profile?.is_admin)
+  const needs = useNeeds()
+  const countFor = (to: string) => (to === '/' ? needs.ships.length : needs.qc.length)
 
   return (
     <div className="min-h-screen print:block">
@@ -106,6 +110,7 @@ export function AppShell() {
             >
               {n.icon}
               {n.label}
+              <NavCount n={countFor(n.to)} className="ml-auto" />
             </NavLink>
           ))}
         </nav>
@@ -199,8 +204,9 @@ export function AppShell() {
           >
             {({ isActive }) => (
               <>
-                <span className={`flex items-center justify-center h-8 w-16 rounded-full transition-colors ${isActive ? 'bg-ink text-white' : ''}`}>
+                <span className={`relative flex items-center justify-center h-8 w-16 rounded-full transition-colors ${isActive ? 'bg-ink text-white' : ''}`}>
                   {n.icon}
+                  <NavCount n={countFor(n.to)} className="absolute -top-1 right-1 ring-2 ring-surface" />
                 </span>
                 {n.label}
               </>

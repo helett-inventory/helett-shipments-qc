@@ -6,6 +6,8 @@ import { supabase } from '../lib/supabase'
 import { needsAppointment, needsBoxLabels } from '../data/options'
 import { changeDeadline, withinWatch } from '../lib/deadline'
 import { DeadlineBadge } from '../components/DeadlineBadge'
+import { NeedsStrip } from '../components/NeedsStrip'
+import { useNeeds } from '../hooks/useNeeds'
 import { addDaysISO, fmtDate, fmtDateTime, fmtDayLong, todayISO } from '../lib/format'
 import { G, Glyph, INK, BLUE, TEAL, AMBER, YELLOW, GREEN, DEEP_GREEN, RED, GREY } from '../components/statusIcons'
 import { Chip, ModePill, Tip, Empty, ErrorBox, HoldStamp, Loading, Page, StickyHead, PageTitle, StatusStamp } from '../components/ui'
@@ -191,6 +193,7 @@ const COLS = 'lg:grid-cols-[1fr_1fr_1.4fr_.7fr_1.7fr_1.2fr_1.1fr]'
 
 export function Shipments() {
   const { profile } = useAuth()
+  const needs = useNeeds()
   const { data, error, loading } = useLive<Row[]>(
     async () => {
       const { data, error } = await supabase
@@ -290,6 +293,7 @@ export function Shipments() {
       )}
       </StickyHead>
       {filterBar('flex lg:hidden pt-3')}
+      <NeedsStrip items={needs.ships} />
 
       {showDeadlines && needDecision > 0 && filter !== 'deadline' && (
         <div role="alert" className="mb-4 rounded-lg bg-[#fdeedb] px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
