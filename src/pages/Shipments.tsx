@@ -295,7 +295,7 @@ export function Shipments() {
       {filterBar('flex lg:hidden pt-3')}
       <NeedsStrip items={needs.ships} />
 
-      {showDeadlines && needDecision > 0 && filter !== 'deadline' && (
+      {(profile?.role === 'inventory' || !!profile?.is_admin) && needDecision > 0 && filter !== 'deadline' && (
         <div role="alert" className="mb-4 rounded-lg bg-[#fdeedb] px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
           <span className="text-[15px] font-medium text-warn">
             {needDecision} shipment{needDecision > 1 ? 's' : ''} need a decision in the next 48 hours: cancel or reschedule to protect account health.
