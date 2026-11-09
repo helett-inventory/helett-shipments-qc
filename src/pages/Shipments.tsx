@@ -346,7 +346,8 @@ export function Shipments() {
               <ul className="divide-y divide-line min-w-0">
                 {g.rows.map((s) => {
                   const liveLines = s.shipment_lines.filter((l) => l.status !== 'Cancelled')
-                  const units = liveLines.reduce((n, l) => n + l.unit_qty, 0)
+                  const shownLines = s.status === 'Cancelled' ? s.shipment_lines : liveLines // a cancelled shipment still lists its SKUs
+                  const units = shownLines.reduce((n, l) => n + l.unit_qty, 0)
                   const shipped = s.dispatches.length > 0
                   const awaiting = s.dispatches.some((d) => !d.wm_approved_at)
                   return (
@@ -359,7 +360,7 @@ export function Shipments() {
                       >
                         <div className="flex items-center justify-between gap-3 lg:contents">
                           <div className="flex items-center lg:col-start-2 lg:row-start-1 lg:self-center">
-                            <ModePill large mode={s.dispatch_mode} />
+                            <ModePill large mode={s.dispatch_mode} cancelled={s.status === 'Cancelled'} />
                           </div>
                           <div className="flex flex-wrap justify-end gap-1.5 lg:justify-start lg:col-start-7 lg:row-start-1">
                             <StatusIcons
@@ -373,7 +374,7 @@ export function Shipments() {
                         </div>
 
                         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 lg:contents">
-                          <div className="font-mono font-medium break-all lg:col-start-3 lg:row-start-1">{s.fba_id}</div>
+                          <div className={`font-mono font-medium break-all lg:col-start-3 lg:row-start-1 ${s.status === 'Cancelled' ? 'text-muted line-through' : ''}`}>{s.fba_id}</div>
                           <div className="text-sm text-muted lg:text-ink lg:col-start-4 lg:row-start-1">{s.warehouse}</div>
                         </div>
 
@@ -402,13 +403,13 @@ export function Shipments() {
                         </div>
 
                         <ul className="text-sm min-w-0 space-y-2 lg:col-start-5 lg:row-start-1">
-                          {liveLines.map((l) => (
-                            <li key={l.id}>
+                          {shownLines.map((l) => (
+                            <li key={l.id} className={s.status === 'Cancelled' ? 'text-muted' : ''}>
                               {l.product_name}
                               <span className="text-muted"> · {l.unit_qty}</span>
                             </li>
                           ))}
-                          {liveLines.length > 1 && (
+                          {shownLines.length > 1 && (
                             <li className="text-[13px] text-muted">
                               {units} units · {s.box_qty_total} boxes
                             </li>

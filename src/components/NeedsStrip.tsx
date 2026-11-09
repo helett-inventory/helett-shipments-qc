@@ -94,12 +94,13 @@ export function NeedsStrip({ items }: { items: Need[] }) {
   )
 }
 
-export function NavCount({ n, className = '' }: { n: number; className?: string }) {
+// Black on white; flips to white on black when it sits on the active (black) tab.
+export function NavCount({ n, invert = false, className = '' }: { n: number; invert?: boolean; className?: string }) {
   if (n <= 0) return null
   return (
     <span
       aria-label={`${n} waiting`}
-      className={`min-w-[18px] h-[18px] px-1 rounded-full bg-fail text-white text-[11px] font-semibold leading-none flex items-center justify-center ${className}`}
+      className={`min-w-[18px] h-[18px] px-1 rounded-full ${invert ? 'bg-white text-ink' : 'bg-ink text-white'} text-[11px] font-semibold leading-none flex items-center justify-center ${className}`}
     >
       {n > 99 ? '99+' : n}
     </span>

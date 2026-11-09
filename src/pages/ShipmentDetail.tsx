@@ -141,7 +141,7 @@ export function ShipmentDetail() {
             <span>
               {b.ref} · {b.warehouse}
             </span>
-            <ModePill mode={b.dispatch_mode} />
+            <ModePill mode={b.dispatch_mode} cancelled={b.status === 'Cancelled'} />
             {(isInv || isWm) && <CopyInvoiceData fbaId={b.fba_id} fc={b.warehouse} lines={b.shipment_lines.filter((l) => l.status !== 'Cancelled')} />}
           </div>
         }

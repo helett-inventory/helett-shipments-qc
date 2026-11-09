@@ -8,8 +8,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Helett Enterprises',
-        short_name: 'Helett Enterprises',
+        name: 'Helett',
+        short_name: 'Helett',
         description: 'Shipments and QC for Helett Enterprises',
         theme_color: '#12161c',
         background_color: '#f5f6f7',

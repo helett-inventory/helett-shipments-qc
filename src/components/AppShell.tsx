@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { startRealtime } from '../lib/realtime'
 import { useNeeds } from '../hooks/useNeeds'
 import { NavCount } from './NeedsStrip'
+import { Tip } from './ui'
 import type { Shipment } from '../types/db'
 
 const ROLE_LABEL = { inventory: 'Inventory', qc: 'QC', wm: 'Warehouse manager' } as const
@@ -89,36 +90,105 @@ export function AppShell() {
   }, [menuOpen])
   const { alerts, dismiss } = useHoldAlerts(profile?.role === 'inventory' || !!profile?.is_admin)
   const needs = useNeeds()
+  const [slim, setSlim] = useState(() => {
+    try {
+      return localStorage.getItem('helett.sidebar.slim') === '1'
+    } catch {
+      return false
+    }
+  })
+  const toggleSlim = () =>
+    setSlim((v) => {
+      try {
+        localStorage.setItem('helett.sidebar.slim', v ? '0' : '1')
+      } catch {
+        /* not remembered */
+      }
+      return !v
+    })
   const countFor = (to: string) => (to === '/' ? needs.ships.length : needs.qc.length)
 
   return (
-    <div className="min-h-screen print:block">
-      {/* desktop sidebar */}
-      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-60 flex-col bg-surface border-r border-line no-print">
-        <div className="px-5 h-16 flex items-center font-semibold text-lg tracking-tight">Helett Enterprises</div>
-        <nav className="px-3 space-y-1" aria-label="Sections">
+    <div className="min-h-screen print:block" style={{ ['--side' as string]: slim ? '72px' : '240px' }}>
+      {/* desktop sidebar: full, or a slim icon rail (remembered).
+          Every icon sits at the same x and every row at the same y in both states; only labels come and go. */}
+      <aside
+        className={`hidden lg:flex fixed inset-y-0 left-0 flex-col bg-surface border-r border-line no-print overflow-hidden transition-[width] duration-200 ${slim ? 'w-[72px]' : 'w-60'}`}
+      >
+        <div className="h-16 shrink-0 flex items-center gap-2 pl-4 pr-3">
+          <Tip label={slim ? 'Expand sidebar' : 'Collapse sidebar'}>
+            <button
+              type="button"
+              onClick={toggleSlim}
+              aria-label={slim ? 'Expand sidebar' : 'Collapse sidebar'}
+              className="w-10 h-10 shrink-0 rounded-lg text-muted hover:bg-canvas hover:text-ink flex items-center justify-center"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="16" rx="2" />
+                <path d="M9 4v16" />
+                <path d={slim ? 'M13.5 10l2 2-2 2' : 'M15.5 10l-2 2 2 2'} />
+              </svg>
+            </button>
+          </Tip>
+          {!slim && <span className="font-semibold text-lg tracking-tight">Helett</span>}
+        </div>
+
+        <nav className="px-3 space-y-1.5" aria-label="Sections">
           {NAV.map((n) => (
             <NavLink
               key={n.to}
               to={n.to}
               end={n.end}
+              aria-label={n.label}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 min-h-[44px] rounded-full text-[15px] font-medium transition-colors ${
+                `relative flex items-center h-12 pl-[14px] gap-3 rounded-full text-[15px] font-medium whitespace-nowrap transition-colors ${
                   isActive ? 'bg-ink text-white' : 'text-muted hover:bg-canvas hover:text-ink'
                 }`
               }
             >
-              {n.icon}
-              {n.label}
-              <NavCount n={countFor(n.to)} className="ml-auto" />
+              {({ isActive }) => {
+                const body = (
+                  <>
+                    {n.icon}
+                    {!slim && n.label}
+                    <NavCount
+                      n={countFor(n.to)}
+                      invert={isActive}
+                      className={slim ? 'absolute top-[3px] right-[3px] !min-w-[16px] !h-4 !text-[10px]' : 'ml-auto mr-4'}
+                    />
+                  </>
+                )
+                return slim ? <Tip label={n.label}><span className="contents">{body}</span></Tip> : body
+              }}
             </NavLink>
           ))}
         </nav>
-        <div className="mt-auto p-4 border-t border-line">
-          <div className="text-sm font-medium truncate">{profile?.name}</div>
-          <div className="text-[13px] text-muted mb-2">{profile?.is_admin ? 'Admin' : profile ? ROLE_LABEL[profile.role] : ''}</div>
-          <button type="button" onClick={signOut} className="w-full min-h-[40px] rounded-lg bg-fail text-white text-sm font-medium hover:bg-fail/90">
-            Sign out
+
+        <div className="mt-auto p-3 border-t border-line space-y-1.5">
+          <div className="flex items-center gap-3 h-12 pl-1 min-w-0">
+            <Tip label={`${profile?.name ?? ''}, ${profile?.is_admin ? 'Admin' : profile ? ROLE_LABEL[profile.role] : ''}`}>
+              <span className="w-10 h-10 shrink-0 rounded-full bg-[#f0f1f3] text-ink text-sm font-semibold flex items-center justify-center">
+                {(profile?.name ?? '?').trim().charAt(0).toUpperCase()}
+              </span>
+            </Tip>
+            {!slim && (
+              <div className="min-w-0">
+                <div className="text-sm font-medium truncate">{profile?.name}</div>
+                <div className="text-[13px] text-muted">{profile?.is_admin ? 'Admin' : profile ? ROLE_LABEL[profile.role] : ''}</div>
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={signOut}
+            aria-label="Sign out"
+            className="w-full h-11 pl-[15px] gap-3 rounded-xl text-sm font-medium text-muted hover:bg-fail/10 hover:text-fail flex items-center whitespace-nowrap"
+          >
+            <svg className="shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M9 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4" />
+              <path d="M16 8l4 4-4 4M20 12H9" />
+            </svg>
+            {!slim && 'Sign out'}
           </button>
         </div>
       </aside>
@@ -129,7 +199,7 @@ export function AppShell() {
         style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
         <div className="px-4 h-14 flex items-center justify-between">
-          <span className="font-semibold tracking-tight">Helett Enterprises</span>
+          <span className="font-semibold tracking-tight">Helett</span>
           <div className="flex items-center gap-1" ref={menuRef}>
             <span className="text-sm text-muted truncate max-w-[110px]">{profile?.name.split(' ')[0]}</span>
             <button
@@ -164,7 +234,7 @@ export function AppShell() {
         </div>
       </header>
 
-      <div className="lg:pl-60 print:pl-0">
+      <div className="lg:pl-[var(--side)] transition-[padding] duration-200 print:pl-0">
         {!online && (
           <div role="alert" className="bg-fail text-white text-center text-sm py-2 px-4 no-print">
             You are offline. Helett needs a connection to save or scan.
@@ -206,7 +276,7 @@ export function AppShell() {
               <>
                 <span className={`relative flex items-center justify-center h-8 w-16 rounded-full transition-colors ${isActive ? 'bg-ink text-white' : ''}`}>
                   {n.icon}
-                  <NavCount n={countFor(n.to)} className="absolute -top-1 right-1 ring-2 ring-surface" />
+                  <NavCount n={countFor(n.to)} invert={isActive} className="absolute top-0 right-1.5" />
                 </span>
                 {n.label}
               </>

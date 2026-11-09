@@ -20,7 +20,7 @@ export function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center p-5">
       <form onSubmit={submit} className="w-full max-w-sm">
-        <h1 className="text-3xl font-semibold tracking-tight">Helett Enterprises</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Helett</h1>
         <p className="text-muted mt-1 mb-8">Sign in to manage shipments and QC.</p>
         <Field label="Email">
           <input

@@ -155,7 +155,7 @@ export function QCList() {
                   >
                     <div className="flex items-center justify-between gap-3 lg:contents">
                       <div className="lg:col-start-1 lg:row-start-1">
-                        <ModePill large mode={s.dispatch_mode} />
+                        <ModePill large mode={s.dispatch_mode} cancelled={s.status === 'Cancelled'} />
                       </div>
                       <div className="lg:col-start-5 lg:row-start-1">
                         <CaseStatus status={r.status} hold={s.on_hold} recheck={r.needs_recheck} />

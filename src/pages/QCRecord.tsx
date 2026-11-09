@@ -263,7 +263,7 @@ export function QCRecord() {
 
       {editing && (
         <div
-          className="fixed bottom-0 inset-x-0 lg:left-60 z-30 bg-surface border-t border-line px-4 pt-3 no-print"
+          className="fixed bottom-0 inset-x-0 lg:left-[var(--side)] z-30 bg-surface border-t border-line px-4 pt-3 no-print"
           style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
         >
           <div className="max-w-2xl lg:max-w-6xl mx-auto lg:px-4 lg:flex lg:items-center lg:justify-end lg:gap-6">

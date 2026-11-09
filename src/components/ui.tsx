@@ -357,12 +357,13 @@ const MODE_LOOK: Record<string, string> = {
   Bluedart: 'bg-[#dde7fb] text-[#1d4fb8]'
 }
 
-export function ModePill({ mode, dot, large }: { mode: string | null | undefined; dot?: React.ReactNode; large?: boolean }) {
+// A cancelled shipment drops its type colour for a pale red, so it never reads as live.
+export function ModePill({ mode, dot, large, cancelled }: { mode: string | null | undefined; dot?: React.ReactNode; large?: boolean; cancelled?: boolean }) {
   return (
     <span
       className={`relative inline-flex items-center justify-center rounded-full font-semibold leading-none whitespace-nowrap text-center ${
         large ? 'h-9 w-28 text-[15px]' : 'h-7 px-3 gap-2 text-[13px]'
-      } ${MODE_LOOK[mode ?? ''] ?? 'bg-[#eceef2] text-muted'}`}
+      } ${cancelled ? 'bg-[#fde8e6] text-fail/75' : (MODE_LOOK[mode ?? ''] ?? 'bg-[#eceef2] text-muted')}`}
     >
       {mode || 'No mode'}
       {dot && (large ? <span className="absolute right-2.5 top-1/2 -translate-y-1/2 flex">{dot}</span> : dot)}
