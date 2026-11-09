@@ -3,14 +3,12 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { useLive } from '../hooks/useLive'
 import { errText, supabase, callRpc } from '../lib/supabase'
-import { uploadSignature } from '../lib/signatures'
 import { todayISO } from '../lib/format'
 import { ALL_ITEMS } from '../data/checklist'
 import { BackLink, Btn, ErrorBox, HoldStamp, Loading, Modal, Notice, Page, StatusStamp } from '../components/ui'
 import { ConfirmModal } from '../components/ReasonModal'
 import { QCFillForm } from '../components/QCFillForm'
 import { printAs } from '../lib/printName'
-import { usePeople } from '../hooks/usePeople'
 import { invalidateAll } from '../lib/cache'
 import { RecordView } from '../components/RecordView'
 import { RecordSheet, draftFromInspection, type Draft, type RecordBundle } from '../components/RecordSheet'
@@ -75,7 +73,6 @@ export function QCRecord() {
   const editing = (profile?.role === 'qc' || profile?.role === 'inventory' || !!profile?.is_admin) && data?.insp.status === 'Open'
 
   const [draft, setDraft] = useState<Draft | null>(null)
-  const [qcSign, setQcSign] = useState('')
   const seeded = useRef<string | null>(null)
   useEffect(() => {
     if (!data || !editing || seeded.current === data.insp.id) return
@@ -96,13 +93,11 @@ export function QCRecord() {
     }
   }, [draft, data, editing])
 
-  // Inspector is picked from the people who have an account, never typed.
-  const people = usePeople((p) => p.role === 'qc' || p.role === 'inventory' || !!p.is_admin, [profile?.name ?? '', 'Suhail K', 'MHD Shafi'])
 
   // The 'fix before submitting' list goes away as soon as the case is edited.
   useEffect(() => {
     setSubmitErrors([])
-  }, [draft, qcSign])
+  }, [draft])
 
   const [target, setTarget] = useState<Target | null>(null)
   const [scanError, setScanError] = useState<string | null>(null)
@@ -161,8 +156,6 @@ export function QCRecord() {
     if (!draft.overall_result) errs.push('Choose the overall result.')
     if (!draft.product_condition) errs.push('Choose product condition.')
     if (!draft.packaging_quality) errs.push('Choose packaging quality.')
-    if (!draft.inspector_name.trim()) errs.push('Choose the inspector.')
-    if (!qcSign) errs.push('Sign the QC box.')
     return errs
   }
 
@@ -179,8 +172,7 @@ export function QCRecord() {
     setBusy(true)
     setSubmitError(null)
     try {
-      const sign_path = await uploadSignature(qcSign, 'qc')
-      const { error: err } = await callRpc('submit_inspection', { p_id: data.insp.id, p: { ...draft, accepted_qty: Math.max(0, draft.inspected_qty - draft.rejected_qty), sign_path } })
+      const { error: err } = await callRpc('submit_inspection', { p_id: data.insp.id, p: { ...draft, accepted_qty: Math.max(0, draft.inspected_qty - draft.rejected_qty), inspector_name: profile?.name ?? draft.inspector_name } })
       if (err) throw err
       try {
         localStorage.removeItem(draftKey(data.insp.id))
@@ -254,10 +246,7 @@ export function QCRecord() {
           draft={view}
           readOnly={!editing}
           setDraft={(patch) => setDraft((d) => (d ? { ...d, ...patch } : d))}
-          qcSign={qcSign}
-          setQcSign={setQcSign}
           onScanFn={(c) => setTarget({ kind: 'fn', id: c.id, title: `Scan FNSKU, unit ${c.sample_no} of ${data.fn.length}`, hint: 'FNSKU printed on any unit' })}
-          people={people}
         />
       ) : (
         <>
@@ -327,7 +316,7 @@ export function QCRecord() {
       {reopen && (
         <ConfirmModal
           title="Reopen QC case"
-          intro="QC will have to fill and sign it again."
+          intro="QC will have to fill and submit it again."
           confirmLabel="Reopen"
           onClose={() => setReopen(false)}
           onConfirm={async () => {

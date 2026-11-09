@@ -3,13 +3,10 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { useLive } from '../hooks/useLive'
 import { errText, supabase, callRpc } from '../lib/supabase'
-import { uploadSignature } from '../lib/signatures'
 import { fmtDate, fmtDateTime, fromLocalInput, toLocalInput } from '../lib/format'
 import { BackLink, Btn, ModePill, Tip, Choice, Chip, ErrorBox, Field, HoldStamp, Loading, Modal, Notice, Page, StickyHead, PageTitle, Panel, StatusStamp, inputCls } from '../components/ui'
 import { SearchableSelect } from '../components/SearchableSelect'
 import { DateInput } from '../components/DateInput'
-import { SignaturePad } from '../components/SignaturePad'
-import { usePeople } from '../hooks/usePeople'
 import { getSkus } from '../services/lookups'
 import { changeDeadline, hoursText, urgency } from '../lib/deadline'
 import { DeadlineBadge, useNow } from '../components/DeadlineBadge'
@@ -287,7 +284,7 @@ export function ShipmentDetail() {
                         </div>
                         {isWm && !d.wm_approved_at && (
                           <Btn tone="ok" className="mt-3" onClick={() => setModal({ kind: 'approve', dispatch: d })}>
-                            Approve and sign
+                            Approve
                           </Btn>
                         )}
                       </li>
@@ -520,7 +517,7 @@ export function ShipmentDetail() {
         <ManualQcModal
           line={modal.line}
           onClose={close}
-          onSave={(checked, failed, by) => rpc('manual_qc', { p_line: modal.line!.id, p: { checked, failed, by_name: by } })}
+          onSave={(checked, failed) => rpc('manual_qc', { p_line: modal.line!.id, p: { checked, failed } })}
         />
       )}
       {modal?.kind === 'editShipment' && <EditShipmentModal b={b} onClose={close} onSave={(c) => rpc('update_shipment', { p_id: b.id, p_changes: c })} />}
@@ -538,18 +535,16 @@ export function ShipmentDetail() {
           boxesSent={boxesSent}
           onlyLine={modal.line?.id}
           onClose={close}
-          onSave={async (payload, dataUrl) => {
-            const sign_path = await uploadSignature(dataUrl, 'dispatch')
-            await rpc('confirm_dispatch', { p_ship: b.id, p: { ...payload, sign_path } })
+          onSave={async (payload) => {
+            await rpc('confirm_dispatch', { p_ship: b.id, p: payload })
           }}
         />
       )}
       {modal?.kind === 'approve' && modal.dispatch && (
         <ApproveModal
           onClose={close}
-          onSave={async (dataUrl, name) => {
-            const path = await uploadSignature(dataUrl, 'final')
-            await rpc('approve_dispatch', { p_dispatch: modal.dispatch!.id, p_sign_path: path, p_name: name })
+          onSave={async () => {
+            await rpc('approve_dispatch', { p_dispatch: modal.dispatch!.id })
           }}
         />
       )}
@@ -791,7 +786,7 @@ function DispatchModal({
   boxesSent: number
   onlyLine?: string
   onClose: () => void
-  onSave: (payload: Record<string, unknown>, signDataUrl: string) => Promise<void>
+  onSave: (payload: Record<string, unknown>) => Promise<void>
 }) {
   const remaining = (l: LineRow) => shipQty(l, insp(l)) - dispatchedUnits(b, l.id)
   const [picked, setPicked] = useState<Record<string, string>>(() =>
@@ -804,9 +799,6 @@ function DispatchModal({
   const [transport, setTransport] = useState(b.transport ?? '')
   const [remarks, setRemarks] = useState('')
   const { profile } = useAuth()
-  const people = usePeople((p) => p.role === 'inventory' || !!p.is_admin, [profile?.name ?? '', 'MHD Anas'])
-  const [by, setBy] = useState(profile?.name ?? '')
-  const [sign, setSign] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -834,11 +826,9 @@ function DispatchModal({
       lines.push({ line_id: l.id, units: n })
     }
     if (isNaN(nBoxes) || nBoxes < 0) return setError('Enter the number of boxes loaded.')
-    if (!by) return setError('Choose who is confirming the dispatch.')
-    if (!sign) return setError('Sign to confirm dispatch.')
     setBusy(true)
     try {
-      await onSave({ boxes_sent: nBoxes, transport: needsTransport(b.dispatch_mode ?? '') ? transport : '', remarks, lines, by_name: by }, sign)
+      await onSave({ boxes_sent: nBoxes, transport: needsTransport(b.dispatch_mode ?? '') ? transport : '', remarks, lines })
       onClose()
     } catch (e) {
       setError(errText(e))
@@ -897,15 +887,9 @@ function DispatchModal({
         />
       </Field>
       <Field label="Remarks"><textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} rows={2} className={`${inputCls} py-2`} /></Field>
-      <div className="mb-4">
-        <span className="block text-sm font-medium mb-1.5">Dispatch confirmed by</span>
-        <SearchableSelect options={people} value={by} onChange={setBy} placeholder="Choose name" />
-      </div>
-      {/* Not a <Field>: a <label> forwards every click inside it to its first button (Clear). */}
-      <div className="mb-4">
-        <span className="block text-sm font-medium mb-1.5">Dispatch signature</span>
-        <SignaturePad value={sign} onChange={setSign} />
-      </div>
+      <p className="text-sm text-muted mb-4">
+        This dispatch is recorded under your login{profile?.name ? `, ${profile.name}` : ''}.
+      </p>
       {error && <ErrorBox message={error} />}
       <Btn className="w-full" onClick={go} disabled={busy || !!blocker}>
         {busy ? 'Saving…' : 'Confirm dispatch'}
@@ -914,20 +898,14 @@ function DispatchModal({
   )
 }
 
-function ApproveModal({ onClose, onSave }: { onClose: () => void; onSave: (signDataUrl: string, name: string) => Promise<void> }) {
+function ApproveModal({ onClose, onSave }: { onClose: () => void; onSave: () => Promise<void> }) {
   const { profile } = useAuth()
-  // Only warehouse managers are listed as approvers, never admins or whoever happens to be logged in.
-  const people = usePeople((p) => p.role === 'wm' && !p.is_admin, ['Mohammed Misbahudeen'])
-  const [by, setBy] = useState(profile?.role === 'wm' && !profile.is_admin ? profile.name : '')
-  const [sign, setSign] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   async function go() {
-    if (!by) return setError('Choose who is approving.')
-    if (!sign) return setError('Sign to approve.')
     setBusy(true)
     try {
-      await onSave(sign, by)
+      await onSave()
       onClose()
     } catch (e) {
       setError(errText(e))
@@ -936,15 +914,9 @@ function ApproveModal({ onClose, onSave }: { onClose: () => void; onSave: (signD
   }
   return (
     <Modal title="Final confirmation" onClose={onClose}>
-      <p className="text-sm mb-3">Signing approves this dispatch and closes the QC cases it completes.</p>
-      <div className="mb-4">
-        <span className="block text-sm font-medium mb-1.5">Approved by</span>
-        <SearchableSelect options={people} value={by} onChange={setBy} placeholder="Choose name" />
-      </div>
-      <div className="mb-4">
-        <span className="block text-sm font-medium mb-1.5">Signature</span>
-        <SignaturePad value={sign} onChange={setSign} />
-      </div>
+      <p className="text-sm mb-4">
+        Approving closes this dispatch and the QC cases it completes. It is recorded under your login{profile?.name ? `, ${profile.name}` : ''}.
+      </p>
       {error && <ErrorBox message={error} />}
       <Btn tone="ok" className="w-full" onClick={go} disabled={busy}>
         {busy ? 'Saving…' : 'Approve'}
@@ -1090,15 +1062,13 @@ function ManualQcModal({
 }: {
   line: LineRow
   onClose: () => void
-  onSave: (checked: number, failed: number, by: string) => Promise<void>
+  onSave: (checked: number, failed: number) => Promise<void>
 }) {
   const { profile } = useAuth()
-  const people = usePeople((p) => p.role === 'wm' || p.role === 'inventory' || !!p.is_admin, [profile?.name ?? ''])
   const [linked, setLinked] = useState(false)
   const [scanning, setScanning] = useState(false)
   const [checked, setChecked] = useState('')
   const [failed, setFailed] = useState('0')
-  const [by, setBy] = useState(profile?.name ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const c = parseInt(checked, 10)
@@ -1118,11 +1088,10 @@ function ManualQcModal({
     if (!Number.isFinite(c) || c < 1) return setError('Enter how many units were checked.')
     if (!Number.isFinite(f) || f < 0) return setError('Enter how many units failed (0 if none).')
     if (f > c) return setError('Failed cannot be more than checked.')
-    if (!by) return setError('Choose who is entering this.')
     setBusy(true)
     setError(null)
     try {
-      await onSave(c, f, by)
+      await onSave(c, f)
       onClose()
     } catch (e) {
       setError(errText(e))
@@ -1159,10 +1128,7 @@ function ManualQcModal({
           <p className="text-sm text-muted mb-4">
             Passed: <b className="text-ink">{passed != null && passed >= 0 ? passed : '—'}</b> of {line.unit_qty} ordered
           </p>
-          <div className="mb-4">
-            <span className="block text-sm font-medium mb-1.5">Entered by</span>
-            <SearchableSelect options={people} value={by} onChange={setBy} placeholder="Choose name" />
-          </div>
+          <p className="text-sm text-muted mb-4">Recorded under your login{profile?.name ? `, ${profile.name}` : ''}.</p>
           {error && <ErrorBox message={error} />}
           <Btn tone="ok" className="w-full" onClick={go} disabled={busy}>
             {busy ? 'Saving…' : 'Close QC case'}

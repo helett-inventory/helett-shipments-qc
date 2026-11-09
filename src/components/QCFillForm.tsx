@@ -1,6 +1,6 @@
 import { CHECK_SECTIONS, ALL_ITEMS } from '../data/checklist'
 import { fmtTimeSec } from '../lib/format'
-import { SignaturePad } from './SignaturePad'
+import { useAuth } from '../auth/AuthProvider'
 import { SearchableSelect } from './SearchableSelect'
 import { DateInput } from './DateInput'
 import type { FnskuCheck } from '../types/db'
@@ -13,10 +13,7 @@ interface Props {
   draft: Draft
   readOnly: boolean
   setDraft: (patch: Partial<Draft>) => void
-  qcSign: string
-  setQcSign: (v: string) => void
   onScanFn: (c: FnskuCheck) => void
-  people: string[]
 }
 
 function Card({ title, aside, className = '', children }: { title: string; aside?: string; className?: string; children: React.ReactNode }) {
@@ -187,7 +184,8 @@ const BOX_REASON: Record<string, string> = {
   wrong_fba: 'This label is for a different FBA shipment.'
 }
 
-export function QCFillForm({ data, draft, readOnly, setDraft, qcSign, setQcSign, onScanFn, people }: Props) {
+export function QCFillForm({ data, draft, readOnly, setDraft, onScanFn }: Props) {
+  const { profile } = useAuth()
   const { line, ship, fn, boxes, insp } = data
   const answered = ALL_ITEMS.filter((i) => draft.checks[String(i.no)]).length
   const rate = draft.inspected_qty > 0 ? ((draft.rejected_qty / draft.inspected_qty) * 100).toFixed(1) : '0.0'
@@ -377,17 +375,7 @@ export function QCFillForm({ data, draft, readOnly, setDraft, qcSign, setQcSign,
 
       {!readOnly && (
         <Card title="Sign off" className="order-10">
-          <div className="mb-4">
-            <Label>Inspector name</Label>
-            <SearchableSelect
-              options={[...new Set([...people, ...(draft.inspector_name ? [draft.inspector_name] : [])])]}
-              value={draft.inspector_name}
-              onChange={(v) => setDraft({ inspector_name: v })}
-              placeholder="Choose inspector"
-            />
-          </div>
-          <Label>QC signature</Label>
-          <SignaturePad value={qcSign} onChange={setQcSign} />
+          <p className="text-sm text-muted">This case is recorded under your login{profile?.name ? `, ${profile.name}` : ''}, with the time you submit it.</p>
         </Card>
       )}
       </div>
