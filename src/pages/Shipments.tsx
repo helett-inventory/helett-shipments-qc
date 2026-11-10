@@ -10,7 +10,7 @@ import { NeedsStrip } from '../components/NeedsStrip'
 import { useNeeds } from '../hooks/useNeeds'
 import { addDaysISO, fmtDate, fmtDateTime, fmtDayLong, todayISO } from '../lib/format'
 import { G, Glyph, INK, BLUE, TEAL, AMBER, YELLOW, GREEN, DEEP_GREEN, RED, GREY } from '../components/statusIcons'
-import { Chip, ModePill, Tip, Empty, ErrorBox, HoldStamp, Loading, Page, StickyHead, PageTitle, StatusStamp } from '../components/ui'
+import { Chip, ModePill, Tip, Empty, ErrorBox, HoldStamp, ListHead, Loading, Page, StatusStamp } from '../components/ui'
 import type { Dispatch, Shipment, ShipmentLine } from '../types/db'
 
 type Row = Shipment & {
@@ -234,39 +234,20 @@ export function Shipments() {
 
   const needDecision = useMemo(() => (data ?? []).filter((s) => withinWatch(changeDeadline(s))).length, [data])
 
-  const filterBar = (cls: string) => (
-      <div className={`flex-col lg:flex-row lg:items-center gap-3 pt-1 pb-3 ${cls}`}>
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search FBA ID, product, warehouse"
-          aria-label="Search shipments"
-          className="w-full lg:w-80 min-h-[44px] px-3 rounded-lg bg-surface ring-1 ring-[#cfd4da] focus:ring-2 focus:ring-ink focus:outline-none"
-        />
-        <div className="no-scrollbar flex gap-1.5 overflow-x-auto -mx-4 px-4 py-1 lg:mx-0 lg:px-1 lg:min-w-0" role="tablist" aria-label="Filter shipments">
-          {filters.map((f) => (
-            <button
-              key={f.id}
-              role="tab"
-              aria-selected={filter === f.id}
-              onClick={() => setFilter(f.id)}
-              className={`shrink-0 min-h-[44px] px-4 rounded-full text-sm font-medium ${
-                filter === f.id ? 'bg-ink text-white' : 'bg-surface ring-1 ring-[#cfd4da] text-muted hover:text-ink'
-              }`}
-            >
-              {f.label}
-              <span className={`ml-1.5 ${filter === f.id ? 'text-white/65' : 'text-muted/70'}`}>{counts[f.id]}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-  )
+  const filterProps = {
+    query,
+    onQuery: setQuery,
+    searchPlaceholder: 'Search FBA ID, product, warehouse',
+    searchLabel: 'Search shipments',
+    tabs: filters.map((f) => ({ id: f.id, label: f.label, count: counts[f.id] })),
+    active: filter,
+    onTab: (id: string) => setFilter(id as Filter),
+    tabsLabel: 'Filter shipments'
+  }
 
   return (
     <Page wide>
-      <StickyHead wide>
-      <PageTitle
+      <ListHead
         title="Shipments"
         action={
           (profile?.role === 'inventory' || !!profile?.is_admin) && (
@@ -275,9 +256,9 @@ export function Shipments() {
             </Link>
           )
         }
-      />
-      {filterBar('hidden lg:flex')}
-      {groups.length > 0 && (
+        filter={filterProps}
+        columns={
+          groups.length > 0 && (
           <div className="hidden lg:grid grid-cols-[152px_1fr] pt-1 pb-2 text-[13px] text-muted font-medium">
             <span />
             <div className={`grid ${COLS} gap-x-4 px-5`}>
@@ -290,9 +271,9 @@ export function Shipments() {
               <span>Status</span>
             </div>
           </div>
-      )}
-      </StickyHead>
-      {filterBar('flex lg:hidden pt-3')}
+      )
+        }
+      />
       <NeedsStrip items={needs.ships} />
 
       {(profile?.role === 'inventory' || !!profile?.is_admin) && needDecision > 0 && filter !== 'deadline' && (

@@ -4,7 +4,7 @@ import { useLive } from '../hooks/useLive'
 import { useNeeds } from '../hooks/useNeeds'
 import { NeedsStrip } from '../components/NeedsStrip'
 import { supabase } from '../lib/supabase'
-import { ModePill, Tip, Empty, ErrorBox, Loading, Page, StickyHead, PageTitle } from '../components/ui'
+import { ModePill, Tip, Empty, ErrorBox, ListHead, Loading, Page } from '../components/ui'
 import { Glyph, INK, RED } from '../components/statusIcons'
 import type { Inspection, Shipment, ShipmentLine } from '../types/db'
 
@@ -88,51 +88,28 @@ export function QCList() {
       )
   }, [live, tab, query])
 
-  const filterBar = (cls: string) => (
-      <div className={`flex-col lg:flex-row lg:items-center gap-3 pt-1 pb-3 ${cls}`}>
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search product, FBA ID, record"
-          aria-label="Search QC cases"
-          className="w-full lg:w-80 min-h-[44px] px-3 rounded-lg bg-surface ring-1 ring-[#cfd4da] focus:ring-2 focus:ring-ink focus:outline-none"
-        />
-        <div className="flex gap-1.5 p-1 -m-1" role="tablist" aria-label="Case status">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              role="tab"
-              aria-selected={tab === t.id}
-              onClick={() => setTab(t.id)}
-              className={`flex-1 lg:flex-none min-h-[44px] px-4 rounded-full text-sm font-medium ${
-                tab === t.id ? 'bg-ink text-white' : 'bg-surface ring-1 ring-[#cfd4da] text-muted hover:text-ink'
-              }`}
-            >
-              {t.label}
-              <span className={`ml-1.5 ${tab === t.id ? 'text-white/65' : 'text-muted/70'}`}>
-                {live.filter((r) => r.status === t.id).length}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-  )
+  const filterProps = {
+    query,
+    onQuery: setQuery,
+    searchPlaceholder: 'Search product, FBA ID, record',
+    searchLabel: 'Search QC cases',
+    tabs: TABS.map((t) => ({ id: t.id, label: t.label, count: live.filter((r) => r.status === t.id).length })),
+    active: tab,
+    onTab: (id: string) => setTab(id as Inspection['status']),
+    tabsLabel: 'Case status'
+  }
 
   return (
     <Page wide>
-      <StickyHead wide>
-        <PageTitle
-          title="QC cases"
-          action={
-            <Link to="/qc/new-form" className="min-h-[44px] px-4 rounded-lg bg-ink text-white font-medium flex items-center">
-              Blank QC form
-            </Link>
-          }
-        />
-      {filterBar('hidden lg:flex')}
-      </StickyHead>
-      {filterBar('flex lg:hidden pt-3')}
+      <ListHead
+        title="QC cases"
+        action={
+          <Link to="/qc/new-form" className="min-h-[44px] px-4 rounded-lg bg-ink text-white font-medium flex items-center">
+            Blank QC form
+          </Link>
+        }
+        filter={filterProps}
+      />
       <NeedsStrip items={needs.qc} />
 
       {error && <ErrorBox message={error} />}

@@ -176,6 +176,79 @@ export function PageTitle({
   )
 }
 
+// Search box + pill tabs. One component for every list page, so size and position are identical everywhere.
+export interface FilterTab {
+  id: string
+  label: string
+  count: number
+}
+export interface FilterProps {
+  query: string
+  onQuery: (v: string) => void
+  searchPlaceholder: string
+  searchLabel: string
+  tabs: FilterTab[]
+  active: string
+  onTab: (id: string) => void
+  tabsLabel: string
+}
+
+export function FilterBar({ f, className = '' }: { f: FilterProps; className?: string }) {
+  return (
+    <div className={`flex-col lg:flex-row lg:items-center gap-3 pt-1 pb-3 ${className}`}>
+      <input
+        type="search"
+        value={f.query}
+        onChange={(e) => f.onQuery(e.target.value)}
+        placeholder={f.searchPlaceholder}
+        aria-label={f.searchLabel}
+        className="w-full lg:w-80 shrink-0 min-h-[44px] px-3 rounded-lg bg-surface ring-1 ring-[#cfd4da] focus:ring-2 focus:ring-ink focus:outline-none"
+      />
+      <div className="no-scrollbar flex gap-1.5 overflow-x-auto -mx-4 px-4 py-1 lg:mx-0 lg:px-1 lg:min-w-0" role="tablist" aria-label={f.tabsLabel}>
+        {f.tabs.map((t) => (
+          <button
+            key={t.id}
+            role="tab"
+            aria-selected={f.active === t.id}
+            onClick={() => f.onTab(t.id)}
+            className={`shrink-0 min-h-[44px] px-4 rounded-full text-sm font-medium ${
+              f.active === t.id ? 'bg-ink text-white' : 'bg-surface ring-1 ring-[#cfd4da] text-muted hover:text-ink'
+            }`}
+          >
+            {t.label}
+            <span className={`ml-1.5 ${f.active === t.id ? 'text-white/65' : 'text-muted/70'}`}>{t.count}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// The top of every list page: sticky title (+ action) and filters on desktop, the same filters under it on phones.
+// `columns` is an optional column-header row that sticks with the title on desktop.
+export function ListHead({
+  title,
+  action,
+  filter,
+  columns
+}: {
+  title: string
+  action?: React.ReactNode
+  filter: FilterProps
+  columns?: React.ReactNode
+}) {
+  return (
+    <>
+      <StickyHead wide>
+        <PageTitle title={title} action={action} />
+        <FilterBar f={filter} className="hidden lg:flex" />
+        {columns}
+      </StickyHead>
+      <FilterBar f={filter} className="flex lg:hidden pt-3" />
+    </>
+  )
+}
+
 export function Panel({
   title,
   action,
