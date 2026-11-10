@@ -1,6 +1,6 @@
 import { CHECK_SECTIONS } from '../data/checklist'
 import { fmtDate, fmtDateTime, fmtTimeSec } from '../lib/format'
-import { Chip, Panel, SignImg } from './ui'
+import { Chip, Panel } from './ui'
 import { needsBoxLabels } from '../data/options'
 import type { BoxCheck } from '../types/db'
 import type { Draft, RecordBundle } from './RecordSheet'
@@ -125,22 +125,47 @@ export function RecordView({ data, draft, onScanBox }: { data: RecordBundle; dra
         </Panel>
 
         <Panel title="Sign-off">
-          <div className="grid sm:grid-cols-3 gap-4">
+          <p className="text-sm text-muted mb-4">Each step is recorded under the login of the person who did it.</p>
+          <ol className="grid sm:grid-cols-3 gap-4 sm:gap-0">
             {[
-              { role: 'QC', path: insp.qc_sign_path, name: draft.inspector_name, when: insp.submitted_at },
-              { role: 'Dispatch', path: lastDispatch?.dispatch_sign_path, name: lastDispatch?.dispatched_by_name ?? '', when: lastDispatch?.dispatched_at },
-              { role: 'Final confirmation', path: lastApproved?.wm_sign_path, name: lastApproved?.wm_name ?? '', when: lastApproved?.wm_approved_at }
-            ].map((s) => (
-              <div key={s.role}>
-                <div className="text-sm font-medium mb-2">{s.role}</div>
-                <div className="h-24 rounded-lg bg-[#f6f7f8] flex items-center justify-center overflow-hidden">
-                  {s.path ? <SignImg path={s.path} className="max-h-full max-w-full object-contain" /> : <span className="text-sm text-muted">Pending</span>}
-                </div>
-                <div className="text-sm mt-1.5 font-medium">{s.name}</div>
-                {s.when && <div className="text-[13px] text-muted">{fmtDateTime(s.when)}</div>}
-              </div>
-            ))}
-          </div>
+              { role: 'QC', verb: 'Inspected', name: draft.inspector_name, when: insp.submitted_at, wait: 'Waiting for QC' },
+              { role: 'Dispatch', verb: 'Dispatched', name: lastDispatch?.dispatched_by_name ?? '', when: lastDispatch?.dispatched_at, wait: 'Not dispatched yet' },
+              { role: 'Final confirmation', verb: 'Approved', name: lastApproved?.wm_name ?? '', when: lastApproved?.wm_approved_at, wait: 'Waiting for the manager' }
+            ].map((st, i, all) => {
+              const done = !!st.when
+              return (
+                <li key={st.role} className="relative flex sm:block gap-3 sm:pr-4">
+                  {/* the line joining the steps */}
+                  {i < all.length - 1 && <span aria-hidden="true" className={`absolute left-[15px] top-9 bottom-[-16px] w-0.5 sm:left-9 sm:top-[15px] sm:bottom-auto sm:h-0.5 sm:w-[calc(100%-40px)] ${done ? 'bg-ink' : 'bg-[#dfe2e6]'}`} />}
+                  <span className={`relative w-8 h-8 rounded-full shrink-0 flex items-center justify-center ${done ? 'bg-ink text-white' : 'bg-[#eceef2] text-[#9aa2ad]'}`}>
+                    {done ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M5 12.5l4.5 4.5L19 7.5" />
+                      </svg>
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 7v5l3 2" />
+                      </svg>
+                    )}
+                  </span>
+                  <div className="sm:mt-3 min-w-0 pb-1">
+                    <div className="text-[13px] text-muted">{st.role}</div>
+                    {done ? (
+                      <>
+                        <div className="text-[15px] font-semibold break-words">{st.name || '—'}</div>
+                        <div className="text-[13px] text-muted">
+                          {st.verb} {fmtDateTime(st.when!)}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-[15px] text-muted">{st.wait}</div>
+                    )}
+                  </div>
+                </li>
+              )
+            })}
+          </ol>
         </Panel>
       </div>
 

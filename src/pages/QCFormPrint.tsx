@@ -169,11 +169,12 @@ function LineForm({ ship, line, page }: { ship: Shipment; line: ShipmentLine; pa
       <h2>4. Authorisation</h2>
       <div className="auth" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
         {['Quality control', 'Manager'].map((r) => (
-          <div key={r}>
-            <div className="box" />
+          <div key={r} className="cell">
             <div className="role">{r}</div>
-            <div className="who blank" style={{ height: '5mm' }} />
-            <div className="when">Name and date</div>
+            <div className="blank" style={{ height: '8mm' }} />
+            <div className="when">Name</div>
+            <div className="blank" style={{ height: '8mm' }} />
+            <div className="when">Date and time</div>
           </div>
         ))}
       </div>

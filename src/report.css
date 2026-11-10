@@ -96,6 +96,14 @@
 .rpt .auth .who { font-weight: 600; font-size: 9.5pt; }
 .rpt .auth .when { font-size: 8pt; color: var(--muted); }
 
+/* sign-off cells: the person and time come from the login, so there is no signature box */
+.rpt .auth .cell { border-top: 2px solid var(--ink); padding-top: 2mm; min-height: 20mm; }
+.rpt .auth .cell .role { margin-top: 0; }
+.rpt .auth .cell.todo .who { color: var(--muted); font-weight: 500; }
+.rpt .auth .cell .who { margin-top: 1.2mm; font-size: 11pt; }
+.rpt .auth .cell .via { font-size: 7pt; color: var(--muted); margin-top: 1mm; }
+.rpt .auth .cell .blank + .when { margin-top: 1mm; }
+
 /* footer */
 .rpt .foot { position: absolute; left: 15mm; right: 15mm; bottom: 8mm; display: flex; justify-content: space-between; border-top: 1px solid var(--rule); padding-top: 1.8mm; font-size: 7.5pt; color: var(--muted); }
 

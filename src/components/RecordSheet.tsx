@@ -1,6 +1,5 @@
 import { CHECK_SECTIONS } from '../data/checklist'
 import { fmtDate, fmtDateTime, fmtTimeSec } from '../lib/format'
-import { SignImg } from './ui'
 import { needsBoxLabels } from '../data/options'
 import type { BoxCheck, Dispatch, DispatchLine, FnskuCheck, Inspection, Shipment, ShipmentLine } from '../types/db'
 
@@ -363,30 +362,18 @@ export function RecordSheet({ data, draft }: { data: RecordBundle; draft: Draft 
 
         <h2>5. Authorisation</h2>
         <div className="auth">
-          <div>
-            <div className="box">
-              <SignImg path={insp.qc_sign_path} />
+          {[
+            { role: 'Quality control', who: draft.inspector_name, when: insp.submitted_at },
+            { role: 'Dispatch confirmed by', who: lastDispatch?.dispatched_by_name ?? '', when: lastDispatch?.dispatched_at },
+            { role: 'Final confirmation', who: lastApproved?.wm_name ?? '', when: lastApproved?.wm_approved_at }
+          ].map((a) => (
+            <div key={a.role} className={`cell ${a.when ? 'done' : 'todo'}`}>
+              <div className="role">{a.role}</div>
+              <div className="who">{a.when ? a.who || '—' : 'Pending'}</div>
+              <div className="when">{a.when ? fmtDateTime(a.when) : ''}</div>
+              {a.when && <div className="via">Recorded under the person's login</div>}
             </div>
-            <div className="role">Quality control</div>
-            <div className="who">{draft.inspector_name || '—'}</div>
-            <div className="when">{insp.submitted_at ? fmtDateTime(insp.submitted_at) : ''}</div>
-          </div>
-          <div>
-            <div className="box">
-              <SignImg path={lastDispatch?.dispatch_sign_path} />
-            </div>
-            <div className="role">Dispatch confirmed by</div>
-            <div className="who">{lastDispatch?.dispatched_by_name ?? '—'}</div>
-            <div className="when">{lastDispatch ? fmtDateTime(lastDispatch.dispatched_at) : ''}</div>
-          </div>
-          <div>
-            <div className="box">
-              <SignImg path={lastApproved?.wm_sign_path} />
-            </div>
-            <div className="role">Final confirmation</div>
-            <div className="who">{lastApproved?.wm_name ?? '—'}</div>
-            <div className="when">{lastApproved?.wm_approved_at ? fmtDateTime(lastApproved.wm_approved_at) : ''}</div>
-          </div>
+          ))}
         </div>
 
         {foot(2)}
