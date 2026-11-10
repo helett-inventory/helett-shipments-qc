@@ -21,6 +21,8 @@ export function Qr({ value }: { value: string }) {
   return src ? <img src={src} alt="QR code that links this paper to the app" className="qr" /> : <div className="qr" />
 }
 
+// Printed in the Manager's name line on the blank forms.
+export const MANAGER_NAME = 'Misbahudeen KC'
 export const Box = () => <span className="tick" />
 
 function Head({ line, ship, sub }: { line: ShipmentLine; ship: Shipment; sub: string }) {
@@ -174,7 +176,9 @@ function LineForm({ ship, line, page }: { ship: Shipment; line: ShipmentLine; pa
             <div className="role">{r}: signature</div>
             <div className="signrow">
               <div>
-                <div className="blank" style={{ height: '7mm' }} />
+                <div className="blank" style={{ height: '7mm', display: 'flex', alignItems: 'flex-end', fontWeight: 600, fontSize: '10pt', paddingBottom: '0.6mm' }}>
+                  {r === 'Manager' ? MANAGER_NAME : ''}
+                </div>
                 <div className="when">Name</div>
               </div>
               <div>

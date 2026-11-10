@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { CHECK_SECTIONS } from '../data/checklist'
 import { printAs } from '../lib/printName'
 import { Btn } from '../components/ui'
-import { Box, Qr } from './QCFormPrint'
+import { Box, MANAGER_NAME, Qr } from './QCFormPrint'
 import '../report.css'
 
 // A one-page QC checklist that is not tied to any shipment, for stock inspected outside the app.
@@ -131,7 +131,9 @@ function Sheet({ code }: { code: string }) {
             <div className="role">{r}: signature</div>
             <div className="signrow">
               <div>
-                <div className="blank" style={{ height: '6mm' }} />
+                <div className="blank" style={{ height: '7mm', display: 'flex', alignItems: 'flex-end', fontWeight: 600, fontSize: '10pt', paddingBottom: '0.6mm' }}>
+                  {r === 'Manager' ? MANAGER_NAME : ''}
+                </div>
                 <div className="when">Name</div>
               </div>
               <div>
