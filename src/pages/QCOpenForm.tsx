@@ -12,11 +12,11 @@ import '../report.css'
 
 const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789' // no 0/O, 1/I/L: easy to read and copy by hand
 
-// Short on purpose: day+month, then 4 characters (about 920,000 combinations per day).
+// Short on purpose: DDMMYY, then 4 characters (about 920,000 combinations per day).
 // Two forms printed on the same day would have to draw the same 4 characters to clash.
 function makeCode(): string {
   const d = new Date()
-  const dm = `${String(d.getDate()).padStart(2, '0')}${String(d.getMonth() + 1).padStart(2, '0')}`
+  const dm = `${String(d.getDate()).padStart(2, '0')}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getFullYear()).slice(2)}`
   const r = new Uint32Array(4)
   crypto.getRandomValues(r)
   return `${dm}-${[...r].map((n) => ALPHABET[n % ALPHABET.length]).join('')}`
