@@ -43,6 +43,18 @@ where id = (select id from auth.users where email = 'their-email@example.com');
 
 
 -- =====================================================================
+-- 4b. SHOW A DIFFERENT TITLE (e.g. Supply chain). Run supabase/patch_022_role_label.sql once first.
+--     Permissions stay those of the role (a Supply chain person has role 'inventory').
+-- =====================================================================
+update profiles set role_label = 'Supply chain'
+where id = (select id from auth.users where email = 'their-email@example.com');
+
+-- go back to the normal title for the role:
+update profiles set role_label = null
+where id = (select id from auth.users where email = 'their-email@example.com');
+
+
+-- =====================================================================
 -- 5. CHANGE THE ROLE  ('inventory', 'qc' or 'wm')
 -- =====================================================================
 update profiles set role = 'wm'

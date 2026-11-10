@@ -9,6 +9,8 @@ import { Tip } from './ui'
 import type { Shipment } from '../types/db'
 
 const ROLE_LABEL = { inventory: 'Inventory', qc: 'QC', wm: 'Warehouse manager' } as const
+const titleOf = (p: { role: keyof typeof ROLE_LABEL; is_admin?: boolean; role_label?: string | null } | null) =>
+  !p ? '' : p.is_admin ? 'Admin' : p.role_label || ROLE_LABEL[p.role]
 
 function useOnline() {
   const [online, setOnline] = useState(navigator.onLine)
@@ -166,7 +168,7 @@ export function AppShell() {
 
         <div className="mt-auto p-3 border-t border-line space-y-1.5">
           <div className="flex items-center gap-3 h-12 pl-1 min-w-0">
-            <Tip label={`${profile?.name ?? ''}, ${profile?.is_admin ? 'Admin' : profile ? ROLE_LABEL[profile.role] : ''}`}>
+            <Tip label={`${profile?.name ?? ''}, ${titleOf(profile)}`}>
               <span className="w-10 h-10 shrink-0 rounded-full bg-[#f0f1f3] text-ink text-sm font-semibold flex items-center justify-center">
                 {(profile?.name ?? '?').trim().charAt(0).toUpperCase()}
               </span>
@@ -174,7 +176,7 @@ export function AppShell() {
             {!slim && (
               <div className="min-w-0">
                 <div className="text-sm font-medium truncate">{profile?.name}</div>
-                <div className="text-[13px] text-muted">{profile?.is_admin ? 'Admin' : profile ? ROLE_LABEL[profile.role] : ''}</div>
+                <div className="text-[13px] text-muted">{titleOf(profile)}</div>
               </div>
             )}
           </div>
@@ -220,7 +222,7 @@ export function AppShell() {
                 className="absolute right-3 top-[calc(100%-6px)] w-56 bg-surface rounded-xl shadow-lg ring-1 ring-black/5 p-3"
               >
                 <div className="text-sm font-medium truncate">{profile?.name}</div>
-                <div className="text-[13px] text-muted mb-3">{profile?.is_admin ? 'Admin' : profile ? ROLE_LABEL[profile.role] : ''}</div>
+                <div className="text-[13px] text-muted mb-3">{titleOf(profile)}</div>
                 <button
                   type="button"
                   onClick={signOut}

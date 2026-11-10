@@ -5,6 +5,7 @@ export interface Profile {
   name: string
   role: Role
   is_admin?: boolean
+  role_label?: string | null // display title only, for example 'Supply chain'; permissions come from `role`
 }
 
 export type ShipmentStatus =
