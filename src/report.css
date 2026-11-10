@@ -127,6 +127,8 @@
 .rpt .openform table.tight td.blank-cell { height: auto; }
 .rpt .openform .tick { width: 3.6mm; height: 3.6mm; vertical-align: -0.7mm; }
 .rpt .openform .dispo > div { padding: 1.5mm 3mm; }
+.rpt .openform .dispo dd { font-size: 9.5pt; font-weight: 600; margin-top: 1.2mm; }
+.rpt .openform .dispo .tick { margin-right: 1.8mm; }
 .rpt .openform .remarks { padding: 1.5mm 3mm; }
 .rpt .openform .auth .cell, .rpt .openform .auth > div { min-height: 0; }
 

@@ -103,19 +103,19 @@ function Sheet({ code }: { code: string }) {
         <div>
           <dt>Overall result</dt>
           <dd>
-            <Box /> Good &nbsp;&nbsp; <Box /> Satisfactory &nbsp;&nbsp; <Box /> Bad
+            <Box /> Good &nbsp;&nbsp;&nbsp;&nbsp; <Box /> Satisfactory &nbsp;&nbsp;&nbsp;&nbsp; <Box /> Bad
           </dd>
         </div>
         <div>
           <dt>Product condition</dt>
           <dd>
-            <Box /> Good &nbsp; <Box /> Bad
+            <Box /> Good &nbsp;&nbsp;&nbsp;&nbsp; <Box /> Bad
           </dd>
         </div>
         <div>
           <dt>Packaging quality</dt>
           <dd>
-            <Box /> Good &nbsp; <Box /> Bad
+            <Box /> Good &nbsp;&nbsp;&nbsp;&nbsp; <Box /> Bad
           </dd>
         </div>
       </dl>
