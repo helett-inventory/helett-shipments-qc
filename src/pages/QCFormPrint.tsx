@@ -13,7 +13,7 @@ import '../report.css'
 
 type Bundle = Shipment & { shipment_lines: ShipmentLine[] }
 
-function Qr({ value }: { value: string }) {
+export function Qr({ value }: { value: string }) {
   const [src, setSrc] = useState('')
   useEffect(() => {
     QRCode.toDataURL(value, { margin: 0, width: 240, errorCorrectionLevel: 'M' }).then(setSrc, () => setSrc(''))
@@ -21,7 +21,7 @@ function Qr({ value }: { value: string }) {
   return src ? <img src={src} alt="QR code that links this paper to the app" className="qr" /> : <div className="qr" />
 }
 
-const Box = () => <span className="tick" />
+export const Box = () => <span className="tick" />
 
 function Head({ line, ship, sub }: { line: ShipmentLine; ship: Shipment; sub: string }) {
   return (
@@ -169,12 +169,19 @@ function LineForm({ ship, line, page }: { ship: Shipment; line: ShipmentLine; pa
       <h2>4. Authorisation</h2>
       <div className="auth" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
         {['Quality control', 'Manager'].map((r) => (
-          <div key={r} className="cell">
-            <div className="role">{r}</div>
-            <div className="blank" style={{ height: '8mm' }} />
-            <div className="when">Name</div>
-            <div className="blank" style={{ height: '8mm' }} />
-            <div className="when">Date and time</div>
+          <div key={r}>
+            <div className="box" style={{ height: '18mm' }} />
+            <div className="role">{r}: signature</div>
+            <div className="signrow">
+              <div>
+                <div className="blank" style={{ height: '7mm' }} />
+                <div className="when">Name</div>
+              </div>
+              <div>
+                <div className="blank" style={{ height: '7mm' }} />
+                <div className="when">Date and time</div>
+              </div>
+            </div>
           </div>
         ))}
       </div>

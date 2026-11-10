@@ -122,7 +122,14 @@ export function QCList() {
   return (
     <Page wide>
       <StickyHead wide>
-        <PageTitle title="QC cases" />
+        <PageTitle
+          title="QC cases"
+          action={
+            <Link to="/qc/new-form" className="min-h-[44px] px-4 rounded-lg bg-ink text-white font-medium flex items-center">
+              Blank QC form
+            </Link>
+          }
+        />
       {filterBar('hidden lg:flex')}
       </StickyHead>
       {filterBar('flex lg:hidden pt-3')}

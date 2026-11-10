@@ -104,6 +104,32 @@
 .rpt .auth .cell .via { font-size: 7pt; color: var(--muted); margin-top: 1mm; }
 .rpt .auth .cell .blank + .when { margin-top: 1mm; }
 
+/* signature block of the blank forms: a box to sign in, then name and date lines side by side */
+.rpt .auth .signrow { display: grid; grid-template-columns: 1.3fr 1fr; gap: 4mm; margin-top: 1.5mm; }
+.rpt .auth .signrow .blank { min-height: 0; }
+.rpt .auth .signrow .when { margin-top: 0.8mm; }
+/* the one-page stock-check form packs everything tighter so it fits one A4 sheet */
+.rpt .openform { padding: 8mm 9mm 8mm; }
+.rpt .openform .head { padding-bottom: 3mm; }
+.rpt .openform .qr { width: 17mm; height: 17mm; }
+.rpt .openform .code { font-size: 15pt; letter-spacing: 0.5px; }
+.rpt .openform .keyband { margin: 3.5mm 0 3mm; }
+.rpt .openform .keyband > div { padding: 1.8mm 4mm; }
+.rpt .openform .facts > div { padding: 1.4mm 3mm; }
+.rpt .openform .facts dd.blank { height: 4mm; }
+.rpt .openform .figs { margin-top: 3mm; }
+.rpt .openform .figs > div { padding: 1.8mm 3mm; }
+.rpt .openform h2 { margin: 3.5mm 0 1.5mm; padding-bottom: 0.8mm; }
+.rpt .openform table.tight { font-size: 8.6pt; table-layout: fixed; }
+.rpt .openform table.tight td.blank-cell { border-bottom: 1px solid var(--rule); }
+.rpt .openform table.tight td { padding: 0.75mm 2mm; }
+.rpt .openform table.tight tr.group td { padding: 1mm 2mm 0.5mm; }
+.rpt .openform table.tight td.blank-cell { height: auto; }
+.rpt .openform .tick { width: 3.6mm; height: 3.6mm; vertical-align: -0.7mm; }
+.rpt .openform .dispo > div { padding: 1.5mm 3mm; }
+.rpt .openform .remarks { padding: 1.5mm 3mm; }
+.rpt .openform .auth .cell, .rpt .openform .auth > div { min-height: 0; }
+
 /* footer */
 .rpt .foot { position: absolute; left: 15mm; right: 15mm; bottom: 8mm; display: flex; justify-content: space-between; border-top: 1px solid var(--rule); padding-top: 1.8mm; font-size: 7.5pt; color: var(--muted); }
 
