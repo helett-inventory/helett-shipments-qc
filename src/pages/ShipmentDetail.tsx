@@ -80,6 +80,7 @@ export function ShipmentDetail() {
   const [showAudit, setShowAudit] = useState(false)
   const [scanId, setScanId] = useState<string | null>(null)
   const [scanError, setScanError] = useState<string | null>(null)
+  const [recheckError, setRecheckError] = useState<string | null>(null)
   const scanning = useRef(false)
   const nowTick = useNow() // hooks stay above the early returns below
 
@@ -189,10 +190,35 @@ export function ShipmentDetail() {
                             Passed {i.accepted_qty} · Failed {i.rejected_qty} · Dispatched {sent}{i.manual ? ' · Paper form' : ''}
                           </div>
                         )}
-                        {i && i.status !== 'Open' && i.accepted_qty < l.unit_qty && l.status !== 'Cancelled' && (
+                        {i && i.status !== 'Open' && i.accepted_qty < l.unit_qty && l.status !== 'Cancelled' && l.status !== 'Closed' && l.status !== 'Not Dispatched' && (
                           <div className="text-sm text-warn mt-1">{l.unit_qty - i.accepted_qty} short of the {l.unit_qty} ordered.</div>
                         )}
-                        {i?.needs_recheck && <div className="text-sm text-warn mt-1">Quantity changed after QC. Reopen the case to recheck.</div>}
+                        {i?.needs_recheck && (
+                          <div className="text-sm text-warn mt-1">
+                            Quantity changed after QC. Reopen the case to recheck
+                            {isInv && (
+                              <>
+                                , or{' '}
+                                <button
+                                  type="button"
+                                  className="underline font-medium"
+                                  onClick={async () => {
+                                    setRecheckError(null)
+                                    try {
+                                      await rpc('dismiss_recheck', { p_inspection: i.id })
+                                    } catch (e) {
+                                      setRecheckError(errText(e))
+                                    }
+                                  }}
+                                >
+                                  mark it as checked
+                                </button>
+                              </>
+                            )}
+                            .
+                            {recheckError && <div className="text-fail">{recheckError}</div>}
+                          </div>
+                        )}
                       </div>
                       <StatusStamp status={l.status} />
                     </div>
