@@ -149,7 +149,7 @@ export function NeedsStrip({ items }: { items: Need[] }) {
 export function NavCount({ n, className = '' }: { n: number; className?: string }) {
   if (n <= 0) return null
   return (
-    <span aria-label={`${n} waiting`} className={`text-[12px] font-bold leading-none tabular-nums ${className}`}>
+    <span aria-label={`${n} waiting`} className={`text-[11px] font-bold leading-none tabular-nums ${className}`}>
       {n > 99 ? '99+' : n}
     </span>
   )

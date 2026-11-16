@@ -124,11 +124,11 @@ export function AppShell() {
   const countFor = (to: string) => (to === '/' ? needs.ships.length : to === '/qc' ? needs.qc.length : 0)
 
   return (
-    <div className="min-h-screen print:block" style={{ ['--side' as string]: slim ? '80px' : '240px' }}>
+    <div className="min-h-screen print:block" style={{ ['--side' as string]: slim ? '72px' : '240px' }}>
       {/* desktop sidebar: full, or a slim icon rail (remembered).
           Every icon sits at the same x and every row at the same y in both states; only labels come and go. */}
       <aside
-        className={`hidden lg:flex fixed inset-y-0 left-0 flex-col bg-surface border-r border-line no-print overflow-hidden transition-[width] duration-200 ${slim ? 'w-20' : 'w-60'}`}
+        className={`hidden lg:flex fixed inset-y-0 left-0 flex-col bg-surface border-r border-line no-print overflow-hidden transition-[width] duration-200 ${slim ? 'w-[72px]' : 'w-60'}`}
       >
         <div className="h-16 shrink-0 flex items-center gap-2 pl-4 pr-3">
           <Tip label={slim ? 'Expand sidebar' : 'Collapse sidebar'}>
@@ -156,7 +156,7 @@ export function AppShell() {
               end={n.end}
               aria-label={n.label}
               className={({ isActive }) =>
-                `relative flex items-center h-12 pl-[14px] ${slim ? 'w-14 gap-1.5' : 'gap-3'} rounded-full text-[15px] font-medium whitespace-nowrap transition-colors ${
+                `relative flex items-center h-12 ${slim ? 'w-12 justify-center' : 'pl-[14px] gap-3'} rounded-full text-[15px] font-medium whitespace-nowrap transition-colors ${
                   isActive ? 'bg-ink text-white' : 'text-muted hover:bg-canvas hover:text-ink'
                 }`
               }
@@ -166,7 +166,7 @@ export function AppShell() {
                   <>
                     {n.icon}
                     {!slim && n.label}
-                    <NavCount n={countFor(n.to)} className={`${isActive ? 'text-white' : 'text-ink'} ${slim ? '' : 'ml-auto mr-4'}`} />
+                    <NavCount n={countFor(n.to)} className={`${isActive ? 'text-white' : 'text-ink'} ${slim ? 'absolute top-[9px] right-[8px] !text-[10px]' : 'ml-auto mr-4'}`} />
                   </>
                 )
                 return slim ? <Tip label={n.label}><span className="contents">{body}</span></Tip> : body
