@@ -356,7 +356,10 @@ export function Shipments() {
 
                         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 lg:contents">
                           <div className={`font-mono font-medium break-all lg:col-start-3 lg:row-start-1 ${s.status === 'Cancelled' ? 'text-muted line-through' : ''}`}>{s.fba_id}</div>
-                          <div className="text-sm text-muted lg:text-ink lg:col-start-4 lg:row-start-1">{s.warehouse}</div>
+                          <div className="text-sm text-muted lg:text-ink lg:col-start-4 lg:row-start-1">
+                            {s.warehouse}
+                            {s.box_qty_total ? <b className="font-bold text-ink block lg:mt-0.5">{s.box_qty_total} {s.box_qty_total === 1 ? 'box' : 'boxes'}</b> : null}
+                          </div>
                         </div>
 
                         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm text-muted lg:contents">
@@ -388,6 +391,7 @@ export function Shipments() {
                             <li key={l.id} className={s.status === 'Cancelled' ? 'text-muted' : ''}>
                               {l.product_name}
                               <span className="text-muted"> · {l.unit_qty}</span>
+                              {shownLines.length > 1 && l.box_qty ? <b className="font-bold text-ink"> · {l.box_qty} {l.box_qty === 1 ? 'box' : 'boxes'}</b> : null}
                             </li>
                           ))}
                           {shownLines.length > 1 && (
