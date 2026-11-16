@@ -4,6 +4,8 @@ import { useAuth } from '../auth/AuthProvider'
 import { supabase } from '../lib/supabase'
 import { startRealtime } from '../lib/realtime'
 import { useNeeds } from '../hooks/useNeeds'
+import { useScrollMemory } from '../hooks/useScrollMemory'
+import { holdWho } from '../lib/format'
 import { NavCount } from './NeedsStrip'
 import { Tip } from './ui'
 import type { Shipment } from '../types/db'
@@ -62,9 +64,19 @@ const IconCheck = (
   </svg>
 )
 
+const IconChart = (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M4 20V10" />
+    <path d="M10 20V4" />
+    <path d="M16 20v-7" />
+    <path d="M22 20H2" />
+  </svg>
+)
+
 const NAV = [
   { to: '/', label: 'Shipments', icon: IconBox, end: true },
-  { to: '/qc', label: 'QC', icon: IconCheck, end: false }
+  { to: '/qc', label: 'QC', icon: IconCheck, end: false },
+  { to: '/dashboard', label: 'Dashboard', icon: IconChart, end: false }
 ]
 
 export function AppShell() {
@@ -92,6 +104,7 @@ export function AppShell() {
   }, [menuOpen])
   const { alerts, dismiss } = useHoldAlerts(profile?.role === 'inventory' || !!profile?.is_admin)
   const needs = useNeeds()
+  useScrollMemory()
   const [slim, setSlim] = useState(() => {
     try {
       return localStorage.getItem('helett.sidebar.slim') === '1'
@@ -108,14 +121,14 @@ export function AppShell() {
       }
       return !v
     })
-  const countFor = (to: string) => (to === '/' ? needs.ships.length : needs.qc.length)
+  const countFor = (to: string) => (to === '/' ? needs.ships.length : to === '/qc' ? needs.qc.length : 0)
 
   return (
-    <div className="min-h-screen print:block" style={{ ['--side' as string]: slim ? '72px' : '240px' }}>
+    <div className="min-h-screen print:block" style={{ ['--side' as string]: slim ? '80px' : '240px' }}>
       {/* desktop sidebar: full, or a slim icon rail (remembered).
           Every icon sits at the same x and every row at the same y in both states; only labels come and go. */}
       <aside
-        className={`hidden lg:flex fixed inset-y-0 left-0 flex-col bg-surface border-r border-line no-print overflow-hidden transition-[width] duration-200 ${slim ? 'w-[72px]' : 'w-60'}`}
+        className={`hidden lg:flex fixed inset-y-0 left-0 flex-col bg-surface border-r border-line no-print overflow-hidden transition-[width] duration-200 ${slim ? 'w-20' : 'w-60'}`}
       >
         <div className="h-16 shrink-0 flex items-center gap-2 pl-4 pr-3">
           <Tip label={slim ? 'Expand sidebar' : 'Collapse sidebar'}>
@@ -143,7 +156,7 @@ export function AppShell() {
               end={n.end}
               aria-label={n.label}
               className={({ isActive }) =>
-                `relative flex items-center h-12 pl-[14px] gap-3 rounded-full text-[15px] font-medium whitespace-nowrap transition-colors ${
+                `relative flex items-center h-12 pl-[14px] ${slim ? 'w-14 gap-1.5' : 'gap-3'} rounded-full text-[15px] font-medium whitespace-nowrap transition-colors ${
                   isActive ? 'bg-ink text-white' : 'text-muted hover:bg-canvas hover:text-ink'
                 }`
               }
@@ -153,11 +166,7 @@ export function AppShell() {
                   <>
                     {n.icon}
                     {!slim && n.label}
-                    <NavCount
-                      n={countFor(n.to)}
-                      invert={isActive}
-                      className={slim ? 'absolute top-[3px] right-[3px] !min-w-[16px] !h-4 !text-[10px]' : 'ml-auto mr-4'}
-                    />
+                    <NavCount n={countFor(n.to)} className={`${isActive ? 'text-white' : 'text-ink'} ${slim ? '' : 'ml-auto mr-4'}`} />
                   </>
                 )
                 return slim ? <Tip label={n.label}><span className="contents">{body}</span></Tip> : body
@@ -247,6 +256,7 @@ export function AppShell() {
           <div key={a.id} role="alert" className="bg-fail text-white px-4 lg:px-8 py-2 flex items-center justify-between gap-3 no-print">
             <span className="text-sm">
               <b>Flag:</b> {a.fba_id} is on hold. {a.hold_reason}
+              {holdWho(a.hold_by, a.hold_at) && <span className="opacity-80"> {holdWho(a.hold_by, a.hold_at)}.</span>}
             </span>
             <NavLink to={`/shipments/${a.id}`} onClick={() => dismiss(a.id)} className="underline min-h-[44px] flex items-center shrink-0">
               Open
@@ -261,7 +271,7 @@ export function AppShell() {
 
       {/* mobile tab bar */}
       <nav
-        className="lg:hidden fixed bottom-0 inset-x-0 z-20 bg-surface border-t border-line grid grid-cols-2 no-print"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-20 bg-surface border-t border-line grid grid-cols-3 no-print"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         aria-label="Sections"
       >
@@ -276,9 +286,9 @@ export function AppShell() {
           >
             {({ isActive }) => (
               <>
-                <span className={`relative flex items-center justify-center h-8 w-16 rounded-full transition-colors ${isActive ? 'bg-ink text-white' : ''}`}>
+                <span className={`relative flex items-center justify-center h-8 w-16 gap-1 rounded-full transition-colors ${isActive ? 'bg-ink text-white' : ''}`}>
                   {n.icon}
-                  <NavCount n={countFor(n.to)} invert={isActive} className="absolute top-0 right-1.5" />
+                  <NavCount n={countFor(n.to)} className={isActive ? 'text-white' : 'text-ink'} />
                 </span>
                 {n.label}
               </>

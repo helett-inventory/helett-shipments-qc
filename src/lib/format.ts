@@ -21,6 +21,12 @@ export function fmtDate(s: string | null | undefined): string {
   return `${pad(d.getDate())} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`
 }
 
+// "Scanned by Vasil, 16 Nov 2026, 2:59 PM" (empty when the hold predates this being recorded)
+export function holdWho(by: string | null | undefined, at: string | null | undefined): string {
+  if (!by) return ''
+  return `Raised by ${by}${at ? `, ${fmtDateTime(at)}` : ''}`
+}
+
 export function fmtTime(s: string | null | undefined): string {
   if (!s) return ''
   const d = new Date(s)

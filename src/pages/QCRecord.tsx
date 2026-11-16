@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { useLive } from '../hooks/useLive'
 import { errText, supabase, callRpc } from '../lib/supabase'
-import { todayISO } from '../lib/format'
+import { holdWho, todayISO } from '../lib/format'
 import { ALL_ITEMS } from '../data/checklist'
 import { BackLink, Btn, ErrorBox, HoldStamp, Loading, Modal, Notice, Page, StatusStamp } from '../components/ui'
 import { ConfirmModal } from '../components/ReasonModal'
@@ -213,6 +213,7 @@ export function QCRecord() {
         {data.ship.on_hold && (
           <Notice tone="fail">
             On hold: {data.ship.hold_reason}.{' '}
+            {holdWho(data.ship.hold_by, data.ship.hold_at) && <>{holdWho(data.ship.hold_by, data.ship.hold_at)}.{' '}</>}
             {profile?.role === 'inventory' || !!profile?.is_admin ? (
               <>
                 Clear it with “Clear hold” on the{' '}

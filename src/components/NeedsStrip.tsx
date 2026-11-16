@@ -144,13 +144,12 @@ export function NeedsStrip({ items }: { items: Need[] }) {
   )
 }
 
-export function NavCount({ n, invert = false, className = '' }: { n: number; invert?: boolean; className?: string }) {
+// The count on a nav item: just bold numerals, no bubble. They sit like a superscript beside the icon and take
+// the colour the caller gives them (white on the black active tab, ink elsewhere), so nothing overlaps or needs an outline.
+export function NavCount({ n, className = '' }: { n: number; className?: string }) {
   if (n <= 0) return null
   return (
-    <span
-      aria-label={`${n} waiting`}
-      className={`min-w-[18px] h-[18px] px-1 rounded-full ${invert ? 'bg-white text-ink' : 'bg-ink text-white'} text-[11px] font-semibold leading-none flex items-center justify-center ${className}`}
-    >
+    <span aria-label={`${n} waiting`} className={`text-[12px] font-bold leading-none tabular-nums ${className}`}>
       {n > 99 ? '99+' : n}
     </span>
   )

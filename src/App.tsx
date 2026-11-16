@@ -11,6 +11,7 @@ import { QCList } from './pages/QCList'
 import { QCRecord } from './pages/QCRecord'
 import { QCFormPrint } from './pages/QCFormPrint'
 import { QCOpenForm } from './pages/QCOpenForm'
+import { Dashboard } from './pages/Dashboard'
 
 function Setup() {
   return (
@@ -69,6 +70,7 @@ function Gate() {
         <Route path="/shipments/new" element={(profile.role === 'inventory' || !!profile.is_admin) ? <ShipmentNew /> : <Navigate to="/" replace />} />
         <Route path="/shipments/:id" element={<ShipmentDetail />} />
         <Route path="/shipments/:id/qc-form" element={profile.role === 'qc' && !profile.is_admin ? <Navigate to="/" replace /> : <QCFormPrint />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/qc" element={<QCList />} />
         <Route path="/qc/new-form" element={<QCOpenForm />} />
         <Route path="/qc/:id" element={<QCRecord />} />

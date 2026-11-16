@@ -34,7 +34,7 @@ export function Btn({
 /* ------------------------------------------------------------ tooltip */
 
 // The app's own hover hint (replaces the browser's plain title tooltip). Shows on hover, keyboard focus, and a tap on touch screens.
-export function Tip({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
+export function Tip({ label, children, block }: { label: React.ReactNode; children: React.ReactNode; block?: boolean }) {
   const ref = useRef<HTMLSpanElement>(null)
   const timer = useRef<number | undefined>(undefined)
   const [pos, setPos] = useState<{ x: number; y: number; below: boolean } | null>(null)
@@ -61,7 +61,7 @@ export function Tip({ label, children }: { label: React.ReactNode; children: Rea
   return (
     <span
       ref={ref}
-      className="inline-flex"
+      className={block ? 'flex w-full' : 'inline-flex'}
       onMouseEnter={show}
       onMouseLeave={hide}
       onFocus={show}
@@ -193,6 +193,28 @@ export interface FilterProps {
   tabsLabel: string
 }
 
+// The round pill tabs used by every list and by the dashboard range picker.
+export function PillTabs({ tabs, active, onTab, label }: { tabs: { id: string; label: string; count?: number }[]; active: string; onTab: (id: string) => void; label: string }) {
+  return (
+    <div className="no-scrollbar flex gap-1.5 overflow-x-auto -mx-4 px-4 py-1 lg:mx-0 lg:px-1 lg:min-w-0" role="tablist" aria-label={label}>
+      {tabs.map((t) => (
+        <button
+          key={t.id}
+          role="tab"
+          aria-selected={active === t.id}
+          onClick={() => onTab(t.id)}
+          className={`shrink-0 min-h-[44px] px-4 rounded-full text-sm font-medium ${
+            active === t.id ? 'bg-ink text-white' : 'bg-surface ring-1 ring-[#cfd4da] text-muted hover:text-ink'
+          }`}
+        >
+          {t.label}
+          {t.count != null && <span className={`ml-1.5 ${active === t.id ? 'text-white/65' : 'text-muted/70'}`}>{t.count}</span>}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export function FilterBar({ f, className = '' }: { f: FilterProps; className?: string }) {
   return (
     <div className={`flex-col lg:flex-row lg:items-center gap-3 pt-1 pb-3 ${className}`}>
@@ -204,22 +226,7 @@ export function FilterBar({ f, className = '' }: { f: FilterProps; className?: s
         aria-label={f.searchLabel}
         className="w-full lg:w-80 shrink-0 min-h-[44px] px-3 rounded-lg bg-surface ring-1 ring-[#cfd4da] focus:ring-2 focus:ring-ink focus:outline-none"
       />
-      <div className="no-scrollbar flex gap-1.5 overflow-x-auto -mx-4 px-4 py-1 lg:mx-0 lg:px-1 lg:min-w-0" role="tablist" aria-label={f.tabsLabel}>
-        {f.tabs.map((t) => (
-          <button
-            key={t.id}
-            role="tab"
-            aria-selected={f.active === t.id}
-            onClick={() => f.onTab(t.id)}
-            className={`shrink-0 min-h-[44px] px-4 rounded-full text-sm font-medium ${
-              f.active === t.id ? 'bg-ink text-white' : 'bg-surface ring-1 ring-[#cfd4da] text-muted hover:text-ink'
-            }`}
-          >
-            {t.label}
-            <span className={`ml-1.5 ${f.active === t.id ? 'text-white/65' : 'text-muted/70'}`}>{t.count}</span>
-          </button>
-        ))}
-      </div>
+      <PillTabs tabs={f.tabs} active={f.active} onTab={f.onTab} label={f.tabsLabel} />
     </div>
   )
 }
@@ -253,22 +260,34 @@ export function Panel({
   title,
   action,
   children,
-  flush
+  flush,
+  fill,
+  help,
+  scroll
 }: {
   title?: string
   action?: React.ReactNode
   children: React.ReactNode
   flush?: boolean
+  fill?: boolean // stretch to the height of its grid row
+  help?: string // hover hint on the title
+  scroll?: boolean // long content scrolls inside the card instead of stretching it
 }) {
   return (
-    <section className={`bg-surface shadow-card rounded-xl ${flush ? 'overflow-hidden' : ''}`}>
+    <section className={`bg-surface shadow-card rounded-xl ${flush ? 'overflow-hidden' : ''} ${fill ? 'h-full' : ''}`}>
       {title && (
         <div className="flex items-center justify-between gap-3 px-4 min-h-[48px] border-b border-line">
-          <h2 className="font-semibold">{title}</h2>
+          {help ? (
+            <Tip label={help}>
+              <h2 className="font-semibold cursor-help underline decoration-dotted decoration-[#c3c8d0] underline-offset-4">{title}</h2>
+            </Tip>
+          ) : (
+            <h2 className="font-semibold">{title}</h2>
+          )}
           {action}
         </div>
       )}
-      <div className={flush ? '' : 'p-4'}>{children}</div>
+      <div className={`${flush ? '' : 'p-4'} ${scroll ? 'max-h-[340px] overflow-y-auto' : ''}`}>{children}</div>
     </section>
   )
 }

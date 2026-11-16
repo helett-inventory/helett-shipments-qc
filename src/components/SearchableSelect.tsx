@@ -187,7 +187,15 @@ export function SearchableSelect({
   }
 
   return (
-    <div ref={containerRef} className="relative" onClick={(e) => e.stopPropagation()}>
+    <div
+      ref={containerRef}
+      className="relative"
+      onClick={(e) => {
+        e.stopPropagation()
+        // Fields sit inside a <label>: without this the label re-clicks the first button after a pick, which opened the list again.
+        if ((e.target as HTMLElement).closest('[role=listbox], [data-add-option]')) e.preventDefault()
+      }}
+    >
       <button
         ref={triggerRef}
         type="button"
@@ -268,6 +276,7 @@ export function SearchableSelect({
           {onAddOption && (
             <button
               type="button"
+              data-add-option
               onClick={handleAddNew}
               className="w-full text-left px-3 py-2 min-h-[44px] text-sm font-medium border-t border-line hover:bg-canvas"
             >

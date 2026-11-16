@@ -3,6 +3,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useLive } from './useLive'
 import { supabase } from '../lib/supabase'
 import { needsBoxLabels } from '../data/options'
+import { holdWho } from '../lib/format'
 
 // "Needs you": what is waiting on the logged-in person, by role. In-app only.
 // One light query, kept live through the same cache and realtime as the other pages.
@@ -15,6 +16,8 @@ type Ship = {
   status: string
   on_hold: boolean
   hold_reason: string | null
+  hold_by: string | null
+  hold_at: string | null
   dispatch_mode: string | null
   dispatches: { wm_approved_at: string | null }[]
   box_label_checks: { scanned: string | null }[]
@@ -59,7 +62,7 @@ export function useNeeds() {
       const [s, i] = await Promise.all([
         supabase
           .from('shipments')
-          .select('id, fba_id, warehouse, dispatch_date, status, on_hold, hold_reason, dispatch_mode, dispatches(wm_approved_at), box_label_checks(scanned), shipment_lines(status, product_name, unit_qty, received_qty)')
+          .select('*, dispatches(wm_approved_at), box_label_checks(scanned), shipment_lines(status, product_name, unit_qty, received_qty)')
           .neq('status', 'Cancelled'),
         supabase
           .from('inspections')
@@ -72,7 +75,7 @@ export function useNeeds() {
       return { ships: s.data as unknown as Ship[], insps: i.data as unknown as Insp[] }
     },
     ['shipments', 'shipment_lines', 'dispatches', 'inspections', 'box_label_checks'],
-    'needs-you-2'
+    'needs-you-3'
   )
 
   return useMemo(() => {
@@ -90,7 +93,7 @@ export function useNeeds() {
       const base = { title: s.fba_id, fc: s.warehouse, note: '', products: live.map((l) => `${l.product_name} · ${l.unit_qty}`), date: s.dispatch_date, to }
       if (isWm && s.dispatches.some((d) => !d.wm_approved_at)) ships.push({ ...base, key: `a${s.id}`, kind: 'approve' })
       if (isInv) {
-        if (s.on_hold) ships.push({ ...base, key: `h${s.id}`, kind: 'hold', note: s.hold_reason || '' })
+        if (s.on_hold) ships.push({ ...base, key: `h${s.id}`, kind: 'hold', note: [s.hold_reason, holdWho(s.hold_by, s.hold_at)].filter(Boolean).join(' · ') })
         const ready = s.status === 'QC Done' || s.status === 'Partially Dispatched'
         const labels = ready && needsBoxLabels(s.dispatch_mode ?? '') && s.box_label_checks.some((c) => !c.scanned)
         if (labels) ships.push({ ...base, key: `l${s.id}`, kind: 'labels' })

@@ -41,6 +41,8 @@ export interface Shipment {
   status: ShipmentStatus
   on_hold: boolean
   hold_reason: string | null
+  hold_by?: string | null // who raised the hold (the person who made the scan)
+  hold_at?: string | null
 }
 
 export interface Inspection {

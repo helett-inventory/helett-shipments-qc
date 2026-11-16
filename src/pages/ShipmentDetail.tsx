@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { useLive } from '../hooks/useLive'
 import { errText, supabase, callRpc } from '../lib/supabase'
-import { fmtDate, fmtDateTime, fromLocalInput, toLocalInput } from '../lib/format'
+import { fmtDate, fmtDateTime, fromLocalInput, holdWho, toLocalInput } from '../lib/format'
 import { BackLink, Btn, ModePill, Tip, Choice, Chip, ErrorBox, Field, HoldStamp, Loading, Modal, Notice, Page, StickyHead, PageTitle, Panel, StatusStamp, inputCls } from '../components/ui'
 import { SearchableSelect } from '../components/SearchableSelect'
 import { DateInput } from '../components/DateInput'
@@ -160,7 +160,10 @@ export function ShipmentDetail() {
       {b.on_hold && (
         <Notice tone="fail">
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <span>On hold: {b.hold_reason ?? 'flag open'}</span>
+            <span>
+              On hold: {b.hold_reason ?? 'flag open'}
+              {holdWho(b.hold_by, b.hold_at) && <span className="block text-sm font-medium opacity-80 mt-0.5">{holdWho(b.hold_by, b.hold_at)}</span>}
+            </span>
             {isInv && (
               <Btn tone="danger" onClick={() => setModal({ kind: 'clearHold' })}>
                 Clear hold
