@@ -189,7 +189,8 @@ function StatusIcons({
   )
 }
 
-const COLS = 'lg:grid-cols-[1fr_1fr_1.4fr_.7fr_1.7fr_1.2fr_1.1fr]'
+// fixed widths for the short, predictable columns; the SKU column takes everything that is left
+const COLS = 'lg:grid-cols-[108px_112px_140px_88px_minmax(0,1fr)_190px_110px]'
 
 export function Shipments() {
   const { profile } = useAuth()
@@ -354,11 +355,15 @@ export function Shipments() {
                           </div>
                         </div>
 
-                        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 lg:contents">
+                        <div className="flex flex-col gap-1.5 lg:contents">
                           <div className={`font-mono font-medium break-all lg:col-start-3 lg:row-start-1 ${s.status === 'Cancelled' ? 'text-muted line-through' : ''}`}>{s.fba_id}</div>
-                          <div className="text-sm text-muted lg:text-ink lg:col-start-4 lg:row-start-1">
-                            {s.warehouse}
-                            {s.box_qty_total ? <b className="font-bold text-ink block lg:mt-0.5">{s.box_qty_total} {s.box_qty_total === 1 ? 'box' : 'boxes'}</b> : null}
+                          <div className="flex items-center gap-2 text-sm text-muted lg:text-ink lg:block lg:col-start-4 lg:row-start-1">
+                            <span>{s.warehouse}</span>
+                            {s.box_qty_total ? (
+                              <b className="font-bold text-ink max-lg:h-6 max-lg:px-2.5 max-lg:rounded-full max-lg:bg-[#f0f1f3] max-lg:inline-flex max-lg:items-center lg:block lg:mt-0.5">
+                                {s.box_qty_total} {s.box_qty_total === 1 ? 'box' : 'boxes'}
+                              </b>
+                            ) : null}
                           </div>
                         </div>
 
@@ -367,7 +372,7 @@ export function Shipments() {
                             <span className="lg:hidden">Dispatch </span>
                             <span className="font-semibold text-ink">{s.dispatch_date ? fmtDate(s.dispatch_date) : '—'}</span>
                           </div>
-                          <div className="lg:col-start-6 lg:row-start-1">
+                          <div className="max-lg:basis-full lg:col-start-6 lg:row-start-1">
                             {s.appointment_at ? (
                               <>
                                 <span className="lg:hidden">Appt </span>
@@ -386,20 +391,29 @@ export function Shipments() {
                           </div>
                         </div>
 
-                        <ul className="text-sm min-w-0 space-y-2 lg:col-start-5 lg:row-start-1">
-                          {shownLines.map((l) => (
-                            <li key={l.id} className={s.status === 'Cancelled' ? 'text-muted' : ''}>
-                              {l.product_name}
-                              <span className="text-muted"> · {l.unit_qty}</span>
-                              {shownLines.length > 1 && l.box_qty ? <b className="font-bold text-ink"> · {l.box_qty} {l.box_qty === 1 ? 'box' : 'boxes'}</b> : null}
-                            </li>
-                          ))}
-                          {shownLines.length > 1 && (
-                            <li className="text-[13px] text-muted">
-                              {units} units · {s.box_qty_total} boxes
-                            </li>
-                          )}
-                        </ul>
+                        {shownLines.length > 1 ? (
+                          // several SKUs: each SKU is its own soft grey rounded rectangle (name, units, boxes), flowing side by side
+                          <div className="min-w-0 lg:col-start-5 lg:row-start-1">
+                            <ul className="flex flex-wrap gap-2">
+                              {shownLines.map((l) => (
+                                <li key={l.id} className={`rounded-xl bg-[#f0f1f3] px-3 py-2 text-sm leading-snug max-w-full ${s.status === 'Cancelled' ? 'text-muted' : ''}`}>
+                                  <div className="font-medium break-words">{l.product_name}</div>
+                                  <div className="mt-0.5 tabular-nums text-muted">
+                                    {l.unit_qty} units{l.box_qty ? <b className="font-bold text-ink"> · {l.box_qty} {l.box_qty === 1 ? 'box' : 'boxes'}</b> : null}
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                            <div className="mt-2 text-[13px] text-muted tabular-nums">
+                              {shownLines.length} SKUs · {units} units{s.box_qty_total ? <b className="font-bold text-ink"> · {s.box_qty_total} boxes</b> : null}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className={`text-sm min-w-0 lg:col-start-5 lg:row-start-1 ${s.status === 'Cancelled' ? 'text-muted' : ''}`}>
+                            {shownLines[0]?.product_name}
+                            <span className="text-muted"> · {shownLines[0]?.unit_qty} units</span>
+                          </div>
+                        )}
                       </Link>
                     </li>
                   )
