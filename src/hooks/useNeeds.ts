@@ -19,6 +19,7 @@ type Ship = {
   hold_by: string | null
   hold_at: string | null
   dispatch_mode: string | null
+  box_qty_total: number | null
   dispatches: { wm_approved_at: string | null }[]
   box_label_checks: { scanned: string | null }[]
   shipment_lines: { status: string; product_name: string; unit_qty: number; received_qty: number | null }[]
@@ -28,7 +29,7 @@ type Insp = {
   record_no: string
   status: string
   needs_recheck: boolean
-  shipment_lines: { status: string; product_name: string; unit_qty: number; shipments: { on_hold: boolean; fba_id: string; warehouse: string; dispatch_date: string | null } }
+  shipment_lines: { status: string; product_name: string; unit_qty: number; box_qty: number | null; shipments: { on_hold: boolean; fba_id: string; warehouse: string; dispatch_date: string | null } }
 }
 type Bundle = { ships: Ship[]; insps: Insp[] }
 
@@ -41,6 +42,7 @@ export interface Need {
   note: string // the one detail that matters for this kind
   products: string[] // "Product name · qty" per SKU line
   date: string | null // dispatch date
+  boxes: number | null // box count (whole shipment, or this SKU for a QC case)
   to: string
 }
 
@@ -66,7 +68,7 @@ export function useNeeds() {
           .neq('status', 'Cancelled'),
         supabase
           .from('inspections')
-          .select('id, record_no, status, needs_recheck, shipment_lines(status, product_name, unit_qty, shipments(on_hold, fba_id, warehouse, dispatch_date))')
+          .select('id, record_no, status, needs_recheck, shipment_lines(status, product_name, unit_qty, box_qty, shipments(on_hold, fba_id, warehouse, dispatch_date))')
           .in('status', ['Open', 'Submitted'])
           .limit(500)
       ])
@@ -75,7 +77,7 @@ export function useNeeds() {
       return { ships: s.data as unknown as Ship[], insps: i.data as unknown as Insp[] }
     },
     ['shipments', 'shipment_lines', 'dispatches', 'inspections', 'box_label_checks'],
-    'needs-you-3'
+    'needs-you-4'
   )
 
   return useMemo(() => {
@@ -90,7 +92,7 @@ export function useNeeds() {
     for (const s of data?.ships ?? []) {
       const live = s.shipment_lines.filter((l) => l.status !== 'Cancelled')
       const to = `/shipments/${s.id}`
-      const base = { title: s.fba_id, fc: s.warehouse, note: '', products: live.map((l) => `${l.product_name} · ${l.unit_qty}`), date: s.dispatch_date, to }
+      const base = { title: s.fba_id, fc: s.warehouse, note: '', products: live.map((l) => `${l.product_name} · ${l.unit_qty}`), date: s.dispatch_date, boxes: s.box_qty_total ?? null, to }
       if (isWm && s.dispatches.some((d) => !d.wm_approved_at)) ships.push({ ...base, key: `a${s.id}`, kind: 'approve' })
       if (isInv) {
         if (s.on_hold) ships.push({ ...base, key: `h${s.id}`, kind: 'hold', note: [s.hold_reason, holdWho(s.hold_by, s.hold_at)].filter(Boolean).join(' · ') })
@@ -114,6 +116,7 @@ export function useNeeds() {
         note: r.record_no,
         products: [`${ln.product_name} · ${ln.unit_qty}`],
         date: ln.shipments.dispatch_date,
+        boxes: ln.box_qty ?? null,
         to: `/qc/${r.id}`
       }
       if (isQc && r.status === 'Open' && !r.shipment_lines.shipments.on_hold) {
