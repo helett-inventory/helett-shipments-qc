@@ -359,11 +359,6 @@ export function Shipments() {
                           <div className={`font-mono font-medium break-all lg:col-start-3 lg:row-start-1 ${s.status === 'Cancelled' ? 'text-muted line-through' : ''}`}>{s.fba_id}</div>
                           <div className="flex items-center gap-2 text-sm text-muted lg:text-ink lg:block lg:col-start-4 lg:row-start-1">
                             <span>{s.warehouse}</span>
-                            {s.box_qty_total ? (
-                              <b className="font-bold text-ink max-lg:h-6 max-lg:px-2.5 max-lg:rounded-full max-lg:bg-[#f0f1f3] max-lg:inline-flex max-lg:items-center lg:block lg:mt-0.5">
-                                {s.box_qty_total} {s.box_qty_total === 1 ? 'box' : 'boxes'}
-                              </b>
-                            ) : null}
                           </div>
                         </div>
 
