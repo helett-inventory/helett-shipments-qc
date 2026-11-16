@@ -359,6 +359,7 @@ export function Shipments() {
                           <div className={`font-mono font-medium break-all lg:col-start-3 lg:row-start-1 ${s.status === 'Cancelled' ? 'text-muted line-through' : ''}`}>{s.fba_id}</div>
                           <div className="flex items-center gap-2 text-sm text-muted lg:text-ink lg:block lg:col-start-4 lg:row-start-1">
                             <span>{s.warehouse}</span>
+                            {s.box_qty_total ? <span className="text-muted lg:block">{s.box_qty_total} {s.box_qty_total === 1 ? 'box' : 'boxes'}</span> : null}
                           </div>
                         </div>
 
@@ -394,13 +395,13 @@ export function Shipments() {
                                 <li key={l.id} className={`rounded-xl bg-[#f0f1f3] px-3 py-2 text-sm leading-snug max-w-full ${s.status === 'Cancelled' ? 'text-muted' : ''}`}>
                                   <div className="font-medium break-words">{l.product_name}</div>
                                   <div className="mt-0.5 tabular-nums text-muted">
-                                    {l.unit_qty} units{l.box_qty ? <b className="font-bold text-ink"> · {l.box_qty} {l.box_qty === 1 ? 'box' : 'boxes'}</b> : null}
+                                    {l.unit_qty} units{l.box_qty ? <span> · {l.box_qty} {l.box_qty === 1 ? 'box' : 'boxes'}</span> : null}
                                   </div>
                                 </li>
                               ))}
                             </ul>
                             <div className="mt-2 text-[13px] text-muted tabular-nums">
-                              {shownLines.length} SKUs · {units} units{s.box_qty_total ? <b className="font-bold text-ink"> · {s.box_qty_total} boxes</b> : null}
+                              {shownLines.length} SKUs · {units} units{s.box_qty_total ? <span> · {s.box_qty_total} boxes</span> : null}
                             </div>
                           </div>
                         ) : (
