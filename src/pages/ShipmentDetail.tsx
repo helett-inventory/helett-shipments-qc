@@ -11,6 +11,7 @@ import { getSkus } from '../services/lookups'
 import { changeDeadline, hoursText, urgency } from '../lib/deadline'
 import { DeadlineBadge, useNow } from '../components/DeadlineBadge'
 import { invalidateAll } from '../lib/cache'
+import { canEditIrn, isFinanceOnly } from '../lib/roles'
 import { lineFromQr } from '../lib/manualQc'
 import { DISPATCH_MODES, FULFILMENT_CENTRES, TRANSPORTS, needsAppointment, needsBoxLabels, needsTransport, type DispatchMode } from '../data/options'
 import { ConfirmModal, ReviewStep, type Change } from '../components/ReasonModal'
@@ -49,6 +50,8 @@ export function ShipmentDetail() {
   const isWm = profile?.role === 'wm' || !!profile?.is_admin
   const isAdmin = !!profile?.is_admin
   const canFillQc = profile?.role === 'qc' || profile?.role === 'inventory' || isAdmin
+  const fin = isFinanceOnly(profile) // Finance sees the commercial side only: no QC, box labels, receiving or activity
+  const irnEditor = canEditIrn(profile)
   const navigate = useNavigate()
 
   const { data: b, error, loading, reload } = useLive<Bundle>(
@@ -89,7 +92,7 @@ export function ShipmentDetail() {
   if (!b) return null
 
   const finished = b.status === 'Closed' || b.status === 'Cancelled'
-  const hideDeadline = profile?.role === 'qc' && !profile.is_admin // QC does not manage Amazon deadlines
+  const hideDeadline = (profile?.role === 'qc' && !profile.is_admin) || fin // QC does not manage Amazon deadlines
   const dl = hideDeadline ? null : changeDeadline(b)
   const deadlineNote =
     dl && urgency(dl, nowTick) !== 'ok'
@@ -143,13 +146,13 @@ export function ShipmentDetail() {
               {b.ref} · {b.warehouse}
             </span>
             <ModePill mode={b.dispatch_mode} cancelled={b.status === 'Cancelled'} />
-            {(isInv || isWm) && <CopyInvoiceData fbaId={b.fba_id} fc={b.warehouse} lines={b.shipment_lines.filter((l) => l.status !== 'Cancelled')} />}
+            {(isInv || isWm || fin) && <CopyInvoiceData fbaId={b.fba_id} fc={b.warehouse} irn={b.irn ?? ''} lines={b.shipment_lines.filter((l) => l.status !== 'Cancelled')} />}
           </div>
         }
         action={
           <div className="flex gap-1.5 items-center flex-wrap justify-end">
-            {b.on_hold && <HoldStamp />}
-            <StatusStamp status={b.status} />
+            {b.on_hold && !fin && <HoldStamp />}
+            {fin ? b.status === 'Cancelled' ? <StatusStamp status="Cancelled" /> : b.dispatches.length > 0 ? <StatusStamp status="Dispatched" /> : <Chip tone="gray">Not dispatched</Chip> : <StatusStamp status={b.status} />}
           </div>
         }
       />
@@ -157,7 +160,7 @@ export function ShipmentDetail() {
 
       {scanError && <Notice tone="fail">{scanError}</Notice>}
       {deadlineNote && <Notice tone={deadlineNote.level === 'passed' ? 'fail' : 'warn'}>{deadlineNote.text}</Notice>}
-      {b.on_hold && (
+      {b.on_hold && !fin && (
         <Notice tone="fail">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <span>
@@ -178,7 +181,7 @@ export function ShipmentDetail() {
           <Panel title="SKU lines" flush>
             <ul>
               {b.shipment_lines.map((l) => {
-                const i = insp(l)
+                const i = fin ? null : insp(l)
                 const sent = dispatchedUnits(b, l.id)
                 return (
                   <li key={l.id} className="p-4 border-t first:border-t-0 border-line">
@@ -223,9 +226,9 @@ export function ShipmentDetail() {
                           </div>
                         )}
                       </div>
-                      <StatusStamp status={l.status} />
+                      {!fin && <StatusStamp status={l.status} />}
                     </div>
-                    <div className="flex gap-2 flex-wrap mt-3">
+                    <div className={`flex gap-2 flex-wrap mt-3 ${fin ? 'hidden' : ''}`}>
                       {i && (
                         <Link
                           to={`/qc/${i.id}`}
@@ -284,7 +287,7 @@ export function ShipmentDetail() {
           <Panel title="Dispatches" flush>
             {b.dispatches.length === 0 ? (
               <p className="p-4 text-muted text-sm">
-                {isInv && !finished && readyLines.length === 0 ? 'Nothing to dispatch until QC submits a line.' : 'No dispatches yet. Use Dispatch on a SKU line above.'}
+                {fin ? 'Not dispatched yet.' : isInv && !finished && readyLines.length === 0 ? 'Nothing to dispatch until QC submits a line.' : 'No dispatches yet. Use Dispatch on a SKU line above.'}
               </p>
             ) : (
               <ul>
@@ -300,16 +303,16 @@ export function ShipmentDetail() {
                               Dispatch {n + 1} · {fmtDateTime(d.dispatched_at)}
                             </div>
                             <div className="text-sm text-muted">
-                              {d.boxes_sent} boxes · {units} units{d.transport ? ` · ${d.transport}` : ''} · {d.dispatched_by_name}
+                              {d.boxes_sent} boxes · {units} units{d.transport ? ` · ${d.transport}` : ''}{!fin && ` · ${d.dispatched_by_name}`}
                             </div>
                             {d.remarks && <div className="text-sm mt-1">{d.remarks}</div>}
-                            {d.wm_approved_at && (
+                            {d.wm_approved_at && !fin && (
                               <div className="text-sm text-ok mt-1">
                                 Approved by {d.wm_name}, {fmtDateTime(d.wm_approved_at)}
                               </div>
                             )}
                           </div>
-                          <StatusStamp status={d.wm_approved_at ? 'Closed' : 'Awaiting WM'} />
+                          {!fin && <StatusStamp status={d.wm_approved_at ? 'Closed' : 'Awaiting WM'} />}
                         </div>
                         {isWm && !d.wm_approved_at && (
                           <Btn tone="ok" className="mt-3" onClick={() => setModal({ kind: 'approve', dispatch: d })}>
@@ -323,6 +326,8 @@ export function ShipmentDetail() {
             )}
           </Panel>
 
+          {!fin && (
+          <>
           <Panel
             title="Amazon receiving"
             flush
@@ -411,6 +416,8 @@ export function ShipmentDetail() {
               </ul>
             )}
           </div>
+          </>
+          )}
 
           {isInv && (
             <div className="flex flex-col sm:flex-row gap-2 pt-2 sm:justify-start">
@@ -428,7 +435,8 @@ export function ShipmentDetail() {
           )}
         </div>
 
-        <aside className="order-1 lg:order-2 lg:sticky lg:top-6">
+        <aside className="order-1 lg:order-2 lg:sticky lg:top-6 space-y-5">
+          <IrnPanel value={b.irn ?? ''} editable={irnEditor} onSave={(v) => rpc('set_irn', { p_ship: b.id, p_irn: v })} />
           <Panel title="Details">
             <dl className="space-y-3 text-sm">
               <Fact k="Mode of dispatch" v={b.dispatch_mode ?? ''} />
@@ -954,18 +962,59 @@ function ApproveModal({ onClose, onSave }: { onClose: () => void; onSave: () => 
   )
 }
 
+// The invoice reference (IRN). Everyone can read it; Finance, Accounts and admin can add or change it.
+function IrnPanel({ value, editable, onSave }: { value: string; editable: boolean; onSave: (v: string) => Promise<void> }) {
+  const [v, setV] = useState(value)
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
+  useEffect(() => setV(value), [value])
+  const dirty = v.trim() !== value
+  async function save() {
+    setBusy(true)
+    setErr(null)
+    try {
+      await onSave(v.trim())
+      setSaved(true)
+      window.setTimeout(() => setSaved(false), 2000)
+    } catch (e) {
+      setErr(errText(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <Panel title="Invoice reference">
+      {editable ? (
+        <>
+          <label htmlFor="irn" className="block text-[13px] text-muted mb-1.5">
+            IRN or invoice number
+          </label>
+          <input id="irn" value={v} onChange={(e) => setV(e.target.value)} className={`${inputCls} font-mono`} placeholder="Not added yet" autoComplete="off" />
+          {err && <p className="text-sm text-fail mt-2">{err}</p>}
+          <Btn className="w-full mt-3" onClick={save} disabled={!dirty || busy}>
+            {busy ? 'Saving…' : saved ? 'Saved' : value ? 'Update IRN' : 'Save IRN'}
+          </Btn>
+        </>
+      ) : (
+        <Fact k="IRN or invoice number" v={value} />
+      )}
+    </Panel>
+  )
+}
+
 // Tab-separated rows (one per SKU line) that paste straight into a spreadsheet, for the accounts team's invoice.
-function CopyInvoiceData({ fbaId, fc, lines }: { fbaId: string; fc: string; lines: ShipmentLine[] }) {
+function CopyInvoiceData({ fbaId, fc, irn, lines }: { fbaId: string; fc: string; irn: string; lines: ShipmentLine[] }) {
   const [state, setState] = useState<'idle' | 'busy' | 'done' | 'failed'>('idle')
   async function copy() {
     setState('busy')
     try {
       const skus = await getSkus()
       const rows = [
-        ['FBA number', 'Destination FC', 'ASIN', 'SKU', 'FNSKU', 'Box qty', 'Qty'],
+        ['FBA number', 'Destination FC', 'ASIN', 'SKU', 'FNSKU', 'Box qty', 'Qty', 'IRN'],
         ...lines.map((l) => {
           const m = skus.find((x) => x.asin === l.asin)
-          return [fbaId, fc, l.asin, m?.sku ?? '', m?.fnsku ?? '', l.box_qty ?? '', l.unit_qty].map(String)
+          return [fbaId, fc, l.asin, m?.sku ?? '', m?.fnsku ?? '', l.box_qty ?? '', l.unit_qty, irn].map(String)
         })
       ]
       const text = rows.map((r) => r.join('\t')).join('\n')
@@ -989,7 +1038,7 @@ function CopyInvoiceData({ fbaId, fc, lines }: { fbaId: string; fc: string; line
     window.setTimeout(() => setState('idle'), 2200)
   }
   return (
-    <Tip label="Copies FBA number, destination FC, ASIN, SKU, FNSKU, box qty and qty for every SKU, tab separated, ready to paste into a spreadsheet">
+    <Tip label="Copies FBA number, destination FC, ASIN, SKU, FNSKU, box qty, qty and IRN for every SKU, tab separated, ready to paste into a spreadsheet">
       <button
         type="button"
         onClick={copy}

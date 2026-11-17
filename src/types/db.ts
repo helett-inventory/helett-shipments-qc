@@ -40,6 +40,7 @@ export interface Shipment {
   dispatch_mode: 'ATS' | 'Drop In' | 'Bluedart' | null
   status: ShipmentStatus
   on_hold: boolean
+  irn?: string | null
   hold_reason: string | null
   hold_by?: string | null // who raised the hold (the person who made the scan)
   hold_at?: string | null

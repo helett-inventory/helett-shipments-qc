@@ -62,6 +62,7 @@ function Gate() {
       </div>
     )
   }
+  const fin = profile.role === 'finance' && !profile.is_admin // Finance has no QC pages or dashboard
   return (
     <Routes>
       <Route element={<AppShell />}>
@@ -69,11 +70,11 @@ function Gate() {
         <Route path="/shipments" element={<Shipments />} />
         <Route path="/shipments/new" element={(profile.role === 'inventory' || !!profile.is_admin) ? <ShipmentNew /> : <Navigate to="/" replace />} />
         <Route path="/shipments/:id" element={<ShipmentDetail />} />
-        <Route path="/shipments/:id/qc-form" element={profile.role === 'qc' && !profile.is_admin ? <Navigate to="/" replace /> : <QCFormPrint />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/qc" element={<QCList />} />
-        <Route path="/qc/new-form" element={<QCOpenForm />} />
-        <Route path="/qc/:id" element={<QCRecord />} />
+        <Route path="/shipments/:id/qc-form" element={(profile.role === 'qc' || fin) && !profile.is_admin ? <Navigate to="/" replace /> : <QCFormPrint />} />
+        <Route path="/dashboard" element={fin ? <Navigate to="/" replace /> : <Dashboard />} />
+        <Route path="/qc" element={fin ? <Navigate to="/" replace /> : <QCList />} />
+        <Route path="/qc/new-form" element={fin ? <Navigate to="/" replace /> : <QCOpenForm />} />
+        <Route path="/qc/:id" element={fin ? <Navigate to="/" replace /> : <QCRecord />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { isFinanceOnly } from '../lib/roles'
 import { useAuth } from '../auth/AuthProvider'
 import { useLive } from '../hooks/useLive'
 import { supabase } from '../lib/supabase'
@@ -207,8 +208,9 @@ export function Shipments() {
     ['shipments', 'shipment_lines', 'dispatches'],
     'shipments-list'
   )
-  const showDeadlines = !(profile?.role === 'qc' && !profile.is_admin) // QC does not manage Amazon deadlines
-  const filters = showDeadlines ? FILTERS : FILTERS.filter((f) => f.id !== 'deadline')
+  const fin = isFinanceOnly(profile)
+  const showDeadlines = !(profile?.role === 'qc' && !profile.is_admin) && !fin // QC and Finance do not manage Amazon deadlines
+  const filters = (showDeadlines ? FILTERS : FILTERS.filter((f) => f.id !== 'deadline')).filter((f) => !(fin && f.id === 'ready'))
   const [filter, setFilter] = useState<Filter>('all')
   const [query, setQuery] = useState('')
 
@@ -269,7 +271,7 @@ export function Shipments() {
               <span>FC</span>
               <span>Products</span>
               <span>Appointment</span>
-              <span>Status</span>
+              <span>{fin ? 'IRN' : 'Status'}</span>
             </div>
           </div>
       )
@@ -345,13 +347,17 @@ export function Shipments() {
                             <ModePill large mode={s.dispatch_mode} cancelled={s.status === 'Cancelled'} />
                           </div>
                           <div className="flex flex-wrap justify-end gap-1.5 lg:justify-start lg:col-start-7 lg:row-start-1">
+                            {fin ? (
+                              <span className={`text-sm font-mono break-all ${s.irn ? 'font-medium' : 'text-muted font-sans'}`}>{s.irn || 'No IRN yet'}</span>
+                            ) : (
                             <StatusIcons
-                              status={s.status}
-                              hold={s.on_hold}
-                              labelsPending={(s.status === 'QC Done' || s.status === 'Partially Dispatched') && needsBoxLabels(s.dispatch_mode ?? '') && s.box_label_checks.some((c) => !c.scanned)}
-                              awaitingWm={awaiting}
-                              lines={liveLines}
-                            />
+                                status={s.status}
+                                hold={s.on_hold}
+                                labelsPending={(s.status === 'QC Done' || s.status === 'Partially Dispatched') && needsBoxLabels(s.dispatch_mode ?? '') && s.box_label_checks.some((c) => !c.scanned)}
+                                awaitingWm={awaiting}
+                                lines={liveLines}
+                              />
+                            )}
                           </div>
                         </div>
 

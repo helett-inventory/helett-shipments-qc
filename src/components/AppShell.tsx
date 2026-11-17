@@ -8,6 +8,7 @@ import { useScrollMemory } from '../hooks/useScrollMemory'
 import { holdWho } from '../lib/format'
 import { NavCount } from './NeedsStrip'
 import { Tip } from './ui'
+import { isFinanceOnly } from '../lib/roles'
 import type { Shipment } from '../types/db'
 
 const ROLE_LABEL = { inventory: 'Inventory', qc: 'QC', wm: 'Warehouse manager', finance: 'Finance' } as const
@@ -121,6 +122,7 @@ export function AppShell() {
       }
       return !v
     })
+  const navItems = NAV.filter((n) => !(isFinanceOnly(profile) && n.to !== '/')) // Finance only gets Shipments
   const countFor = (to: string) => (to === '/' ? needs.ships.length : to === '/qc' ? needs.qc.length : 0)
 
   return (
@@ -149,7 +151,7 @@ export function AppShell() {
         </div>
 
         <nav className="px-3 space-y-1.5" aria-label="Sections">
-          {NAV.map((n) => (
+          {navItems.map((n) => (
             <NavLink
               key={n.to}
               to={n.to}
@@ -271,11 +273,11 @@ export function AppShell() {
 
       {/* mobile tab bar */}
       <nav
-        className="lg:hidden fixed bottom-0 inset-x-0 z-20 bg-surface border-t border-line grid grid-cols-3 no-print"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        className="lg:hidden fixed bottom-0 inset-x-0 z-20 bg-surface border-t border-line grid no-print"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)', gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
         aria-label="Sections"
       >
-        {NAV.map((n) => (
+        {navItems.map((n) => (
           <NavLink
             key={n.to}
             to={n.to}
