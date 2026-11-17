@@ -204,7 +204,7 @@ export function PillTabs({ tabs, active, onTab, label }: { tabs: { id: string; l
           role="tab"
           aria-selected={active === t.id}
           onClick={() => onTab(t.id)}
-          className={`shrink-0 min-h-[44px] px-4 rounded-full text-sm font-medium ${
+          className={`shrink-0 min-h-[44px] px-4 rounded-full text-sm font-medium transition-colors duration-200 active:scale-[0.97] ${
             active === t.id ? 'bg-ink text-white' : 'bg-surface ring-1 ring-[#cfd4da] text-muted hover:text-ink'
           }`}
         >

@@ -117,7 +117,7 @@ export function QCList() {
       {data && rows.length === 0 && <Empty>{tab === 'Open' ? 'Nothing to inspect right now.' : 'No cases here.'}</Empty>}
 
       {rows.length > 0 && (
-        <div className="bg-surface shadow-card rounded-xl overflow-hidden">
+        <div key={tab} className="bg-surface shadow-card rounded-xl overflow-hidden swap-in">
           <div className={`hidden lg:grid ${COLS} gap-x-4 px-5 py-2.5 border-b border-line text-[13px] text-muted font-medium`}>
             <span>Type</span>
             <span>Shipment</span>

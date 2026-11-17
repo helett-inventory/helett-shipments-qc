@@ -78,3 +78,7 @@ input, select, textarea, button {
 .carton:nth-of-type(3) { animation-delay: 0.3s; }
 @keyframes belt { to { stroke-dashoffset: -16; } }
 .belt { animation: belt 0.9s linear infinite; }
+
+/* Switching a tab, filter or date range: the new content eases in so the change is visible. */
+@keyframes swap-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.swap-in { animation: swap-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }

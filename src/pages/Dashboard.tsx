@@ -73,7 +73,7 @@ export function Dashboard() {
       {d?.isEmpty && <Empty>No shipments yet. Numbers appear here once shipments are created.</Empty>}
 
       {d && !d.isEmpty && (
-        <div className="space-y-5 mt-4">
+        <div key={`${range.id}-${range.from}-${range.to}`} className="space-y-5 mt-4 swap-in">
           {/* ------------------------------------------------ top numbers */}
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
             <Kpi chip="ink" help="Shipments that are not yet closed or cancelled, including any on hold." label="Open shipments" value={String(d.kpi.openShipments)} sub={d.kpi.onHold ? `${d.kpi.onHold} on hold` : 'None on hold'} />

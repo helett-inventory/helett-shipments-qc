@@ -296,7 +296,7 @@ export function Shipments() {
       {groups.length > 0 && (
         <div>
 
-          <div className="space-y-4">
+          <div key={filter} className="space-y-4 swap-in">
           {groups.map((g) => {
             const isDay = /^\d{4}-\d{2}-\d{2}$/.test(g.key)
             const [wd, dd, mon, yr] = isDay ? fmtDayLong(g.key).split(' ') : []
