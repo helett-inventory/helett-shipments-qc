@@ -1,3 +1,4 @@
+import { LoadingScreen } from './Brand'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { signedUrl } from '../lib/signatures'
@@ -484,8 +485,8 @@ export function Notice({ tone, children }: { tone: 'fail' | 'warn'; children: Re
   )
 }
 
-export function Loading() {
-  return <div className="p-10 text-center text-muted">Loading…</div>
+export function Loading({ full = false }: { full?: boolean }) {
+  return <LoadingScreen full={full} />
 }
 
 export function Empty({ children }: { children: React.ReactNode }) {

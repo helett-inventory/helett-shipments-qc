@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 
 // Small chart pieces for the dashboard. No chart library: bars are plain HTML, lines and the donut are SVG.
 // Palette is the app's own: ink, greys, and the one blue already used for Bluedart.
@@ -32,7 +32,7 @@ export function HBars({ rows, empty = 'Nothing to show yet.' }: { rows: BarRow[]
   if (rows.length === 0) return <p className="text-sm text-muted py-2">{empty}</p>
   return (
     <ul className="space-y-3">
-      {rows.map((r) => (
+      {rows.map((r, i) => (
         <li key={r.label}>
           <div className="flex items-baseline justify-between gap-3 text-sm">
             <span className="min-w-0 truncate font-medium">{r.label}</span>
@@ -40,8 +40,8 @@ export function HBars({ rows, empty = 'Nothing to show yet.' }: { rows: BarRow[]
           </div>
           <div className="mt-1 h-2 rounded-full" style={{ background: CHART.track }}>
             <div
-              className="h-2 rounded-full"
-              style={{ width: `${Math.max(r.value > 0 ? 2 : 0, (r.value / max) * 100)}%`, background: CHART[r.tone ?? 'ink'] }}
+              className="h-2 rounded-full grow-x"
+              style={{ animationDelay: `${i * 60}ms`, width: `${Math.max(r.value > 0 ? 2 : 0, (r.value / max) * 100)}%`, background: CHART[r.tone ?? 'ink'] }}
             />
           </div>
           {r.note && <div className="text-[13px] text-muted mt-0.5">{r.note}</div>}
@@ -95,8 +95,8 @@ export function PairBars({ points, aName, bName }: { points: PairPoint[]; aName:
               onMouseEnter={() => setHover(i)}
               onTouchStart={() => setHover(i)}
             >
-              <div className="w-1/2 max-w-[14px] rounded-t-[3px]" style={{ height: `${(p.a / max) * 100}%`, minHeight: p.a ? 2 : 0, background: CHART.blueSoft }} />
-              <div className="w-1/2 max-w-[14px] rounded-t-[3px]" style={{ height: `${(p.b / max) * 100}%`, minHeight: p.b ? 2 : 0, background: CHART.blue }} />
+              <div className="w-1/2 max-w-[14px] rounded-t-[3px] grow-y" style={{ animationDelay: `${i * 45}ms`, height: `${(p.a / max) * 100}%`, minHeight: p.a ? 2 : 0, background: CHART.blueSoft }} />
+              <div className="w-1/2 max-w-[14px] rounded-t-[3px] grow-y" style={{ animationDelay: `${i * 45 + 70}ms`, height: `${(p.b / max) * 100}%`, minHeight: p.b ? 2 : 0, background: CHART.blue }} />
             </div>
           ))}
         </div>
@@ -138,8 +138,10 @@ export function AreaChart({ values, labels, unit }: { values: number[]; labels: 
         ))}
         <span className="absolute -top-2.5 right-0 text-[11px] text-muted bg-surface pl-1 tabular-nums">{max}</span>
         <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="absolute inset-0 w-full h-full overflow-visible" aria-hidden="true">
-          <path d={area} fill={CHART.blue} opacity="0.12" />
-          <path d={line} fill="none" stroke={CHART.blue} strokeWidth="2" vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
+          <g className="reveal-x">
+            <path d={area} fill={CHART.blue} opacity="0.12" />
+            <path d={line} fill="none" stroke={CHART.blue} strokeWidth="2" vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
+          </g>
           {hover != null && <line x1={x(hover)} x2={x(hover)} y1="0" y2={H} stroke={CHART.mid} strokeWidth="1" vectorEffect="non-scaling-stroke" strokeDasharray="3 3" />}
         </svg>
         {hover != null && (
@@ -180,7 +182,7 @@ export function ModeSplit({ parts, unit }: { parts: ModePart[]; unit: string }) 
         <span className="text-[34px] leading-none font-semibold tracking-tight tabular-nums">{total.toLocaleString()}</span>
         <span className="text-sm text-muted">{unit}</span>
       </div>
-      <div className="flex h-3 rounded-full overflow-hidden gap-[3px] mt-4" role="img" aria-label="Share of units by dispatch type" style={{ background: total ? undefined : CHART.track }}>
+      <div className="flex h-3 rounded-full overflow-hidden gap-[3px] mt-4 reveal-x" role="img" aria-label="Share of units by dispatch type" style={{ background: total ? undefined : CHART.track }}>
         {total > 0 &&
           parts
             .filter((p) => p.units > 0)
@@ -219,11 +221,18 @@ export function Donut({ parts, centre }: { parts: Part[]; centre: string }) {
   const R = 38
   const C = 2 * Math.PI * R
   let off = 0
+  const maskId = useId()
   return (
     <div className="flex items-center gap-5 flex-wrap">
       <div className="relative w-[140px] h-[140px] shrink-0">
         <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90" aria-hidden="true">
+          <defs>
+            <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+              <circle className="sweep-circle" cx="50" cy="50" r={R} fill="none" stroke="#fff" strokeWidth="16" pathLength={1} />
+            </mask>
+          </defs>
           <circle cx="50" cy="50" r={R} fill="none" stroke={CHART.track} strokeWidth="14" />
+          <g mask={`url(#${maskId})`}>
           {total > 0 &&
             parts.map((p) => {
               const len = (p.value / total) * C
@@ -231,6 +240,7 @@ export function Donut({ parts, centre }: { parts: Part[]; centre: string }) {
               off += len
               return el
             })}
+          </g>
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-2xl font-semibold leading-none tabular-nums">{total}</span>

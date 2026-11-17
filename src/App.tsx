@@ -12,6 +12,7 @@ import { QCRecord } from './pages/QCRecord'
 import { QCFormPrint } from './pages/QCFormPrint'
 import { QCOpenForm } from './pages/QCOpenForm'
 import { Dashboard } from './pages/Dashboard'
+import { NotFound } from './pages/NotFound'
 
 function Setup() {
   return (
@@ -29,7 +30,7 @@ function Setup() {
 
 function Gate() {
   const { session, profile, loading, problem, retry, signOut } = useAuth()
-  if (loading) return <Loading />
+  if (loading) return <Loading full />
   if (!session) return <Login />
   if (problem && !profile) {
     return (
@@ -75,7 +76,7 @@ function Gate() {
         <Route path="/qc" element={fin ? <Navigate to="/" replace /> : <QCList />} />
         <Route path="/qc/new-form" element={fin ? <Navigate to="/" replace /> : <QCOpenForm />} />
         <Route path="/qc/:id" element={fin ? <Navigate to="/" replace /> : <QCRecord />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   )
