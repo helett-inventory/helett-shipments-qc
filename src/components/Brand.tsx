@@ -21,8 +21,9 @@ export function LoadingScreen({ full = false }: { full?: boolean }) {
     )
   }
   return (
-    <div role="status" aria-label="Loading" className="min-h-screen flex items-center justify-center bg-canvas">
+    <div role="status" aria-label="Loading" className="min-h-screen flex flex-col items-center justify-center gap-6 bg-canvas">
       <CartonLoader />
+      <span className="text-sm text-muted">Getting your shipments ready</span>
     </div>
   )
 }
