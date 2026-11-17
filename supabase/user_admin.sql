@@ -4,7 +4,7 @@
 --   * Run ONE block at a time: highlight just that block, then press Run.
 --     (Running the whole file would run every block, including the risky ones.)
 --   * Replace the email and the names with real ones. The email must match exactly.
---   * Roles are exactly: 'inventory', 'qc', 'wm'.
+--   * Roles are exactly: 'inventory', 'qc', 'wm', 'finance' (finance is view-only).
 --   * An UPDATE with a wrong email changes 0 rows and shows no error. Check the result afterwards.
 --
 -- The block markers below are comments, so nothing runs by accident.
@@ -55,7 +55,7 @@ where id = (select id from auth.users where email = 'their-email@example.com');
 
 
 -- =====================================================================
--- 5. CHANGE THE ROLE  ('inventory', 'qc' or 'wm')
+-- 5. CHANGE THE ROLE  ('inventory', 'qc', 'wm' or 'finance')
 -- =====================================================================
 update profiles set role = 'wm'
 where id = (select id from auth.users where email = 'their-email@example.com');

@@ -10,7 +10,7 @@ import { NavCount } from './NeedsStrip'
 import { Tip } from './ui'
 import type { Shipment } from '../types/db'
 
-const ROLE_LABEL = { inventory: 'Inventory', qc: 'QC', wm: 'Warehouse manager' } as const
+const ROLE_LABEL = { inventory: 'Inventory', qc: 'QC', wm: 'Warehouse manager', finance: 'Finance' } as const
 const titleOf = (p: { role: keyof typeof ROLE_LABEL; is_admin?: boolean; role_label?: string | null } | null) =>
   !p ? '' : p.is_admin ? 'Admin' : p.role_label || ROLE_LABEL[p.role]
 

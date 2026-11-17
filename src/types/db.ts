@@ -1,4 +1,4 @@
-export type Role = 'inventory' | 'qc' | 'wm'
+export type Role = 'inventory' | 'qc' | 'wm' | 'finance'
 
 export interface Profile {
   id: string
