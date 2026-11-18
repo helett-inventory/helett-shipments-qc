@@ -8,7 +8,7 @@ import { fmtDayLong, todayISO } from '../lib/format'
 import { ErrorBox, HoldStamp, Loading, ModePill, Page, PageTitle, StatusStamp } from '../components/ui'
 import type { Shipment, ShipmentLine } from '../types/db'
 
-type Row = Shipment & { shipment_lines: Pick<ShipmentLine, 'product_name' | 'unit_qty' | 'status'>[] }
+type Row = Shipment & { shipment_lines: Pick<ShipmentLine, 'product_name' | 'unit_qty' | 'status' | 'received_qty'>[] }
 type Kind = 'open' | 'late' | 'hold' | 'done'
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -37,7 +37,7 @@ export function Calendar() {
     async () => {
       const { data, error } = await supabase
         .from('shipments')
-        .select('*, shipment_lines(product_name, unit_qty, status)')
+        .select('*, shipment_lines(product_name, unit_qty, status, received_qty)')
         .not('dispatch_date', 'is', null)
         .order('created_at', { ascending: false })
         .limit(5000)
@@ -225,6 +225,8 @@ export function Calendar() {
               {dayRows.map((s) => {
                 const lines = s.shipment_lines.filter((l) => l.status !== 'Cancelled')
                 const units = lines.reduce((n, l) => n + l.unit_qty, 0)
+                const got = lines.reduce((n, l) => n + (l.received_qty ?? 0), 0)
+                const sent = s.status === 'Closed' || s.status === 'Partially Dispatched'
                 return (
                   <li key={s.id}>
                     <Link to={`/shipments/${s.id}`} className="block px-4 py-3 hover:bg-canvas">
@@ -241,6 +243,16 @@ export function Calendar() {
                           {units.toLocaleString()} units · {s.box_qty_total} box{s.box_qty_total === 1 ? '' : 'es'}
                         </span>
                       </div>
+                      {sent && !fin && (
+                        <div className="mt-2 flex items-center gap-2 text-[13px]">
+                          <span className="h-1.5 flex-1 rounded-full bg-[#eef0f2] overflow-hidden" aria-hidden="true">
+                            <span className="block h-full rounded-full bg-ink" style={{ width: `${units ? Math.min(100, (got / units) * 100) : 0}%` }} />
+                          </span>
+                          <span className="tabular-nums text-muted shrink-0">
+                            {got.toLocaleString()} of {units.toLocaleString()} received
+                          </span>
+                        </div>
+                      )}
                     </Link>
                   </li>
                 )
