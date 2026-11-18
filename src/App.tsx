@@ -12,6 +12,7 @@ import { QCRecord } from './pages/QCRecord'
 import { QCFormPrint } from './pages/QCFormPrint'
 import { QCOpenForm } from './pages/QCOpenForm'
 import { Dashboard } from './pages/Dashboard'
+import { Calendar } from './pages/Calendar'
 import { NotFound } from './pages/NotFound'
 
 function Setup() {
@@ -67,11 +68,12 @@ function Gate() {
   return (
     <Routes>
       <Route element={<AppShell />}>
-        <Route path="/" element={<Shipments />} />
+        <Route path="/" element={<Calendar />} />
         <Route path="/shipments" element={<Shipments />} />
         <Route path="/shipments/new" element={(profile.role === 'inventory' || !!profile.is_admin) ? <ShipmentNew /> : <Navigate to="/" replace />} />
         <Route path="/shipments/:id" element={<ShipmentDetail />} />
         <Route path="/shipments/:id/qc-form" element={(profile.role === 'qc' || fin) && !profile.is_admin ? <Navigate to="/" replace /> : <QCFormPrint />} />
+        <Route path="/calendar" element={<Navigate to="/" replace />} />
         <Route path="/dashboard" element={fin ? <Navigate to="/" replace /> : <Dashboard />} />
         <Route path="/qc" element={fin ? <Navigate to="/" replace /> : <QCList />} />
         <Route path="/qc/new-form" element={fin ? <Navigate to="/" replace /> : <QCOpenForm />} />

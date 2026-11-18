@@ -95,7 +95,7 @@ export function ShipmentNew() {
   return (
     <Page>
       <StickyHead>
-        <BackLink to="/">Shipments</BackLink>
+        <BackLink to="/shipments">Shipments</BackLink>
         <PageTitle title="New shipment" sub="QC cases open automatically for each SKU line." />
       </StickyHead>
 

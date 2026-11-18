@@ -6,6 +6,11 @@ html, body, #root {
   min-height: 100%;
 }
 
+/* Keep the page width the same whether or not a page needs a scrollbar. */
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   background: #f5f6f7;

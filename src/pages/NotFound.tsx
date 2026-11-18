@@ -23,7 +23,7 @@ export function NotFound() {
                 <span key={i} className="h-8 bg-ink rounded-[1px]" style={{ width: [2, 1, 3, 1, 2][i % 5] }} />
               ))}
             </div>
-            <Link to="/" className="mt-5 inline-flex items-center justify-center min-h-[48px] px-5 rounded-xl bg-ink text-white font-medium w-full">
+            <Link to="/shipments" className="mt-5 inline-flex items-center justify-center min-h-[48px] px-5 rounded-xl bg-ink text-white font-medium w-full">
               Back to shipments
             </Link>
           </div>

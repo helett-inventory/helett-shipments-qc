@@ -137,7 +137,7 @@ export function ShipmentDetail() {
   return (
     <Page wide>
       <StickyHead wide>
-      <BackLink to="/">Shipments</BackLink>
+      <BackLink to="/shipments">Shipments</BackLink>
       <PageTitle
         title={b.fba_id}
         sub={
@@ -490,7 +490,7 @@ export function ShipmentDetail() {
             const files = (paths ?? []) as string[]
             if (files.length) await supabase.storage.from('signatures').remove(files)
             invalidateAll()
-            navigate('/', { replace: true })
+            navigate('/shipments', { replace: true })
           }}
         />
       )}

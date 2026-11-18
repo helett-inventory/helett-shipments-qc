@@ -74,8 +74,16 @@ const IconChart = (
   </svg>
 )
 
+const IconCal = (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="3" y="5" width="18" height="16" rx="2" />
+    <path d="M3 10h18M8 3v4M16 3v4" />
+  </svg>
+)
+
 const NAV = [
-  { to: '/', label: 'Shipments', icon: IconBox, end: true },
+  { to: '/', label: 'Calendar', icon: IconCal, end: true },
+  { to: '/shipments', label: 'Shipments', icon: IconBox, end: false },
   { to: '/qc', label: 'QC', icon: IconCheck, end: false },
   { to: '/dashboard', label: 'Dashboard', icon: IconChart, end: false }
 ]
@@ -122,8 +130,8 @@ export function AppShell() {
       }
       return !v
     })
-  const navItems = NAV.filter((n) => !(isFinanceOnly(profile) && n.to !== '/')) // Finance only gets Shipments
-  const countFor = (to: string) => (to === '/' ? needs.ships.length : to === '/qc' ? needs.qc.length : 0)
+  const navItems = NAV.filter((n) => !(isFinanceOnly(profile) && n.to !== '/' && n.to !== '/shipments')) // Finance only gets Calendar and Shipments
+  const countFor = (to: string) => (to === '/shipments' ? needs.ships.length : to === '/qc' ? needs.qc.length : 0)
 
   return (
     <div className="min-h-screen print:block" style={{ ['--side' as string]: slim ? '72px' : '240px' }}>
