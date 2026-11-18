@@ -110,7 +110,7 @@ export function Calendar() {
     if (window.matchMedia('(max-width: 1535px)').matches) setTimeout(() => panel.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 60)
   }
   const dayRows = picked ? (byDay.get(picked) ?? []) : []
-  const navBtn = 'w-11 h-11 rounded-full bg-surface ring-1 ring-[#cfd4da] flex items-center justify-center hover:bg-[#f0f1f3] active:scale-95 transition'
+  const navBtn = 'w-11 h-11 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 active:scale-95 transition'
 
   return (
     <Page wide>
@@ -129,7 +129,7 @@ export function Calendar() {
       {data && (
         <div className="grid 2xl:grid-cols-[minmax(0,1fr)_380px] gap-5 items-start">
           <section aria-label="Month" className="bg-surface shadow-card rounded-xl overflow-hidden">
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-line">
+            <div className="flex items-center gap-3 px-4 py-3 bg-ink text-white">
               <button type="button" onClick={() => move(-1)} aria-label="Previous month" className={navBtn}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M15 6l-6 6 6 6" />
@@ -139,7 +139,7 @@ export function Calendar() {
                 <h2 className="text-lg font-semibold tracking-tight leading-tight">
                   {MONTHS[view.m]} {view.y}
                 </h2>
-                <p className="text-[13px] text-muted">
+                <p className="text-[13px] text-white/70">
                   {monthStats.ships} shipment{monthStats.ships === 1 ? '' : 's'} · {monthStats.units.toLocaleString()} units
                 </p>
               </div>
