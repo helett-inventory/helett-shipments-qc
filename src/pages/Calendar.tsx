@@ -16,12 +16,12 @@ const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const pad = (n: number) => String(n).padStart(2, '0')
 const iso = (y: number, m: number, d: number) => `${y}-${pad(m + 1)}-${pad(d)}`
 
-// Dot look per state. Black = still to dispatch, amber = past its date, red ring = on hold, grey = dispatched.
+// Dot look per state. Black = still to dispatch, amber = past its date, red ring = on hold, light green = dispatched.
 const DOT: Record<Kind, string> = {
   open: 'bg-ink',
   late: 'bg-[#c98a1b]',
   hold: 'bg-white ring-2 ring-fail',
-  done: 'bg-[#c3c8d0]'
+  done: 'bg-[#8fd3ae]'
 }
 const KIND_LABEL: Record<Kind, string> = { open: 'To dispatch', late: 'Past its date', hold: 'On hold', done: 'Dispatched' }
 
