@@ -5,7 +5,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useLive } from '../hooks/useLive'
 import { supabase } from '../lib/supabase'
 import { fmtDayLong, todayISO } from '../lib/format'
-import { ErrorBox, HoldStamp, Loading, ModePill, PageTitle, StatusStamp } from '../components/ui'
+import { ErrorBox, HoldStamp, Loading, ModePill, PageTitle, StatusStamp, StickyHead } from '../components/ui'
 import type { Shipment, ShipmentLine } from '../types/db'
 
 type Row = Shipment & { shipment_lines: Pick<ShipmentLine, 'product_name' | 'unit_qty' | 'status' | 'received_qty'>[] }
@@ -113,7 +113,8 @@ export function Calendar() {
   const navBtn = 'w-11 h-11 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 active:scale-95 transition'
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-[1760px] px-4 py-5 lg:px-6 lg:py-4 lg:h-[calc(100vh-2.5rem)] lg:flex lg:flex-col">
+    <div className="mx-auto w-full min-w-0 max-w-[1760px] px-4 py-5 lg:px-6 lg:pt-8 lg:pb-4 lg:h-[calc(100vh-2.5rem)] lg:flex lg:flex-col">
+      <StickyHead wide>
       <PageTitle
         title="Calendar"
         action={
@@ -122,6 +123,7 @@ export function Calendar() {
           </button>
         }
       />
+      </StickyHead>
       {error && <ErrorBox message={error} />}
       {loading && !data && <Loading />}
 
