@@ -114,7 +114,7 @@ export function NeedsStrip({ items }: { items: Need[] }) {
                       className="flex flex-col gap-1.5 lg:grid lg:grid-cols-[150px_110px_minmax(0,1fr)_minmax(0,.7fr)_210px_16px] lg:items-center lg:gap-x-4 px-4 py-3 min-h-[52px] hover:bg-canvas"
                     >
                       <span className="flex items-center justify-between gap-3 lg:contents">
-                        <span className="font-mono text-[15px] font-semibold">{n.title}</span>
+                        <span className="font-mono text-[15px] font-normal">{n.title}</span>
                         <span className="text-sm text-muted lg:text-ink">
                           {n.fc}
                           {n.boxes ? <b className="font-bold text-ink ml-2 whitespace-nowrap">{n.boxes} {n.boxes === 1 ? 'box' : 'boxes'}</b> : null}

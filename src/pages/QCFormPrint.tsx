@@ -35,7 +35,7 @@ function Head({ line, ship, sub }: { line: ShipmentLine; ship: Shipment; sub: st
       <div className="ref qrref">
         <div>
           Shipment
-          <b className="mono">{ship.fba_id}</b>
+          <span className="mono">{ship.fba_id}</span>
           {line.product_name}
         </div>
         <Qr value={qrPayload(line.id)} />

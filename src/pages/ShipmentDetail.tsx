@@ -140,6 +140,7 @@ export function ShipmentDetail() {
       <BackLink to="/shipments">Shipments</BackLink>
       <PageTitle
         title={b.fba_id}
+        plain
         sub={
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
             <span>

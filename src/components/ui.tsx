@@ -160,16 +160,18 @@ export function Page({ children, wide }: { children: React.ReactNode; wide?: boo
 export function PageTitle({
   title,
   sub,
-  action
+  action,
+  plain
 }: {
   title: string
+  plain?: boolean // regular weight, for titles that are an ID
   sub?: React.ReactNode
   action?: React.ReactNode
 }) {
   return (
     <div className="page-title flex items-start justify-between gap-3 mb-5">
       <div className="min-w-0">
-        <h1 className="text-2xl lg:text-[28px] font-semibold tracking-tight leading-tight break-words">{title}</h1>
+        <h1 className={`text-2xl lg:text-[28px] ${plain ? 'font-normal' : 'font-semibold'} tracking-tight leading-tight break-words`}>{title}</h1>
         {sub && <div className="text-sm text-muted mt-1">{sub}</div>}
       </div>
       {action && <div className="shrink-0">{action}</div>}

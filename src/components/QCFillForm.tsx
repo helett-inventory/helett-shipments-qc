@@ -281,7 +281,7 @@ export function QCFillForm({ data, draft, readOnly, setDraft, onScanFn }: Props)
         <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
           <div>
             <dt className="text-muted">FBA shipment</dt>
-            <dd className="font-mono font-medium break-all">{ship.fba_id}</dd>
+            <dd className="font-mono font-normal break-all">{ship.fba_id}</dd>
           </div>
           <div>
             <dt className="text-muted">Warehouse</dt>

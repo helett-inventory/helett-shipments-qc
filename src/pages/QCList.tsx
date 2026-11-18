@@ -146,7 +146,7 @@ export function QCList() {
                       </div>
                     </div>
                     <div className="flex flex-wrap items-baseline gap-x-3 text-sm lg:contents">
-                      <div className="font-mono font-medium lg:col-start-2 lg:row-start-1 lg:text-[15px]">{s.fba_id}</div>
+                      <div className="font-mono font-normal lg:col-start-2 lg:row-start-1 lg:text-[15px]">{s.fba_id}</div>
                                           </div>
                     <div className="min-w-0 lg:col-start-3 lg:row-start-1">
                       <div className="font-medium">{l.product_name}</div>

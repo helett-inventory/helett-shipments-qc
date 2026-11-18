@@ -238,7 +238,7 @@ export function Calendar() {
                     <Link to={`/shipments/${s.id}`} className="block px-4 py-3 hover:bg-canvas">
                       <div className="flex items-center gap-2">
                         <Dot kind={kindOf(s)} />
-                        <span className="font-mono text-[15px] font-semibold">{s.fba_id}</span>
+                        <span className="font-mono text-[15px] font-normal">{s.fba_id}</span>
                         <span className="ml-auto text-sm text-muted">{s.warehouse}</span>
                       </div>
                       <div className="mt-1.5 text-sm truncate">{lines.length === 1 ? lines[0].product_name : `${lines.length} SKUs`}</div>
