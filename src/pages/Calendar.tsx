@@ -5,7 +5,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useLive } from '../hooks/useLive'
 import { supabase } from '../lib/supabase'
 import { fmtDayLong, todayISO } from '../lib/format'
-import { ErrorBox, HoldStamp, Loading, ModePill, Page, PageTitle, StatusStamp } from '../components/ui'
+import { ErrorBox, HoldStamp, Loading, ModePill, PageTitle, StatusStamp } from '../components/ui'
 import type { Shipment, ShipmentLine } from '../types/db'
 
 type Row = Shipment & { shipment_lines: Pick<ShipmentLine, 'product_name' | 'unit_qty' | 'status' | 'received_qty'>[] }
@@ -107,16 +107,15 @@ export function Calendar() {
   const pick = (key: string) => {
     setPicked(key)
     // stacked layout: bring the day's list into view
-    if (window.matchMedia('(max-width: 1535px)').matches) setTimeout(() => panel.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 60)
+    if (window.matchMedia('(max-width: 1023px)').matches) setTimeout(() => panel.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 60)
   }
   const dayRows = picked ? (byDay.get(picked) ?? []) : []
   const navBtn = 'w-11 h-11 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 active:scale-95 transition'
 
   return (
-    <Page wide>
+    <div className="mx-auto w-full min-w-0 max-w-[1760px] px-4 py-5 lg:px-6 lg:py-4 lg:h-[calc(100vh-2.5rem)] lg:flex lg:flex-col">
       <PageTitle
         title="Calendar"
-        sub="Shipments on their planned dispatch date."
         action={
           <button type="button" onClick={goToday} className="min-h-[44px] px-4 rounded-lg bg-ink text-white font-medium">
             Today
@@ -127,8 +126,8 @@ export function Calendar() {
       {loading && !data && <Loading />}
 
       {data && (
-        <div className="grid 2xl:grid-cols-[minmax(0,1fr)_380px] gap-5 items-start">
-          <section aria-label="Month" className="bg-surface shadow-card rounded-xl overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px] lg:grid-rows-[minmax(0,1fr)] gap-5 items-start lg:items-stretch lg:flex-1 lg:min-h-0">
+          <section aria-label="Month" className="bg-surface shadow-card rounded-xl overflow-hidden min-w-0 lg:flex lg:flex-col lg:min-h-0">
             <div className="flex items-center gap-3 px-4 py-3 bg-ink text-white">
               <button type="button" onClick={() => move(-1)} aria-label="Previous month" className={navBtn}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -158,7 +157,7 @@ export function Calendar() {
               ))}
             </div>
 
-            <div key={`${view.y}-${view.m}`} className="grid grid-cols-7 swap-in [&>button:nth-child(7n)]:border-r-0 [&>button:nth-last-child(-n+7)]:border-b-0">
+            <div key={`${view.y}-${view.m}`} className="grid grid-cols-7 lg:grid-rows-6 lg:flex-1 lg:min-h-0 swap-in [&>button:nth-child(7n)]:border-r-0 [&>button:nth-last-child(-n+7)]:border-b-0">
               {cells.map((c) => {
                 const rows = byDay.get(c.key) ?? []
                 const isToday = c.key === today
@@ -170,7 +169,7 @@ export function Calendar() {
                     onClick={() => pick(c.key)}
                     aria-label={`${fmtDayLong(c.key)}, ${rows.length} shipment${rows.length === 1 ? '' : 's'}`}
                     aria-pressed={isPicked}
-                    className={`relative min-h-[64px] lg:min-h-[112px] p-1.5 lg:p-2 border-b border-r border-line text-left flex flex-col items-center lg:items-stretch gap-1 transition-colors ${
+                    className={`relative min-h-[64px] lg:min-h-0 lg:overflow-hidden p-1.5 lg:p-2 border-b border-r border-line text-left flex flex-col items-center lg:items-stretch gap-1 transition-colors ${
                       isPicked ? 'bg-[#eef0f2]' : 'hover:bg-canvas'
                     } ${c.inMonth ? '' : 'text-muted/50 [&_.dot]:opacity-40'}`}
                   >
@@ -182,21 +181,26 @@ export function Calendar() {
                       {c.day}
                     </span>
                     {/* phones: dots only */}
-                    <span className="flex flex-wrap justify-center gap-1 lg:hidden">
+                    <span className="flex flex-wrap justify-center gap-1 xl:hidden">
                       {rows.slice(0, 4).map((s) => (
                         <Dot key={s.id} kind={kindOf(s)} />
                       ))}
                     </span>
-                    {rows.length > 4 && <span className="text-[10px] text-muted leading-none lg:hidden">+{rows.length - 4}</span>}
-                    {/* desktop: a small chip per shipment */}
-                    <span className="hidden lg:flex flex-col gap-1 min-w-0">
-                      {rows.slice(0, 3).map((s) => (
-                        <span key={s.id} className="flex items-center gap-1.5 rounded-md bg-[#f0f1f3] px-1.5 py-1 text-[11px] leading-none min-w-0">
+                    {rows.length > 4 && <span className="text-[10px] text-muted leading-none xl:hidden">+{rows.length - 4}</span>}
+                    {/* wide screens: a small chip per shipment; the third only when the window is tall enough */}
+                    <span className="hidden xl:flex flex-col gap-1 min-w-0">
+                      {rows.slice(0, 3).map((s, i) => (
+                        <span key={s.id} className={`${i === 2 ? 'hidden [@media(min-height:860px)]:flex' : 'flex'} items-center gap-1.5 rounded-md bg-[#f0f1f3] px-1.5 py-1 text-[11px] leading-none min-w-0`}>
                           <Dot kind={kindOf(s)} />
                           <span className="truncate font-mono">{s.fba_id}</span>
                         </span>
                       ))}
-                      {rows.length > 3 && <span className="text-[11px] text-muted px-1">+{rows.length - 3} more</span>}
+                      {rows.length > 2 && (
+                        <span className="text-[11px] text-muted px-1 leading-none">
+                          <span className="[@media(min-height:860px)]:hidden">+{rows.length - 2} more</span>
+                          {rows.length > 3 && <span className="hidden [@media(min-height:860px)]:inline">+{rows.length - 3} more</span>}
+                        </span>
+                      )}
                     </span>
                   </button>
                 )
@@ -215,13 +219,13 @@ export function Calendar() {
             </ul>
           </section>
 
-          <aside ref={panel} aria-label="Selected day" className="bg-surface shadow-card rounded-xl overflow-hidden 2xl:sticky 2xl:top-6 scroll-mt-20">
+          <aside ref={panel} aria-label="Selected day" className="bg-surface shadow-card rounded-xl overflow-hidden scroll-mt-20 lg:flex lg:flex-col lg:min-h-0">
             <div className="px-4 py-3 border-b border-line">
               <h2 className="text-lg font-semibold tracking-tight">{picked ? fmtDayLong(picked) : 'Pick a day'}</h2>
               <p className="text-[13px] text-muted">{picked ? `${dayRows.length} shipment${dayRows.length === 1 ? '' : 's'} to dispatch` : 'Tap a day to see its shipments.'}</p>
             </div>
             {picked && dayRows.length === 0 && <p className="px-4 py-8 text-sm text-muted text-center">No shipments on this day.</p>}
-            <ul key={picked ?? ''} className="divide-y divide-line swap-in">
+            <ul key={picked ?? ''} className="divide-y divide-line swap-in lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
               {dayRows.map((s) => {
                 const lines = s.shipment_lines.filter((l) => l.status !== 'Cancelled')
                 const units = lines.reduce((n, l) => n + l.unit_qty, 0)
@@ -261,6 +265,6 @@ export function Calendar() {
           </aside>
         </div>
       )}
-    </Page>
+    </div>
   )
 }
