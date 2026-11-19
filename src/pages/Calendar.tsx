@@ -114,7 +114,7 @@ export function Calendar() {
     if (window.matchMedia('(max-width: 1023px)').matches) setTimeout(() => panel.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 60)
   }
   const dayRows = picked ? (byDay.get(picked) ?? []) : []
-  const navBtn = 'w-11 h-11 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 active:scale-95 transition'
+  const navBtn = 'w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 active:scale-95 transition'
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-[1760px] px-4 py-5 lg:px-6 lg:pt-8 lg:pb-4 lg:min-h-[calc(100vh-2.5rem)] lg:flex lg:flex-col">
@@ -142,7 +142,7 @@ export function Calendar() {
       {data && (
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px] lg:grid-rows-[auto] gap-5 items-start lg:items-stretch lg:flex-1">
           <section aria-label="Month" className="bg-surface shadow-card rounded-xl overflow-hidden min-w-0 lg:flex lg:flex-col">
-            <div className="flex items-center gap-3 px-4 py-3 bg-ink text-white">
+            <div className="flex items-center gap-3 px-4 py-2.5 bg-ink text-white">
               <button type="button" onClick={() => move(-1)} aria-label="Previous month" className={navBtn}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M15 6l-6 6 6 6" />
@@ -165,13 +165,13 @@ export function Calendar() {
 
             <div className="grid grid-cols-7 text-center text-[13px] text-muted font-medium border-b border-line">
               {WEEKDAYS.map((w) => (
-                <span key={w} className="py-2">
+                <span key={w} className="py-1.5">
                   {w}
                 </span>
               ))}
             </div>
 
-            <div key={`${view.y}-${view.m}`} className="grid grid-cols-7 lg:grid-rows-[repeat(6,minmax(120px,1fr))] lg:flex-1 swap-in [&>button:nth-child(7n)]:border-r-0 [&>button:nth-last-child(-n+7)]:border-b-0">
+            <div key={`${view.y}-${view.m}`} className="grid grid-cols-7 lg:grid-rows-[repeat(6,minmax(96px,1fr))] lg:flex-1 swap-in [&>button:nth-child(7n)]:border-r-0 [&>button:nth-last-child(-n+7)]:border-b-0">
               {cells.map((c) => {
                 const rows = byDay.get(c.key) ?? []
                 const isToday = c.key === today
@@ -183,12 +183,12 @@ export function Calendar() {
                     onClick={() => pick(c.key)}
                     aria-label={`${fmtDayLong(c.key)}, ${rows.length} shipment${rows.length === 1 ? '' : 's'}`}
                     aria-pressed={isPicked}
-                    className={`relative min-h-[64px] lg:min-h-[120px] lg:overflow-hidden p-1.5 lg:p-2 border-b border-r border-line text-left flex flex-col items-center lg:items-stretch gap-1 transition-colors ${
+                    className={`relative min-h-[64px] lg:min-h-[96px] lg:overflow-hidden p-1.5 border-b border-r border-line text-left flex flex-col items-center lg:items-stretch gap-1 transition-colors ${
                       isPicked ? 'bg-[#eef0f2]' : 'hover:bg-canvas'
                     } ${c.inMonth ? '' : 'text-muted/50 [&_.dot]:opacity-40'}`}
                   >
                     <span
-                      className={`w-7 h-7 rounded-full flex items-center justify-center text-sm tabular-nums ${
+                      className={`w-6 h-6 rounded-full flex items-center justify-center text-[13px] tabular-nums ${
                         isToday ? 'bg-ink text-white font-semibold' : c.inMonth ? 'font-medium' : ''
                       }`}
                     >
@@ -204,7 +204,7 @@ export function Calendar() {
                     {/* wide screens: a small chip per shipment; the third only when the window is tall enough */}
                     <span className="hidden xl:flex flex-col gap-1 min-w-0">
                       {rows.slice(0, 3).map((s, i) => (
-                        <span key={s.id} className={`${i === 2 ? 'hidden [@media(min-height:860px)]:flex' : 'flex'} items-center gap-1.5 rounded-md bg-[#f0f1f3] px-1.5 py-1 text-[11px] leading-none min-w-0`}>
+                        <span key={s.id} className={`${i === 2 ? 'hidden [@media(min-height:860px)]:flex' : 'flex'} items-center gap-1.5 rounded-md bg-[#f0f1f3] px-1.5 py-[3px] text-[11px] leading-none min-w-0`}>
                           <Dot kind={kindOf(s)} />
                           <span className="truncate font-mono">{s.fba_id}</span>
                         </span>
@@ -221,7 +221,7 @@ export function Calendar() {
               })}
             </div>
 
-            <ul className="flex flex-wrap gap-x-5 gap-y-1.5 px-4 py-3 text-[13px] text-muted border-t border-line" aria-label="Key">
+            <ul className="flex flex-wrap gap-x-5 gap-y-1.5 px-4 py-2 text-[13px] text-muted border-t border-line" aria-label="Key">
               {(Object.keys(KIND_LABEL) as Kind[])
                 .filter((k) => !(fin && k === 'hold'))
                 .map((k) => (
