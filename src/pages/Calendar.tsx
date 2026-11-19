@@ -1,29 +1,32 @@
 import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { isFinanceOnly } from '../lib/roles'
+import { isViewOnly } from '../lib/roles'
 import { useAuth } from '../auth/AuthProvider'
 import { useLive } from '../hooks/useLive'
+import { useNeeds } from '../hooks/useNeeds'
+import { NeedsStrip } from '../components/NeedsStrip'
 import { supabase } from '../lib/supabase'
 import { fmtDayLong, todayISO } from '../lib/format'
 import { ErrorBox, HoldStamp, Loading, ModePill, PageTitle, StatusStamp, StickyHead } from '../components/ui'
 import type { Shipment, ShipmentLine } from '../types/db'
 
 type Row = Shipment & { shipment_lines: Pick<ShipmentLine, 'product_name' | 'unit_qty' | 'status' | 'received_qty'>[] }
-type Kind = 'open' | 'late' | 'hold' | 'done'
+type Kind = 'dropin' | 'other' | 'late' | 'hold' | 'done'
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const pad = (n: number) => String(n).padStart(2, '0')
 const iso = (y: number, m: number, d: number) => `${y}-${pad(m + 1)}-${pad(d)}`
 
-// Dot look per state. Black = still to dispatch, amber = past its date, red ring = on hold, light green = dispatched.
+// Dot look. Still to dispatch: black = Drop In, grey = every other type. Then amber = past its date, red ring = on hold, light green = dispatched.
 const DOT: Record<Kind, string> = {
-  open: 'bg-ink',
+  dropin: 'bg-ink',
+  other: 'bg-[#aab0b9]',
   late: 'bg-[#c98a1b]',
   hold: 'bg-white ring-2 ring-fail',
   done: 'bg-[#8fd3ae]'
 }
-const KIND_LABEL: Record<Kind, string> = { open: 'To dispatch', late: 'Past its date', hold: 'On hold', done: 'Dispatched' }
+const KIND_LABEL: Record<Kind, string> = { dropin: 'Drop In', other: 'ATS and others', late: 'Past its date', hold: 'On hold', done: 'Dispatched' }
 
 function Dot({ kind }: { kind: Kind }) {
   return <span className={`dot inline-block w-2 h-2 rounded-full shrink-0 ${DOT[kind]}`} />
@@ -32,7 +35,8 @@ function Dot({ kind }: { kind: Kind }) {
 // A calendar of dispatch dates: every shipment is an indicator on the day it is planned to go out.
 export function Calendar() {
   const { profile } = useAuth()
-  const fin = isFinanceOnly(profile)
+  const fin = isViewOnly(profile)
+  const needs = useNeeds()
   const { data, error, loading } = useLive<Row[]>(
     async () => {
       const { data, error } = await supabase
@@ -57,7 +61,7 @@ export function Calendar() {
     if (s.status === 'Closed') return 'done'
     if (s.on_hold && !fin) return 'hold'
     if ((s.dispatch_date ?? '') < today) return 'late'
-    return 'open'
+    return s.dispatch_mode === 'Drop In' ? 'dropin' : 'other'
   }
 
   const byDay = useMemo(() => {
@@ -118,12 +122,20 @@ export function Calendar() {
       <PageTitle
         title="Calendar"
         action={
-          <button type="button" onClick={goToday} className="min-h-[44px] px-4 rounded-lg bg-ink text-white font-medium">
-            Today
-          </button>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={goToday} className="min-h-[44px] px-4 rounded-lg bg-surface ring-1 ring-[#cfd4da] font-medium hover:bg-[#f0f1f3]">
+              Today
+            </button>
+            {(profile?.role === 'inventory' || !!profile?.is_admin) && (
+              <Link to="/shipments/new" className="min-h-[44px] px-4 rounded-lg bg-ink text-white font-medium flex items-center">
+                New shipment
+              </Link>
+            )}
+          </div>
         }
       />
       </StickyHead>
+      <NeedsStrip items={needs.ships} />
       {error && <ErrorBox message={error} />}
       {loading && !data && <Loading />}
 

@@ -11,7 +11,7 @@ import { getSkus } from '../services/lookups'
 import { changeDeadline, hoursText, urgency } from '../lib/deadline'
 import { DeadlineBadge, useNow } from '../components/DeadlineBadge'
 import { invalidateAll } from '../lib/cache'
-import { canEditIrn, isFinanceOnly } from '../lib/roles'
+import { canEditIrn, isFinanceOnly, isViewOnly } from '../lib/roles'
 import { lineFromQr } from '../lib/manualQc'
 import { DISPATCH_MODES, FULFILMENT_CENTRES, TRANSPORTS, needsAppointment, needsBoxLabels, needsTransport, type DispatchMode } from '../data/options'
 import { ConfirmModal, ReviewStep, type Change } from '../components/ReasonModal'
@@ -50,7 +50,8 @@ export function ShipmentDetail() {
   const isWm = profile?.role === 'wm' || !!profile?.is_admin
   const isAdmin = !!profile?.is_admin
   const canFillQc = profile?.role === 'qc' || profile?.role === 'inventory' || isAdmin
-  const fin = isFinanceOnly(profile) // Finance sees the commercial side only: no QC, box labels, receiving or activity
+  const isFinance = isFinanceOnly(profile)
+  const fin = isViewOnly(profile) // Finance sees the commercial side only: no QC, box labels, receiving or activity
   const irnEditor = canEditIrn(profile)
   const navigate = useNavigate()
 
@@ -147,7 +148,7 @@ export function ShipmentDetail() {
               {b.ref} · {b.warehouse}
             </span>
             <ModePill mode={b.dispatch_mode} cancelled={b.status === 'Cancelled'} />
-            {(isInv || isWm || fin) && <CopyInvoiceData fbaId={b.fba_id} fc={b.warehouse} irn={b.irn ?? ''} lines={b.shipment_lines.filter((l) => l.status !== 'Cancelled')} />}
+            {(isInv || isWm || isFinance) && <CopyInvoiceData fbaId={b.fba_id} fc={b.warehouse} irn={b.irn ?? ''} lines={b.shipment_lines.filter((l) => l.status !== 'Cancelled')} />}
           </div>
         }
         action={
@@ -437,7 +438,7 @@ export function ShipmentDetail() {
         </div>
 
         <aside className="order-1 lg:order-2 lg:sticky lg:top-6 space-y-5">
-          <IrnPanel value={b.irn ?? ''} editable={irnEditor} onSave={(v) => rpc('set_irn', { p_ship: b.id, p_irn: v })} />
+          {(!fin || isFinance) && <IrnPanel value={b.irn ?? ''} editable={irnEditor} onSave={(v) => rpc('set_irn', { p_ship: b.id, p_irn: v })} />}
           <Panel title="Details">
             <dl className="space-y-3 text-sm">
               <Fact k="Mode of dispatch" v={b.dispatch_mode ?? ''} />

@@ -13,7 +13,7 @@ const readOpen = () => {
 }
 
 // Most pressing first.
-const ORDER: NeedKind[] = ['hold', 'approve', 'labels', 'dispatch', 'recheck', 'qc', 'review', 'receive']
+const ORDER: NeedKind[] = ['invoice', 'hold', 'approve', 'labels', 'dispatch', 'recheck', 'qc', 'review', 'receive']
 
 // Whole days from the dispatch date to today (positive = in the past).
 const daysSince = (iso: string) =>
@@ -28,7 +28,7 @@ function sinceText(n: number): string {
 // The chip turns black when it is time to act: a dispatch due today or late, or Amazon receiving open for 5+ days.
 function isUrgent(kind: NeedKind, n: number) {
   if (kind === 'receive') return n >= 5
-  if (kind === 'dispatch' || kind === 'labels' || kind === 'approve') return n >= 0
+  if (kind === 'dispatch' || kind === 'labels' || kind === 'approve' || kind === 'invoice') return n >= 0
   return false
 }
 

@@ -64,7 +64,7 @@ function Gate() {
       </div>
     )
   }
-  const fin = profile.role === 'finance' && !profile.is_admin // Finance has no QC pages or dashboard
+  const fin = (profile.role === 'finance' || profile.role === 'marketplace') && !profile.is_admin // view-only roles have no QC pages or dashboard
   return (
     <Routes>
       <Route element={<AppShell />}>

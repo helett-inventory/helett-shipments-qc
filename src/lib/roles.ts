@@ -6,5 +6,8 @@ type P = Pick<Profile, 'role' | 'is_admin'> | null | undefined
 // Never QC records or warehouse detail. (Admin sees everything, so an admin is never treated as finance.)
 export const isFinanceOnly = (p: P) => p?.role === 'finance' && !p.is_admin
 
+// Finance and Marketplace are view-only: they get Calendar and Shipments, never QC, the dashboard or warehouse detail.
+export const isViewOnly = (p: P) => (p?.role === 'finance' || p?.role === 'marketplace') && !p.is_admin
+
 // Who may add or change a shipment's IRN / invoice reference.
 export const canEditIrn = (p: P) => p?.role === 'finance' || !!p?.is_admin

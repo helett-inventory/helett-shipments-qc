@@ -3,7 +3,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useLive } from './useLive'
 import { supabase } from '../lib/supabase'
 import { needsBoxLabels } from '../data/options'
-import { holdWho } from '../lib/format'
+import { addDaysISO, holdWho } from '../lib/format'
 
 // "Needs you": what is waiting on the logged-in person, by role. In-app only.
 // One light query, kept live through the same cache and realtime as the other pages.
@@ -20,6 +20,7 @@ type Ship = {
   hold_at: string | null
   dispatch_mode: string | null
   box_qty_total: number | null
+  irn: string | null
   dispatches: { wm_approved_at: string | null }[]
   box_label_checks: { scanned: string | null }[]
   shipment_lines: { status: string; product_name: string; unit_qty: number; received_qty: number | null }[]
@@ -33,7 +34,7 @@ type Insp = {
 }
 type Bundle = { ships: Ship[]; insps: Insp[] }
 
-export type NeedKind = 'approve' | 'hold' | 'dispatch' | 'labels' | 'receive' | 'qc' | 'recheck' | 'review'
+export type NeedKind = 'invoice' | 'approve' | 'hold' | 'dispatch' | 'labels' | 'receive' | 'qc' | 'recheck' | 'review'
 export interface Need {
   key: string
   kind: NeedKind
@@ -47,6 +48,7 @@ export interface Need {
 }
 
 export const NEED_LABEL: Record<NeedKind, string> = {
+  invoice: 'Invoice details pending',
   approve: 'Approve dispatch',
   hold: 'On hold',
   dispatch: 'Ready to dispatch',
@@ -77,7 +79,7 @@ export function useNeeds() {
       return { ships: s.data as unknown as Ship[], insps: i.data as unknown as Insp[] }
     },
     ['shipments', 'shipment_lines', 'dispatches', 'inspections', 'box_label_checks'],
-    'needs-you-4'
+    'needs-you-5'
   )
 
   return useMemo(() => {
@@ -86,6 +88,8 @@ export function useNeeds() {
     const isInv = all || role === 'inventory'
     const isWm = all || role === 'wm'
     const isQc = all || role === 'qc'
+    const isFin = role === 'finance' // invoice reminders go to the Finance role only (Accounts uses it), nobody else
+    const invoiceFrom = addDaysISO(-30) // older shipments are history, not reminders
     const ships: Need[] = []
     const qc: Need[] = []
 
@@ -93,6 +97,8 @@ export function useNeeds() {
       const live = s.shipment_lines.filter((l) => l.status !== 'Cancelled')
       const to = `/shipments/${s.id}`
       const base = { title: s.fba_id, fc: s.warehouse, note: '', products: live.map((l) => `${l.product_name} · ${l.unit_qty}`), date: s.dispatch_date, boxes: s.box_qty_total ?? null, to }
+      // Accounts: every live shipment still without its invoice reference, counted from the dispatch date.
+      if (isFin && !s.irn && s.dispatch_date && s.dispatch_date >= invoiceFrom) ships.push({ ...base, key: `i${s.id}`, kind: 'invoice', note: 'Add the invoice reference (IRN) and e-way bill' })
       if (isWm && s.dispatches.some((d) => !d.wm_approved_at)) ships.push({ ...base, key: `a${s.id}`, kind: 'approve' })
       if (isInv) {
         if (s.on_hold) ships.push({ ...base, key: `h${s.id}`, kind: 'hold', note: [s.hold_reason, holdWho(s.hold_by, s.hold_at)].filter(Boolean).join(' · ') })

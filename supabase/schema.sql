@@ -9,7 +9,7 @@
     create table if not exists profiles (
       id    uuid primary key references auth.users(id) on delete cascade,
       name  text not null,
-      role  text not null check (role in ('inventory', 'qc', 'wm', 'finance')),
+      role  text not null check (role in ('inventory', 'qc', 'wm', 'finance', 'marketplace')),
       is_admin boolean not null default false
     );
     

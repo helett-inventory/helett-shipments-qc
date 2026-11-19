@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { isFinanceOnly } from '../lib/roles'
+import { isFinanceOnly, isViewOnly } from '../lib/roles'
 import { useAuth } from '../auth/AuthProvider'
 import { useLive } from '../hooks/useLive'
 import { supabase } from '../lib/supabase'
@@ -208,7 +208,8 @@ export function Shipments() {
     ['shipments', 'shipment_lines', 'dispatches'],
     'shipments-list'
   )
-  const fin = isFinanceOnly(profile)
+  const fin = isViewOnly(profile)
+  const isFinance = isFinanceOnly(profile)
   const showDeadlines = !(profile?.role === 'qc' && !profile.is_admin) && !fin // QC and Finance do not manage Amazon deadlines
   const filters = (showDeadlines ? FILTERS : FILTERS.filter((f) => f.id !== 'deadline')).filter((f) => !(fin && f.id === 'ready'))
   const [filter, setFilter] = useState<Filter>('all')
@@ -271,7 +272,7 @@ export function Shipments() {
               <span>FC</span>
               <span>Products</span>
               <span>Appointment</span>
-              <span>{fin ? 'IRN' : 'Status'}</span>
+              <span>{isFinance ? 'IRN' : 'Status'}</span>
             </div>
           </div>
       )
@@ -347,7 +348,9 @@ export function Shipments() {
                             <ModePill large mode={s.dispatch_mode} cancelled={s.status === 'Cancelled'} />
                           </div>
                           <div className="flex flex-wrap justify-end gap-1.5 lg:justify-start lg:col-start-7 lg:row-start-1">
-                            {fin ? (
+                            {fin && !isFinance ? (
+                              s.status === 'Cancelled' ? <StatusStamp status="Cancelled" /> : s.dispatches.length > 0 ? <StatusStamp status="Dispatched" /> : <Chip tone="gray">Not dispatched</Chip>
+                            ) : fin ? (
                               <span className={`text-sm font-mono break-all ${s.irn ? 'font-medium' : 'text-muted font-sans'}`}>{s.irn || 'No IRN yet'}</span>
                             ) : (
                             <StatusIcons
