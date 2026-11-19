@@ -54,6 +54,10 @@ export function ShipmentDetail() {
   const fin = isViewOnly(profile) // Finance sees the commercial side only: no QC, box labels, receiving or activity
   const irnEditor = canEditIrn(profile)
   const navigate = useNavigate()
+  const [skuMap, setSkuMap] = useState<SkuRow[]>([])
+  useEffect(() => {
+    getSkus().then(setSkuMap).catch(() => {})
+  }, [])
 
   const { data: b, error, loading, reload } = useLive<Bundle>(
     async () => {
@@ -191,7 +195,18 @@ export function ShipmentDetail() {
                       <div className="min-w-0">
                         <div className="font-medium">{l.product_name}</div>
                         <div className="text-sm text-muted">
-                          {l.unit_qty} units{l.box_qty ? ` · ${l.box_qty} boxes` : ''} · <span className="font-mono">{l.asin}</span>
+                          {l.unit_qty} units{l.box_qty ? ` · ${l.box_qty} boxes` : ''}
+                        </div>
+                        <div className="text-sm text-muted">
+                          ASIN: <span className="font-mono">{l.asin}</span>
+                          {(() => {
+                            const fn = skuMap.find((s) => s.asin === l.asin)?.fnsku
+                            return fn ? (
+                              <>
+                                {' · '}FNSKU: <span className="font-mono">{fn}</span>
+                              </>
+                            ) : null
+                          })()}
                         </div>
                         {i && i.status !== 'Open' && (
                           <div className="text-sm mt-1">
