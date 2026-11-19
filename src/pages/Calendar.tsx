@@ -117,7 +117,7 @@ export function Calendar() {
   const navBtn = 'w-11 h-11 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 active:scale-95 transition'
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-[1760px] px-4 py-5 lg:px-6 lg:pt-8 lg:pb-4 lg:h-[calc(100vh-2.5rem)] lg:flex lg:flex-col">
+    <div className="mx-auto w-full min-w-0 max-w-[1760px] px-4 py-5 lg:px-6 lg:pt-8 lg:pb-4 lg:min-h-[calc(100vh-2.5rem)] lg:flex lg:flex-col">
       <StickyHead wide>
       <PageTitle
         title="Calendar"
@@ -140,8 +140,8 @@ export function Calendar() {
       {loading && !data && <Loading />}
 
       {data && (
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px] lg:grid-rows-[minmax(0,1fr)] gap-5 items-start lg:items-stretch lg:flex-1 lg:min-h-0">
-          <section aria-label="Month" className="bg-surface shadow-card rounded-xl overflow-hidden min-w-0 lg:flex lg:flex-col lg:min-h-0">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px] lg:grid-rows-[auto] gap-5 items-start lg:items-stretch lg:flex-1">
+          <section aria-label="Month" className="bg-surface shadow-card rounded-xl overflow-hidden min-w-0 lg:flex lg:flex-col">
             <div className="flex items-center gap-3 px-4 py-3 bg-ink text-white">
               <button type="button" onClick={() => move(-1)} aria-label="Previous month" className={navBtn}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -171,7 +171,7 @@ export function Calendar() {
               ))}
             </div>
 
-            <div key={`${view.y}-${view.m}`} className="grid grid-cols-7 lg:grid-rows-6 lg:flex-1 lg:min-h-0 swap-in [&>button:nth-child(7n)]:border-r-0 [&>button:nth-last-child(-n+7)]:border-b-0">
+            <div key={`${view.y}-${view.m}`} className="grid grid-cols-7 lg:grid-rows-[repeat(6,minmax(120px,1fr))] lg:flex-1 swap-in [&>button:nth-child(7n)]:border-r-0 [&>button:nth-last-child(-n+7)]:border-b-0">
               {cells.map((c) => {
                 const rows = byDay.get(c.key) ?? []
                 const isToday = c.key === today
@@ -183,7 +183,7 @@ export function Calendar() {
                     onClick={() => pick(c.key)}
                     aria-label={`${fmtDayLong(c.key)}, ${rows.length} shipment${rows.length === 1 ? '' : 's'}`}
                     aria-pressed={isPicked}
-                    className={`relative min-h-[64px] lg:min-h-0 lg:overflow-hidden p-1.5 lg:p-2 border-b border-r border-line text-left flex flex-col items-center lg:items-stretch gap-1 transition-colors ${
+                    className={`relative min-h-[64px] lg:min-h-[120px] lg:overflow-hidden p-1.5 lg:p-2 border-b border-r border-line text-left flex flex-col items-center lg:items-stretch gap-1 transition-colors ${
                       isPicked ? 'bg-[#eef0f2]' : 'hover:bg-canvas'
                     } ${c.inMonth ? '' : 'text-muted/50 [&_.dot]:opacity-40'}`}
                   >
@@ -233,7 +233,8 @@ export function Calendar() {
             </ul>
           </section>
 
-          <aside ref={panel} aria-label="Selected day" className="bg-surface shadow-card rounded-xl overflow-hidden scroll-mt-20 lg:flex lg:flex-col lg:min-h-0">
+          <aside ref={panel} aria-label="Selected day" className="bg-surface shadow-card rounded-xl overflow-hidden scroll-mt-20 lg:relative">
+            <div className="lg:absolute lg:inset-0 lg:flex lg:flex-col">
             <div className="px-4 py-3 border-b border-line">
               <h2 className="text-lg font-semibold tracking-tight">{picked ? fmtDayLong(picked) : 'Pick a day'}</h2>
               <p className="text-[13px] text-muted">{picked ? `${dayRows.length} shipment${dayRows.length === 1 ? '' : 's'} to dispatch` : 'Tap a day to see its shipments.'}</p>
@@ -276,6 +277,7 @@ export function Calendar() {
                 )
               })}
             </ul>
+            </div>
           </aside>
         </div>
       )}
