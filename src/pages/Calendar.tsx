@@ -123,9 +123,6 @@ export function Calendar() {
         title="Calendar"
         action={
           <div className="flex items-center gap-2">
-            <button type="button" onClick={goToday} className="min-h-[44px] px-4 rounded-lg bg-surface ring-1 ring-[#cfd4da] font-medium hover:bg-[#f0f1f3]">
-              Today
-            </button>
             {(profile?.role === 'inventory' || !!profile?.is_admin) && (
               <Link to="/shipments/new" className="min-h-[44px] px-4 rounded-lg bg-ink text-white font-medium flex items-center">
                 New shipment
@@ -143,12 +140,7 @@ export function Calendar() {
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px] lg:grid-rows-[auto] gap-5 items-start lg:items-stretch lg:flex-1">
           <section aria-label="Month" className="bg-surface shadow-card rounded-xl overflow-hidden min-w-0 lg:flex lg:flex-col">
             <div className="flex items-center gap-3 px-4 py-2.5 bg-ink text-white">
-              <button type="button" onClick={() => move(-1)} aria-label="Previous month" className={navBtn}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M15 6l-6 6 6 6" />
-                </svg>
-              </button>
-              <div className="flex-1 min-w-0 text-center">
+              <div className="flex-1 min-w-0">
                 <h2 className="text-lg font-semibold tracking-tight leading-tight">
                   {MONTHS[view.m]} {view.y}
                 </h2>
@@ -156,6 +148,14 @@ export function Calendar() {
                   {monthStats.ships} shipment{monthStats.ships === 1 ? '' : 's'} · {monthStats.units.toLocaleString()} units
                 </p>
               </div>
+              <button type="button" onClick={goToday} className="min-h-[36px] px-3.5 rounded-full bg-white/10 hover:bg-white/20 text-sm font-medium transition-colors">
+                Today
+              </button>
+              <button type="button" onClick={() => move(-1)} aria-label="Previous month" className={navBtn}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M15 6l-6 6 6 6" />
+                </svg>
+              </button>
               <button type="button" onClick={() => move(1)} aria-label="Next month" className={navBtn}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M9 6l6 6-6 6" />
