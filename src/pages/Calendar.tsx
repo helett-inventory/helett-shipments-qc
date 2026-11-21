@@ -185,11 +185,11 @@ export function Calendar() {
                     aria-pressed={isPicked}
                     className={`relative min-h-[64px] lg:min-h-[96px] lg:overflow-hidden p-1.5 border-b border-r border-line text-left flex flex-col items-center lg:items-stretch gap-1 transition-colors ${
                       isPicked ? 'bg-[#eef0f2]' : 'hover:bg-canvas'
-                    } ${c.inMonth ? '' : 'text-muted/50 [&_.dot]:opacity-40'}`}
+                    } ${c.inMonth ? '' : '[&_.dot]:!bg-[#c3c8d0] [&_.dot]:!ring-0'}`}
                   >
                     <span
                       className={`w-6 h-6 rounded-full flex items-center justify-center text-[13px] tabular-nums ${
-                        isToday ? 'bg-ink text-white font-semibold' : c.inMonth ? 'font-medium' : ''
+                        isToday ? 'bg-ink text-white font-semibold' : c.inMonth ? 'font-medium' : 'text-muted/50'
                       }`}
                     >
                       {c.day}
