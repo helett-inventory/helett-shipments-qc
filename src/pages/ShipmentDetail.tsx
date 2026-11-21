@@ -691,11 +691,12 @@ function EditShipmentModal({
               disabled={!needsTransport(f.dispatch_mode)}
             />
           </Field>
-          <Field label="Date of dispatch"><DateInput value={f.dispatch_date} onChange={(v) => setF((p) => ({ ...p, dispatch_date: v }))} /></Field>
+          <Field label="Date of dispatch"><DateInput value={f.dispatch_date} onChange={(v) => setF((p) => ({ ...p, dispatch_date: v, appointment: v && p.appointment && p.appointment.slice(0, 10) < v ? '' : p.appointment }))} /></Field>
           <Field label="Appointment" hint={!needsAppointment(f.dispatch_mode) ? `Not needed for ${f.dispatch_mode}.` : undefined}>
             <DateInput
               value={needsAppointment(f.dispatch_mode) ? f.appointment : ''}
               onChange={(v) => setF((p) => ({ ...p, appointment: v }))}
+              min={f.dispatch_date}
               withTime
               disabled={!needsAppointment(f.dispatch_mode)}
             />

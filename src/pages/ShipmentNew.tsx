@@ -75,6 +75,7 @@ export function ShipmentNew() {
     if (!fba.trim()) return setError('Enter the FBA shipment ID.')
     if (!warehouse.trim()) return setError('Choose the Amazon FC.')
     if (!mode) return setError('Choose the mode of dispatch.')
+    if (needsAppointment(mode) && appointment && dispatchDate && appointment.slice(0, 10) < dispatchDate) return setError('The appointment cannot be before the dispatch date.')
     const totalBoxes = parseInt(boxes, 10)
     if (!totalBoxes || totalBoxes < 1) return setError('Enter the total number of boxes.')
     const payloadLines = []
@@ -150,10 +151,18 @@ export function ShipmentNew() {
               />
             </Field>
             <Field label="Date of dispatch" hint={lockedDate ? 'Set from the calendar.' : undefined}>
-              <DateInput value={dispatchDate} onChange={setDispatchDate} disabled={!!lockedDate} />
+              <DateInput
+                value={dispatchDate}
+                onChange={(v) => {
+                  setDispatchDate(v)
+                  // an appointment cannot fall before the dispatch day
+                  if (v && appointment && appointment.slice(0, 10) < v) setAppointment('')
+                }}
+                disabled={!!lockedDate}
+              />
             </Field>
             <Field label="Appointment date and time" hint={!appointmentOn ? `Not needed for ${mode}.` : undefined}>
-              <DateInput value={appointmentOn ? appointment : ''} onChange={setAppointment} withTime disabled={!appointmentOn} />
+              <DateInput value={appointmentOn ? appointment : ''} onChange={setAppointment} min={dispatchDate} withTime disabled={!appointmentOn} />
             </Field>
           </div>
           <Field label="Total boxes in shipment" hint="Used for the box label check and dispatch count.">

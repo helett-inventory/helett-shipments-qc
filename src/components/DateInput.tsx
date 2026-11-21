@@ -48,13 +48,18 @@ export function DateInput({
   value,
   onChange,
   withTime,
-  disabled
+  disabled,
+  min
 }: {
   value: string
   onChange: (v: string) => void
   withTime?: boolean
   disabled?: boolean
+  // Earliest day that can be picked (YYYY-MM-DD or a full value; only the day counts).
+  min?: string
 }) {
+  const minDay = min ? parse(min)?.date ?? null : null
+  const before = (d: Date) => !!minDay && d < minDay
   const [open, setOpen] = useState(false)
   const [up, setUp] = useState(false)
   const [alignRight, setAlignRight] = useState(false)
@@ -68,7 +73,8 @@ export function DateInput({
 
   function blank(): Parts {
     const n = new Date()
-    return { date: new Date(n.getFullYear(), n.getMonth(), n.getDate()), hour12: n.getHours() % 12 || 12, minute: 0, pm: n.getHours() >= 12 }
+    const t = new Date(n.getFullYear(), n.getMonth(), n.getDate())
+    return { date: minDay && t < minDay ? minDay : t, hour12: n.getHours() % 12 || 12, minute: 0, pm: n.getHours() >= 12 }
   }
 
   function begin() {
@@ -124,7 +130,7 @@ export function DateInput({
     // include a time still being typed
     const h = Math.min(12, Math.max(1, Number(hourText.replace(/\D/g, '')) || draft.hour12))
     const mi = Math.min(59, Math.max(0, Number(minText.replace(/\D/g, '')) || 0))
-    onChange(build({ ...draft, hour12: h, minute: mi }, !!withTime))
+    onChange(build({ ...draft, date: before(draft.date) ? minDay! : draft.date, hour12: h, minute: mi }, !!withTime))
     close()
   }
 
@@ -192,10 +198,11 @@ export function DateInput({
                   <button
                     type="button"
                     onClick={() => setDraft((p) => ({ ...p, date: d }))}
+                    disabled={before(d)}
                     aria-label={d.toDateString()}
                     aria-pressed={sameDay(d, draft.date)}
                     className={`w-9 h-9 rounded-full text-sm tabular-nums flex items-center justify-center ${
-                      sameDay(d, draft.date) ? 'bg-ink text-white font-semibold' : 'hover:bg-[#e8eefb]'
+                      sameDay(d, draft.date) ? 'bg-ink text-white font-semibold' : before(d) ? 'text-muted/40 cursor-not-allowed' : 'hover:bg-[#e8eefb]'
                     } ${sameDay(d, today) && !sameDay(d, draft.date) ? 'ring-1 ring-ink' : ''}`}
                   >
                     {d.getDate()}
@@ -253,8 +260,10 @@ export function DateInput({
                 type="button"
                 onClick={() => {
                   const n = new Date()
-                  setDraft((p) => ({ ...p, date: new Date(n.getFullYear(), n.getMonth(), n.getDate()) }))
-                  setView(new Date(n.getFullYear(), n.getMonth(), 1))
+                  const t = new Date(n.getFullYear(), n.getMonth(), n.getDate())
+                  const day = minDay && t < minDay ? minDay : t
+                  setDraft((p) => ({ ...p, date: day }))
+                  setView(new Date(day.getFullYear(), day.getMonth(), 1))
                 }}
                 className="font-medium underline underline-offset-4 decoration-[#c3c8d0] hover:decoration-ink"
               >
