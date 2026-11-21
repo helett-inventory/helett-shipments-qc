@@ -10,6 +10,8 @@ interface SearchableSelectProps {
   allowClear?: boolean
   onAddOption?: (name: string) => void
   addLabel?: string
+  // Extra text to match when typing (e.g. an ASIN), shown small beside the option.
+  keywords?: Record<string, string>
   'aria-label'?: string
 }
 
@@ -41,6 +43,7 @@ export function SearchableSelect({
   allowClear,
   onAddOption,
   addLabel = '+ Add new...',
+  keywords,
   'aria-label': ariaLabel
 }: SearchableSelectProps) {
   const uid = useId()
@@ -57,11 +60,12 @@ export function SearchableSelect({
   const listRef = useRef<HTMLUListElement>(null)
 
   const searchable = options.length >= SEARCH_FROM
+  const hit = (o: string, q: string) => o.toLowerCase().includes(q) || (keywords?.[o] ?? '').toLowerCase().includes(q)
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase()
-    const found = options.filter((o) => o.toLowerCase().includes(q))
+    const found = options.filter((o) => hit(o, q))
     return allowClear && !q ? ['', ...found] : found
-  }, [options, search, allowClear])
+  }, [options, search, allowClear, keywords])
 
   function openList(seed = '') {
     if (disabled) return
@@ -71,7 +75,7 @@ export function SearchableSelect({
       setUp(below < 340 && r.top > below)
     }
     setSearch(seed)
-    const base = options.filter((o) => o.toLowerCase().includes(seed.toLowerCase()))
+    const base = options.filter((o) => hit(o, seed.toLowerCase()))
     const list = allowClear && !seed ? ['', ...base] : base
     const at = list.indexOf(value)
     setActive(at >= 0 ? at : 0)
@@ -264,6 +268,7 @@ export function SearchableSelect({
                 } ${opt === value ? 'font-semibold' : ''} ${opt ? '' : 'text-muted'}`}
               >
                 <span className="truncate">{opt || 'None'}</span>
+                {opt && keywords?.[opt] && <span className="ml-auto pl-2 text-xs font-mono text-muted shrink-0">{keywords[opt].split(' ')[0]}</span>}
                 {opt === value && opt !== '' && (
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M5 13l4 4L19 7" />

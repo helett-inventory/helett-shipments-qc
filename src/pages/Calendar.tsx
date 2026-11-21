@@ -6,7 +6,7 @@ import { useLive } from '../hooks/useLive'
 import { useNeeds } from '../hooks/useNeeds'
 import { NeedsStrip } from '../components/NeedsStrip'
 import { supabase } from '../lib/supabase'
-import { fmtDayLong, todayISO } from '../lib/format'
+import { fmtDate, fmtDayLong, todayISO } from '../lib/format'
 import { ErrorBox, HoldStamp, Loading, ModePill, PageTitle, StatusStamp, StickyHead } from '../components/ui'
 import type { Shipment, ShipmentLine } from '../types/db'
 
@@ -277,6 +277,16 @@ export function Calendar() {
                 )
               })}
             </ul>
+            {picked && (profile?.role === 'inventory' || !!profile?.is_admin) && (
+              <div className="p-3 border-t border-line shrink-0">
+                <Link
+                  to={`/shipments/new?date=${picked}`}
+                  className="min-h-[44px] w-full rounded-lg bg-[#f0f1f3] hover:bg-[#e6e8eb] font-medium flex items-center justify-center transition-colors"
+                >
+                  Add shipment to {fmtDate(picked)}
+                </Link>
+              </div>
+            )}
             </div>
           </aside>
         </div>

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase, errText, callRpc } from '../lib/supabase'
 import { fromLocalInput, todayISO } from '../lib/format'
 import { SearchableSelect } from '../components/SearchableSelect'
@@ -19,11 +19,14 @@ interface LineDraft {
 
 export function ShipmentNew() {
   const navigate = useNavigate()
+  // Coming from a calendar day: that date is fixed for this shipment.
+  const [params] = useSearchParams()
+  const lockedDate = /^\d{4}-\d{2}-\d{2}$/.test(params.get('date') ?? '') ? params.get('date')! : null
   const [skus, setSkus] = useState<SkuRow[]>([])
   const [fba, setFba] = useState('')
   const [warehouse, setWarehouse] = useState('')
   const [mode, setMode] = useState<DispatchMode | ''>('')
-  const [dispatchDate, setDispatchDate] = useState(todayISO())
+  const [dispatchDate, setDispatchDate] = useState(lockedDate ?? todayISO())
   const [appointment, setAppointment] = useState('')
   const [transport, setTransport] = useState('')
   const [boxes, setBoxes] = useState('')
@@ -31,12 +34,22 @@ export function ShipmentNew() {
   const [lines, setLines] = useState<LineDraft[]>([{ key: 1, product: '', units: '', boxes: '' }])
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const newLine = useRef<number | null>(null)
 
   useEffect(() => {
     getSkus()
       .then(setSkus)
       .catch((e) => setError(errText(e)))
   }, [])
+
+  // After Add SKU: bring the new line into view and focus its product field.
+  useEffect(() => {
+    if (newLine.current == null) return
+    const el = document.getElementById(`sku-line-${newLine.current}`)
+    newLine.current = null
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    el?.querySelector<HTMLButtonElement>('button[aria-haspopup=listbox]')?.focus({ preventScroll: true })
+  }, [lines.length])
 
   // A message about an earlier attempt must not outlive the fix: clear it on any edit.
   useEffect(() => {
@@ -48,6 +61,8 @@ export function ShipmentNew() {
   const appointmentOn = !mode || needsAppointment(mode)
 
   const byName = useMemo(() => new Map(skus.map((s) => [s.product_name, s])), [skus])
+  // Search by ASIN or seller SKU as well as by name.
+  const keywords = useMemo(() => Object.fromEntries(skus.map((s) => [s.product_name, `${s.asin} ${s.sku ?? ''}`.trim()])), [skus])
   const sumLineBoxes = lines.reduce((n, l) => n + (parseInt(l.boxes, 10) || 0), 0)
 
   function setLine(key: number, patch: Partial<LineDraft>) {
@@ -134,8 +149,8 @@ export function ShipmentNew() {
                 disabled={!transportOn}
               />
             </Field>
-            <Field label="Date of dispatch">
-              <DateInput value={dispatchDate} onChange={setDispatchDate} />
+            <Field label="Date of dispatch" hint={lockedDate ? 'Set from the calendar.' : undefined}>
+              <DateInput value={dispatchDate} onChange={setDispatchDate} disabled={!!lockedDate} />
             </Field>
             <Field label="Appointment date and time" hint={!appointmentOn ? `Not needed for ${mode}.` : undefined}>
               <DateInput value={appointmentOn ? appointment : ''} onChange={setAppointment} withTime disabled={!appointmentOn} />
@@ -156,21 +171,10 @@ export function ShipmentNew() {
           </Field>
         </Panel>
 
-        <Panel
-          title="SKU lines"
-          action={
-            <button
-              type="button"
-              className="min-h-[44px] text-sm font-medium underline underline-offset-4"
-              onClick={() => setLines((p) => [...p, { key: Date.now(), product: '', units: '', boxes: '' }])}
-            >
-              Add SKU
-            </button>
-          }
-        >
+        <Panel title="SKU lines">
           <div className="space-y-5">
             {lines.map((l, i) => (
-              <div key={l.key} className={i > 0 ? 'pt-5 border-t border-line' : ''}>
+              <div key={l.key} id={`sku-line-${l.key}`} className={`scroll-mt-24 ${i > 0 ? 'pt-5 border-t border-line' : ''}`}>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-muted">Line {i + 1}</span>
                   {lines.length > 1 && (
@@ -189,6 +193,7 @@ export function ShipmentNew() {
                     value={l.product}
                     onChange={(v) => setLine(l.key, { product: v })}
                     placeholder="Select product"
+                    keywords={keywords}
                   />
                 </Field>
                 <div className="grid grid-cols-2 gap-4">
@@ -216,6 +221,17 @@ export function ShipmentNew() {
               </div>
             ))}
           </div>
+          <button
+            type="button"
+            className="mt-4 min-h-[44px] px-4 rounded-lg bg-[#f0f1f3] hover:bg-[#e6e8eb] text-sm font-medium transition-colors"
+            onClick={() => {
+              const key = Date.now()
+              newLine.current = key
+              setLines((p) => [...p, { key, product: '', units: '', boxes: '' }])
+            }}
+          >
+            + Add SKU
+          </button>
           {sumLineBoxes > 0 && boxes && sumLineBoxes !== parseInt(boxes, 10) && (
             <p className="text-sm text-warn mt-3">
               Boxes per SKU add up to {sumLineBoxes}, total says {boxes}. Fine if boxes hold mixed SKUs.
