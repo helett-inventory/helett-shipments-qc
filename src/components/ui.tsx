@@ -1,6 +1,7 @@
 import { LoadingScreen } from './Brand'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import { signedUrl } from '../lib/signatures'
 
 /* ------------------------------------------------------------ buttons */
@@ -309,12 +310,23 @@ export function StickyHead({ wide, children }: { wide?: boolean; children: React
 }
 
 export function BackLink({ to, children }: { to: string; children: React.ReactNode }) {
+  // Go back to wherever the person came from (calendar, QC, dashboard…); fall back to `to` on a fresh load.
+  const navigate = useNavigate()
+  const hasHistory = ((window.history.state as { idx?: number } | null)?.idx ?? 0) > 0
   return (
-    <a href={`#${to}`} className="inline-flex items-center gap-1 min-h-[44px] text-sm text-muted hover:text-ink">
+    <a
+      href={`#${to}`}
+      onClick={(e) => {
+        if (!hasHistory) return
+        e.preventDefault()
+        navigate(-1)
+      }}
+      className="inline-flex items-center gap-1 min-h-[44px] text-sm text-muted hover:text-ink"
+    >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
       </svg>
-      {children}
+      {hasHistory ? 'Back' : children}
     </a>
   )
 }

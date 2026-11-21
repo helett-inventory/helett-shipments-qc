@@ -200,7 +200,7 @@ export function ShipmentDetail() {
                         <div className="text-sm text-muted">
                           ASIN: <span className="font-mono">{l.asin}</span>
                           {(() => {
-                            const fn = skuMap.find((s) => s.asin === l.asin)?.fnsku
+                            const fn = skuMap.find((s) => s.asin?.trim().toUpperCase() === l.asin?.trim().toUpperCase())?.fnsku?.trim()
                             return fn ? (
                               <>
                                 {' · '}FNSKU: <span className="font-mono">{fn}</span>
