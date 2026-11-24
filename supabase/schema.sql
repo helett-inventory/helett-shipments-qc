@@ -190,8 +190,9 @@
     create policy sku_map_inventory on sku_map for all to authenticated
       using (app_role() = 'inventory') with check (app_role() = 'inventory');
     
-    -- fnsku_checks.scanned shows what the inspector scanned; the expected value
-    -- lives only in sku_map. QC never gets read access to sku_map.
+    -- Every signed-in role can read the product list (ASIN, SKU, FNSKU); only Inventory can change it.
+    drop policy if exists sku_map_read on sku_map;
+    create policy sku_map_read on sku_map for select to authenticated using (true);
     
     -- ---------------------------------------------------------------- storage
     insert into storage.buckets (id, name, public) values ('signatures', 'signatures', false)
