@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useLive } from '../hooks/useLive'
-import { supabase } from '../lib/supabase'
+import { fetchAll, supabase } from '../lib/supabase'
 import { computeDashboard, fmtDays, type DashboardData } from '../lib/dashboardStats'
 import { preset, type DRange } from '../lib/dateRange'
 import { AreaChart, CHART, HBars, ModeSplit, PairBars, type Tone } from '../components/charts'
@@ -41,19 +41,22 @@ const AGE_TONE: Tone[] = ['grey', 'amberSoft', 'amber', 'amber']
 export function Dashboard() {
   const { data, error, loading } = useLive<DashboardData>(
     async () => {
-      const [s, i] = await Promise.all([
-        supabase
-          .from('shipments')
-          .select(
-            'id, fba_id, warehouse, created_at, dispatch_date, dispatch_mode, status, on_hold, shipment_lines(id, asin, product_name, unit_qty, status, received_qty, received_at), dispatches(id, dispatched_at, wm_approved_at, dispatch_lines(line_id, units))'
-          )
-          .order('created_at', { ascending: false })
-          .limit(5000),
-        supabase.from('inspections').select('id, line_id, status, inspected_qty, accepted_qty, rejected_qty, submitted_at').limit(10000)
+      const [ships, insps] = await Promise.all([
+        fetchAll<DashboardData['ships'][number]>((a, b) =>
+          supabase
+            .from('shipments')
+            .select(
+              'id, fba_id, warehouse, created_at, dispatch_date, dispatch_mode, status, on_hold, shipment_lines(id, asin, product_name, unit_qty, status, received_qty, received_at), dispatches(id, dispatched_at, wm_approved_at, dispatch_lines(line_id, units))'
+            )
+            .order('created_at', { ascending: false })
+            .order('id')
+            .range(a, b)
+        ),
+        fetchAll<DashboardData['insps'][number]>((a, b) =>
+          supabase.from('inspections').select('id, line_id, status, inspected_qty, accepted_qty, rejected_qty, submitted_at').order('id').range(a, b)
+        )
       ])
-      if (s.error) throw s.error
-      if (i.error) throw i.error
-      return { ships: s.data as unknown as DashboardData['ships'], insps: i.data as unknown as DashboardData['insps'] }
+      return { ships, insps }
     },
     ['shipments', 'shipment_lines', 'dispatches', 'inspections'],
     'dashboard'

@@ -23,3 +23,18 @@ Check it with `npm run test:db` (loads schema + all patches into an in-memory Po
 - Confirm all patches 001-030 are applied on the live project (the repo cannot tell).
 - Concurrency (two people scanning or dispatching the same shipment) was not tested.
 - `manual_qc` as wm and `set_line_state` transitions were not exercised.
+
+## Second pass: logic bugs and conflicts
+Run `supabase/patch_032_logic_fixes.sql` after patch 031. All reproduced locally first, then covered by `npm run test:db`.
+
+| # | Severity | Bug | Status |
+|---|---|---|---|
+| 12 | High | Lists were silently cut at 1000 rows (Supabase API cap, whatever `.limit()` says): Dashboard, Calendar, Shipments, the "needs" strip, and the QC list (which also stopped at 500, so old open cases vanished). | **Fixed**: `fetchAll()` in `src/lib/supabase.ts` reads page by page; used by all five. |
+| 13 | High | `set_line_state(..., 'Cancelled')` worked on a line with dispatched units; the shipment then showed Cancelled although goods had left. | **Fixed** (patch 032, section 4). Also refused on a cancelled shipment. |
+| 14 | High | `add_line` on a cancelled shipment brought it back to life (status recalculated to Created). | **Fixed** (section 5): refused on cancelled or closed shipments. |
+| 15 | Medium | A line flagged "quantity changed after QC, recheck" could still be dispatched. | **Fixed** (section 3). Inventory can still dismiss the flag on purpose. |
+| 16 | Medium | Negative accepted, rejected or inspected quantities were stored (accepted = -5). | **Fixed** (sections 1 and 2): function check plus `NOT VALID` constraints. Negative box counts also refused. |
+| 17 | Low | QC could submit a case on a cancelled line; a cancelled line could be reopened. | **Fixed** (sections 2 and 6). |
+| 18 | Low | `approve_dispatch` and `reopen_inspection` with an unknown id silently succeeded. | **Fixed** (section 6). |
+
+Noted, not changed: a case where QC accepts 0 units leaves the line at "QC Submitted" and the shipment at "QC Done" until Inventory marks the line Not Dispatched or Cancelled. That looks intentional.

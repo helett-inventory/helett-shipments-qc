@@ -117,5 +117,36 @@ check('box scans kept', (await q(`select count(*)::int c from box_label_checks w
 check('fnsku scans kept', (await q(`select count(*)::int c from fnsku_checks where inspection_id='${iid}' and scanned is not null`))[0].c === checks.length)
 check('harmless edit after dispatch allowed', (await as('inv', `select update_shipment('${sid}','{"remarks":"note"}')`)).ok)
 
+// ---- second pass: logic fixes (patch 032)
+async function mk(fba, units = 10) {
+  const r = await as('inv', `select create_shipment($1::jsonb) id`, [JSON.stringify({ fba_id: fba, warehouse: 'W', box_qty_total: 2, dispatch_mode: 'ATS', lines: [{ asin: 'B0TEST', unit_qty: units }] })])
+  const s = r.rows[0].id
+  const l = (await q(`select id from shipment_lines where shipment_id='${s}'`))[0].id
+  const i = (await q(`select id from inspections where line_id='${l}'`))[0].id
+  for (const c of await q(`select id from fnsku_checks where inspection_id='${i}'`)) await as('qc', `select scan_fnsku('${c.id}','X00FN1')`)
+  return { sid: s, lid: l, iid: i }
+}
+const ok10 = '{"accepted_qty":10,"rejected_qty":0,"inspected_qty":10}'
+let m = await mk('L1')
+check('negative accepted qty refused', !(await as('qc', `select submit_inspection('${m.iid}','{"accepted_qty":-5,"rejected_qty":0,"inspected_qty":10}')`)).ok)
+await as('qc', `select submit_inspection('${m.iid}','${ok10}')`)
+await as('inv', `select update_line('${m.lid}',12,1)`)
+const rc = await as('inv', `select confirm_dispatch('${m.sid}',$1::jsonb)`, [JSON.stringify({ boxes_sent: 1, lines: [{ line_id: m.lid, units: 10 }] })])
+check('dispatch refused while recheck flag is set', !rc.ok, JSON.stringify(rc))
+await as('inv', `select dismiss_recheck('${m.iid}')`)
+check('dispatch allowed once flag is dismissed', (await as('inv', `select confirm_dispatch('${m.sid}',$1::jsonb)`, [JSON.stringify({ boxes_sent: 1, lines: [{ line_id: m.lid, units: 10 }] })])).ok)
+m = await mk('L2')
+await as('qc', `select submit_inspection('${m.iid}','${ok10}')`)
+await as('inv', `select confirm_dispatch('${m.sid}',$1::jsonb)`, [JSON.stringify({ boxes_sent: 1, lines: [{ line_id: m.lid, units: 4 }] })])
+check('cancel a line with dispatched units refused', !(await as('inv', `select set_line_state('${m.lid}','Cancelled')`)).ok)
+check('shipment not cancelled by that attempt', (await q(`select status from shipments where id='${m.sid}'`))[0].status !== 'Cancelled')
+check('unknown dispatch refused', !(await as('wm', `select approve_dispatch('99999999-9999-9999-9999-999999999999')`)).ok)
+check('unknown case reopen refused', !(await as('inv', `select reopen_inspection('99999999-9999-9999-9999-999999999999')`)).ok)
+m = await mk('L3')
+await as('inv', `select cancel_shipment('${m.sid}')`)
+check('add_line to cancelled shipment refused', !(await as('inv', `select add_line('${m.sid}','B0TEST',5,1)`)).ok)
+check('submit on cancelled line refused', !(await as('qc', `select submit_inspection('${m.iid}','${ok10}')`)).ok)
+check('cancelled shipment stays cancelled', (await q(`select status from shipments where id='${m.sid}'`))[0].status === 'Cancelled')
+
 console.log(failed ? `\n${failed} FAILED` : '\nAll passed')
 process.exit(failed ? 1 : 0)

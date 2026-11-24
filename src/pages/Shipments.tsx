@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { isFinanceOnly, isViewOnly } from '../lib/roles'
 import { useAuth } from '../auth/AuthProvider'
 import { useLive } from '../hooks/useLive'
-import { supabase } from '../lib/supabase'
+import { fetchAll, supabase } from '../lib/supabase'
 import { needsAppointment, needsBoxLabels } from '../data/options'
 import { changeDeadline, withinWatch } from '../lib/deadline'
 import { DeadlineBadge } from '../components/DeadlineBadge'
@@ -198,12 +198,14 @@ export function Shipments() {
   const needs = useNeeds()
   const { data, error, loading } = useLive<Row[]>(
     async () => {
-      const { data, error } = await supabase
-        .from('shipments')
-        .select('*, shipment_lines(*), dispatches(id, wm_approved_at), box_label_checks(scanned)')
-        .order('created_at', { ascending: false })
-      if (error) throw error
-      return data as unknown as Row[]
+      return fetchAll<Row>((a, b) =>
+        supabase
+          .from('shipments')
+          .select('*, shipment_lines(*), dispatches(id, wm_approved_at), box_label_checks(scanned)')
+          .order('created_at', { ascending: false })
+          .order('id')
+          .range(a, b)
+      )
     },
     ['shipments', 'shipment_lines', 'dispatches'],
     'shipments-list'

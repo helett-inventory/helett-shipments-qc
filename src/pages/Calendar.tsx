@@ -5,7 +5,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useLive } from '../hooks/useLive'
 import { useNeeds } from '../hooks/useNeeds'
 import { NeedsStrip } from '../components/NeedsStrip'
-import { supabase } from '../lib/supabase'
+import { fetchAll, supabase } from '../lib/supabase'
 import { fmtDate, fmtDayLong, todayISO } from '../lib/format'
 import { ErrorBox, HoldStamp, Loading, ModePill, PageTitle, StatusStamp, StickyHead } from '../components/ui'
 import type { Shipment, ShipmentLine } from '../types/db'
@@ -39,14 +39,15 @@ export function Calendar() {
   const needs = useNeeds()
   const { data, error, loading } = useLive<Row[]>(
     async () => {
-      const { data, error } = await supabase
-        .from('shipments')
-        .select('*, shipment_lines(product_name, unit_qty, status, received_qty)')
-        .not('dispatch_date', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(5000)
-      if (error) throw error
-      return data as unknown as Row[]
+      return fetchAll<Row>((a, b) =>
+        supabase
+          .from('shipments')
+          .select('*, shipment_lines(product_name, unit_qty, status, received_qty)')
+          .not('dispatch_date', 'is', null)
+          .order('created_at', { ascending: false })
+          .order('id')
+          .range(a, b)
+      )
     },
     ['shipments', 'shipment_lines'],
     'calendar'

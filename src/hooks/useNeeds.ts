@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useLive } from './useLive'
-import { supabase } from '../lib/supabase'
+import { fetchAll, supabase } from '../lib/supabase'
 import { needsBoxLabels } from '../data/options'
 import { addDaysISO, holdWho } from '../lib/format'
 
@@ -63,20 +63,25 @@ export function useNeeds() {
   const { profile } = useAuth()
   const { data } = useLive<Bundle>(
     async () => {
-      const [s, i] = await Promise.all([
-        supabase
-          .from('shipments')
-          .select('*, dispatches(wm_approved_at), box_label_checks(scanned), shipment_lines(status, product_name, unit_qty, received_qty)')
-          .neq('status', 'Cancelled'),
-        supabase
-          .from('inspections')
-          .select('id, record_no, status, needs_recheck, shipment_lines(status, product_name, unit_qty, box_qty, shipments(on_hold, fba_id, warehouse, dispatch_date))')
-          .in('status', ['Open', 'Submitted'])
-          .limit(500)
+      const [ships, insps] = await Promise.all([
+        fetchAll<Ship>((a, b) =>
+          supabase
+            .from('shipments')
+            .select('*, dispatches(wm_approved_at), box_label_checks(scanned), shipment_lines(status, product_name, unit_qty, received_qty)')
+            .neq('status', 'Cancelled')
+            .order('id')
+            .range(a, b)
+        ),
+        fetchAll<Insp>((a, b) =>
+          supabase
+            .from('inspections')
+            .select('id, record_no, status, needs_recheck, shipment_lines(status, product_name, unit_qty, box_qty, shipments(on_hold, fba_id, warehouse, dispatch_date))')
+            .in('status', ['Open', 'Submitted'])
+            .order('id')
+            .range(a, b)
+        )
       ])
-      if (s.error) throw s.error
-      if (i.error) throw i.error
-      return { ships: s.data as unknown as Ship[], insps: i.data as unknown as Insp[] }
+      return { ships, insps }
     },
     ['shipments', 'shipment_lines', 'dispatches', 'inspections', 'box_label_checks'],
     'needs-you-5'

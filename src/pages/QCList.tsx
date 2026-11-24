@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useLive } from '../hooks/useLive'
 import { useNeeds } from '../hooks/useNeeds'
 import { NeedsStrip } from '../components/NeedsStrip'
-import { supabase } from '../lib/supabase'
+import { fetchAll, supabase } from '../lib/supabase'
 import { ModePill, Tip, Empty, ErrorBox, ListHead, Loading, Page } from '../components/ui'
 import { Glyph, INK, RED } from '../components/statusIcons'
 import type { Inspection, Shipment, ShipmentLine } from '../types/db'
@@ -60,15 +60,15 @@ export function QCList() {
   const needs = useNeeds()
   const { data, error, loading } = useLive<Row[]>(
     async () => {
-      const { data, error } = await supabase
-        .from('inspections')
-        .select(
-          'id, record_no, status, needs_recheck, shipment_lines(product_name, unit_qty, status, shipments(fba_id, ref, on_hold, status, warehouse, dispatch_mode))'
-        )
-        .order('record_no', { ascending: false })
-        .limit(500)
-      if (error) throw error
-      return data as unknown as Row[]
+      return fetchAll<Row>((a, b) =>
+        supabase
+          .from('inspections')
+          .select(
+            'id, record_no, status, needs_recheck, shipment_lines(product_name, unit_qty, status, shipments(fba_id, ref, on_hold, status, warehouse, dispatch_mode))'
+          )
+          .order('record_no', { ascending: false })
+          .range(a, b)
+      )
     },
     ['inspections', 'shipment_lines', 'shipments'],
     'qc-list'

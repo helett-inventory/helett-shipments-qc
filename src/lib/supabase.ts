@@ -55,3 +55,19 @@ export async function callRpc(name: string, args?: Record<string, unknown>) {
   if (!res.error) lastOk = Date.now()
   return res
 }
+
+// The API returns at most 1000 rows per request (Supabase default), whatever .limit() says, and silently drops the rest.
+// Read a whole list by asking for it page by page. The query must have a stable order (end it with .order('id')).
+export async function fetchAll<T>(
+  page: (from: number, to: number) => PromiseLike<{ data: unknown[] | null; error: { message: string } | null }>,
+  size = 1000
+): Promise<T[]> {
+  const out: T[] = []
+  for (let from = 0; ; from += size) {
+    const { data, error } = await page(from, from + size - 1)
+    if (error) throw error
+    const rows = (data ?? []) as T[]
+    out.push(...rows)
+    if (rows.length < size) return out
+  }
+}
