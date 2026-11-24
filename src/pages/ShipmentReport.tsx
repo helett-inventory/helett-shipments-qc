@@ -408,30 +408,30 @@ export function ShipmentReport() {
             )}
 
             <h2>5. Dispatch</h2>
-            <table>
+            <table style={{ tableLayout: 'fixed' }}>
               <thead>
                 <tr>
-                  <th style={{ width: '8mm' }}>No.</th>
-                  <th style={{ width: '28mm' }}>Date</th>
-                  <th>Transport</th>
-                  <th className="num" style={{ width: '16mm' }}>
+                  <th style={{ width: '9mm' }}>No.</th>
+                  <th style={{ width: '25mm' }}>Date</th>
+                  <th style={{ width: '24mm' }}>Transport</th>
+                  <th className="num" style={{ width: '24mm' }}>
                     Boxes
                   </th>
-                  <th className="num" style={{ width: '16mm' }}>
+                  <th className="num" style={{ width: '28mm' }}>
                     Units
                   </th>
-                  <th style={{ width: '48mm' }}>Approved by</th>
+                  <th style={{ paddingLeft: '6mm' }}>Approved by</th>
                 </tr>
               </thead>
               <tbody>
                 {disp.map((d, n) => (
                   <tr key={d.id}>
                     <td className="ref-no">{n + 1}</td>
-                    <td>{fmtDate(d.dispatched_at)}</td>
+                    <td style={{ whiteSpace: 'nowrap' }}>{fmtDate(d.dispatched_at)}</td>
                     <td>{d.transport || '—'}</td>
                     <td className="num">{d.boxes_sent}</td>
                     <td className="num">{d.dispatch_lines.reduce((s, x) => s + x.units, 0).toLocaleString()}</td>
-                    <td>{d.wm_approved_at ? d.wm_name || '—' : <span className="muted">Pending</span>}</td>
+                    <td style={{ paddingLeft: '6mm' }}>{d.wm_approved_at ? d.wm_name || '—' : <span className="muted">Pending</span>}</td>
                   </tr>
                 ))}
                 {disp.length === 0 && (
@@ -443,14 +443,13 @@ export function ShipmentReport() {
                 )}
                 {disp.length > 0 && (
                   <tr>
-                    <td />
-                    <td colSpan={2} style={{ fontWeight: 600 }}>
+                    <td colSpan={3} style={{ fontWeight: 600 }}>
                       Sent so far
                     </td>
-                    <td className="num" style={{ fontWeight: 600 }}>
+                    <td className="num" style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
                       {sentBoxes} of {ship.box_qty_total}
                     </td>
-                    <td className="num" style={{ fontWeight: 600 }}>
+                    <td className="num" style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
                       {sentUnits.toLocaleString()} of {tot.units.toLocaleString()}
                     </td>
                     <td />
