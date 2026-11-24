@@ -25,6 +25,10 @@ export interface Draft {
   inspector_name: string
 }
 
+// Why units failed QC. Kept inside the saved checklist under a reserved key, so no database change is needed.
+export const FAIL_KEY = 'fail_reason'
+export const failReason = (checks: Inspection['checks'] | null | undefined) => checks?.[FAIL_KEY]?.n?.trim() ?? ''
+
 export function draftFromInspection(i: Inspection, fallbackName = ''): Draft {
   return {
     inspection_date: i.inspection_date ?? '',
@@ -313,6 +317,12 @@ export function RecordSheet({ data, draft }: { data: RecordBundle; draft: Draft 
             <dd>{draft.packaging_quality || '—'}</dd>
           </div>
         </dl>
+        {failReason(draft.checks) && (
+          <div className="remarks" style={{ minHeight: 0 }}>
+            <small>Why units failed</small>
+            <span style={{ whiteSpace: 'pre-wrap' }}>{failReason(draft.checks)}</span>
+          </div>
+        )}
         <div className="remarks">
           <small>QC remarks</small>
           <span style={{ whiteSpace: 'pre-wrap' }}>{draft.qc_remarks || 'None.'}</span>

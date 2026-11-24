@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useLive } from '../hooks/useLive'
 import { supabase } from '../lib/supabase'
 import { fmtDate, fmtDateTime, todayISO } from '../lib/format'
+import { failReason } from '../components/RecordSheet'
 import { CHECK_SECTIONS } from '../data/checklist'
 import { needsBoxLabels } from '../data/options'
 import { printAs } from '../lib/printName'
@@ -99,7 +100,9 @@ export function ShipmentReport() {
         if (c?.r === 'no') findings.push({ n: r.n, ref: it.no, text: it.text, note: c.n ?? '' })
       }
   }
-  const remarks = rows.filter((r) => r.insp?.qc_remarks?.trim()).map((r) => ({ n: r.n, text: r.insp!.qc_remarks!.trim() }))
+  const remarks = rows
+    .map((r) => ({ n: r.n, text: [failReason(r.insp?.checks) && `Failed units: ${failReason(r.insp?.checks)}`, r.insp?.qc_remarks?.trim()].filter(Boolean).join('. ') }))
+    .filter((m) => m.text)
 
   const disp = [...ship.dispatches].sort((a, b) => a.dispatched_at.localeCompare(b.dispatched_at))
   const sentUnits = disp.reduce((n, d) => n + d.dispatch_lines.reduce((s, x) => s + x.units, 0), 0)

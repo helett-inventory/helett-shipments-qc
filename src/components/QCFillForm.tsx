@@ -4,7 +4,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { SearchableSelect } from './SearchableSelect'
 import { DateInput } from './DateInput'
 import type { FnskuCheck } from '../types/db'
-import type { Draft, RecordBundle } from './RecordSheet'
+import { FAIL_KEY, failReason, type Draft, type RecordBundle } from './RecordSheet'
 
 type Mark = 'ok' | 'no' | 'na'
 
@@ -315,6 +315,19 @@ export function QCFillForm({ data, draft, readOnly, setDraft, onScanFn }: Props)
           <Label>Failed QC</Label>
           <Stepper label="Failed QC" value={draft.rejected_qty} onChange={(n) => setQty({ rejected_qty: n })} disabled={readOnly} />
         </div>
+        {(draft.rejected_qty > 0 || failReason(draft.checks)) && (
+          <div className="mb-4">
+            <Label>Why did they fail?</Label>
+            <textarea
+              disabled={readOnly}
+              value={draft.checks[FAIL_KEY]?.n ?? ''}
+              onChange={(e) => setDraft({ checks: { ...draft.checks, [FAIL_KEY]: { r: 'na', n: e.target.value } } })}
+              rows={2}
+              placeholder="For example: printer does not power on, cracked casing"
+              className="w-full px-3 py-2 rounded-lg bg-[#f0f2f4] focus:bg-surface focus:ring-2 focus:ring-ink focus:outline-none disabled:bg-canvas"
+            />
+          </div>
+        )}
         <div className="rounded-lg bg-canvas px-4 py-3 flex items-baseline justify-between">
           <span className="text-sm text-muted">Passed, ready to ship</span>
           <span className="text-2xl font-semibold">{passed}</span>

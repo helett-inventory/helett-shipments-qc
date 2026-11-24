@@ -3,7 +3,7 @@ import { fmtDate, fmtDateTime, fmtTimeSec } from '../lib/format'
 import { Chip, Panel } from './ui'
 import { needsBoxLabels } from '../data/options'
 import type { BoxCheck } from '../types/db'
-import type { Draft, RecordBundle } from './RecordSheet'
+import { failReason, type Draft, type RecordBundle } from './RecordSheet'
 
 // On-screen QC record (read-only). The approved A4 sheet is still what
 // prints: see RecordSheet, rendered for print only in QCRecord.
@@ -196,6 +196,7 @@ export function RecordView({ data, draft, onScanBox }: { data: RecordBundle; dra
             <Fact k="Fail rate" v={`${rate}%`} />
             <Fact k="Product condition" v={draft.product_condition} />
             <Fact k="Packaging quality" v={draft.packaging_quality} />
+            {failReason(draft.checks) && <Fact k="Why units failed" v={failReason(draft.checks)} />}
             {draft.qc_remarks && <Fact k="QC remarks" v={draft.qc_remarks} />}
           </dl>
         </Panel>

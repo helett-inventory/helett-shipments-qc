@@ -11,7 +11,7 @@ import { QCFillForm } from '../components/QCFillForm'
 import { printAs } from '../lib/printName'
 import { invalidateAll } from '../lib/cache'
 import { RecordView } from '../components/RecordView'
-import { RecordSheet, draftFromInspection, type Draft, type RecordBundle } from '../components/RecordSheet'
+import { RecordSheet, draftFromInspection, failReason, type Draft, type RecordBundle } from '../components/RecordSheet'
 import type { BoxCheck, FnskuCheck, Inspection, Shipment, ShipmentLine } from '../types/db'
 
 const BarcodeScanner = lazy(() => import('../components/BarcodeScanner'))
@@ -152,6 +152,7 @@ export function QCRecord() {
     }
     if (draft.inspected_qty < 1) errs.push('Enter units checked.')
     if (draft.rejected_qty > draft.inspected_qty) errs.push('Failed cannot be more than checked.')
+    if (draft.rejected_qty > 0 && !failReason(draft.checks)) errs.push('Write why the units failed.')
     if (data!.fn.some((c) => !c.scanned)) errs.push('Scan all FNSKU samples.')
     if (!draft.overall_result) errs.push('Choose the overall result.')
     if (!draft.product_condition) errs.push('Choose product condition.')
