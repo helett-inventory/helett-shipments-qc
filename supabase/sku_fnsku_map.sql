@@ -36,7 +36,8 @@ insert into sku_map(asin, product_name, sku, fnsku) values
 ('B0DXKWKBWQ', 'Helett 2x1.5 Thermal Label', 'Helett 2x1.5 Thermal Label', 'X0028SCJVD'),
 ('B0FL2VFCT9', 'HE24 Thermal Label 12x50', 'HE24 Thermal Label 12x50', 'X002DDYAC9'),
 ('B0CBXG8CLB', 'helett HT1400 smart door lock', 'helett HT1400 smart door lock', 'X001TIP4ZB'),
-('B0GDKY6QHN', 'Helett infiStick android stick', 'Helett infiStick android stick', 'X002HDJ79L')
+('B0GDKY6QHN', 'Helett infiStick android stick', 'Helett infiStick android stick', 'X002HDJ79L'),
+('B0GYSTLWT3', 'Helett H30CLite BT', 'Helett H30CLite BT Printer FBA', 'X002KRKFTZ')
 on conflict (asin) do update set sku = excluded.sku, fnsku = excluded.fnsku;
 
 -- Products still without an FNSKU (not in the export). Add them when you have the data:
