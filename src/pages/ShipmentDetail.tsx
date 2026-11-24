@@ -472,10 +472,15 @@ export function ShipmentDetail() {
               <Fact k="Created" v={fmtDate(b.created_at)} />
               {b.remarks && <Fact k="Remarks" v={b.remarks} />}
             </dl>
-            {(isInv || isWm) && b.status !== 'Cancelled' && (
-              <div className="mt-5 pt-4 border-t border-line">
-                <Link to={`/shipments/${b.id}/qc-form`} className="min-h-[44px] px-4 rounded-lg bg-[#eceef1] hover:bg-[#e1e4e8] font-medium flex items-center justify-center">
-                  Print QC form
+            {!fin && b.status !== 'Cancelled' && (
+              <div className="mt-5 pt-4 border-t border-line space-y-2">
+                {(isInv || isWm) && (
+                  <Link to={`/shipments/${b.id}/qc-form`} className="min-h-[44px] px-4 rounded-lg bg-[#eceef1] hover:bg-[#e1e4e8] font-medium flex items-center justify-center">
+                    Print QC form
+                  </Link>
+                )}
+                <Link to={`/shipments/${b.id}/report`} className="min-h-[44px] px-4 rounded-lg bg-[#eceef1] hover:bg-[#e1e4e8] font-medium flex items-center justify-center">
+                  QC report (2 pages)
                 </Link>
               </div>
             )}
