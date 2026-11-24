@@ -1021,6 +1021,9 @@ function IrnPanel({ value, editable, onSave }: { value: string; editable: boolea
   )
 }
 
+// One spreadsheet cell: a tab or line break inside a value would push the rest into the wrong column or row, so flatten them.
+const cell = (v: unknown) => String(v ?? '').replace(/[\t\r\n]+/g, ' ').replace(/"/g, "'").trim()
+
 // Tab-separated rows (one per SKU line) that paste straight into a spreadsheet, for the accounts team's invoice.
 function CopyInvoiceData({ fbaId, fc, irn, lines }: { fbaId: string; fc: string; irn: string; lines: ShipmentLine[] }) {
   const [state, setState] = useState<'idle' | 'busy' | 'done' | 'failed'>('idle')
@@ -1031,8 +1034,8 @@ function CopyInvoiceData({ fbaId, fc, irn, lines }: { fbaId: string; fc: string;
       const rows = [
         ['FBA number', 'Destination FC', 'ASIN', 'SKU', 'FNSKU', 'Box qty', 'Qty', 'IRN'],
         ...lines.map((l) => {
-          const m = skus.find((x) => x.asin === l.asin)
-          return [fbaId, fc, l.asin, m?.sku ?? '', m?.fnsku ?? '', l.box_qty ?? '', l.unit_qty, irn].map(String)
+          const m = skus.find((x) => x.asin?.trim().toUpperCase() === l.asin?.trim().toUpperCase())
+          return [fbaId, fc, l.asin, m?.sku ?? '', m?.fnsku ?? '', l.box_qty ?? '', l.unit_qty, irn].map(cell)
         })
       ]
       const text = rows.map((r) => r.join('\t')).join('\n')

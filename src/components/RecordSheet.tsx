@@ -139,6 +139,9 @@ export function RecordSheet({ data, draft }: { data: RecordBundle; draft: Draft 
   const lastDispatch = myDispatches[myDispatches.length - 1]
   const lastApproved = [...myDispatches].reverse().find((d) => d.wm_approved_at)
   let running = 0
+  let boxesSoFar = 0
+  // This SKU's own boxes, shared out by units sent (the dispatch stores one box count for the whole shipment).
+  const skuBoxesAt = (units: number) => (line.box_qty == null ? null : units >= line.unit_qty ? line.box_qty : Math.round((line.box_qty * units) / line.unit_qty))
 
   const foot = (page: number) => (
     <div className="foot">
@@ -322,8 +325,8 @@ export function RecordSheet({ data, draft }: { data: RecordBundle; draft: Draft 
               <th style={{ width: '9mm' }}>No.</th>
               <th style={{ width: '26mm' }}>Date</th>
               <th>Transport</th>
-              <th className="num" style={{ width: '18mm' }}>
-                Boxes
+              <th className="num" style={{ width: '24mm' }}>
+                Boxes (this SKU)
               </th>
               <th className="num" style={{ width: '18mm' }}>
                 Units
@@ -337,12 +340,15 @@ export function RecordSheet({ data, draft }: { data: RecordBundle; draft: Draft 
             {myDispatches.map((d, n) => {
               const units = d.dispatch_lines.filter((x) => x.line_id === line.id).reduce((s, x) => s + x.units, 0)
               running += units
+              const cum = skuBoxesAt(running)
+              const boxes = cum == null ? null : cum - boxesSoFar
+              if (cum != null) boxesSoFar = cum
               return (
                 <tr key={d.id}>
                   <td className="ref-no">{n + 1}</td>
                   <td>{fmtDate(d.dispatched_at)}</td>
                   <td>{d.transport ?? '—'}</td>
-                  <td className="num">{d.boxes_sent}</td>
+                  <td className="num">{boxes ?? '—'}</td>
                   <td className="num">{units}</td>
                   <td className="num">
                     {running} of {Math.min(draft.accepted_qty, line.unit_qty)}

@@ -25,6 +25,8 @@ export function RecordView({ data, draft, onScanBox }: { data: RecordBundle; dra
   const { insp, line, ship, fn, boxes, dispatches } = data
   const rate = draft.inspected_qty > 0 ? ((draft.rejected_qty / draft.inspected_qty) * 100).toFixed(1) : '0.0'
 
+  let sent = 0
+  let boxesDone = 0
   const myDispatches = dispatches
     .filter((d) => d.dispatch_lines.some((dl) => dl.line_id === line.id))
     .sort((a, b) => a.dispatched_at.localeCompare(b.dispatched_at))
@@ -219,6 +221,11 @@ export function RecordView({ data, draft, onScanBox }: { data: RecordBundle; dra
             <ul>
               {myDispatches.map((d, n) => {
                 const units = d.dispatch_lines.filter((x) => x.line_id === line.id).reduce((s, x) => s + x.units, 0)
+                // This SKU's own boxes, shared out by units sent (a dispatch stores one box count for the whole shipment).
+                sent += units
+                const cum = line.box_qty == null ? null : sent >= line.unit_qty ? line.box_qty : Math.round((line.box_qty * sent) / line.unit_qty)
+                const skuBoxes = cum == null ? null : cum - boxesDone
+                if (cum != null) boxesDone = cum
                 return (
                   <li key={d.id} className="px-4 py-3 border-t first:border-t-0 border-line text-sm">
                     <div className="flex items-center justify-between gap-2">
@@ -228,7 +235,7 @@ export function RecordView({ data, draft, onScanBox }: { data: RecordBundle; dra
                       {d.wm_approved_at ? <Chip tone="ok">Approved</Chip> : <Chip tone="info">Awaiting WM</Chip>}
                     </div>
                     <div className="text-muted">
-                      {units} units · {d.boxes_sent} boxes{d.transport ? ` · ${d.transport}` : ''}
+                      {units} units{skuBoxes != null ? ` · ${skuBoxes} boxes` : ''}{d.transport ? ` · ${d.transport}` : ''}
                     </div>
                   </li>
                 )
