@@ -87,6 +87,12 @@ function legacyChecks(r) {
 
 const num = (v) => Math.max(0, parseInt(v, 10) || 0)
 
+// A bad date in the old sheet must not throw halfway through a shipment and leave it half written.
+const isoOrNow = (v) => {
+  const d = v ? new Date(v) : null
+  return d && !Number.isNaN(d.getTime()) ? d.toISOString() : new Date().toISOString()
+}
+
 async function main() {
   const rows = await fetchOld()
   console.log(`Old sheet: ${rows.length} inspections. Mode: ${commit ? 'COMMIT' : 'dry run'}`)
@@ -186,11 +192,11 @@ async function main() {
           .from('dispatches')
           .insert({
             shipment_id: shipId,
-            dispatched_at: r.dispatchDate ? new Date(r.dispatchDate).toISOString() : new Date().toISOString(),
+            dispatched_at: isoOrNow(r.dispatchDate),
             dispatched_by_name: r.dispatchConfirmedBy || null,
             boxes_sent: num(r.qcQty),
             dispatch_sign_path: dispSign,
-            wm_approved_at: closed ? (r.dispatchDate ? new Date(r.dispatchDate).toISOString() : new Date().toISOString()) : null,
+            wm_approved_at: closed ? isoOrNow(r.dispatchDate) : null,
             wm_name: closed ? r.finalConfirmationBy || null : null,
             wm_sign_path: closed ? finalSign : null
           })

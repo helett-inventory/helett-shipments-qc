@@ -116,6 +116,11 @@ export function clearCache() {
   userId = null
   try {
     localStorage.removeItem(STORAGE_KEY)
+    // Unsent QC checklist drafts belong to the person who signed out, not the next one on this device.
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i)
+      if (k && k.startsWith('helett-qc-draft-')) localStorage.removeItem(k)
+    }
   } catch {
     /* ignore */
   }
