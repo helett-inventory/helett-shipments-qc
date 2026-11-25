@@ -21,9 +21,9 @@ export function LoadingScreen({ full = false }: { full?: boolean }) {
     )
   }
   return (
-    // Same white as the launch screen and the app icon, so opening the app is one unbroken screen.
-    <div role="status" aria-label="Loading" className="min-h-screen flex items-center justify-center bg-white">
-      <img src="/helett-wordmark.png" alt="Helett" width={147} height={47} className="select-none invert" draggable={false} />
+    <div role="status" aria-label="Loading" className="min-h-screen flex flex-col items-center justify-center gap-6 bg-canvas">
+      <CartonLoader />
+      <span className="text-sm text-muted">Getting your shipments ready</span>
     </div>
   )
 }
