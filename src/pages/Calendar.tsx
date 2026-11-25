@@ -8,6 +8,8 @@ import { NeedsStrip } from '../components/NeedsStrip'
 import { fetchAll, supabase } from '../lib/supabase'
 import { fmtDate, fmtDayLong, todayISO } from '../lib/format'
 import { ErrorBox, HoldStamp, Loading, ModePill, PageTitle, StatusStamp, StickyHead } from '../components/ui'
+import { DeadlineBadge } from '../components/DeadlineBadge'
+import { changeDeadline } from '../lib/deadline'
 import type { Shipment, ShipmentLine } from '../types/db'
 
 type Row = Shipment & { shipment_lines: Pick<ShipmentLine, 'product_name' | 'unit_qty' | 'status' | 'received_qty'>[] }
@@ -263,6 +265,12 @@ export function Calendar() {
                           {units.toLocaleString()} units · {s.box_qty_total} box{s.box_qty_total === 1 ? '' : 'es'}
                         </span>
                       </div>
+                      {!fin && changeDeadline(s) && (
+                        <div className="mt-2 flex items-center gap-2 text-[13px]">
+                          <span className="text-muted">Cancel or reschedule:</span>
+                          <DeadlineBadge shipment={s} />
+                        </div>
+                      )}
                       {sent && !fin && (
                         <div className="mt-2 flex items-center gap-2 text-[13px]">
                           <span className="h-1.5 flex-1 rounded-full bg-[#eef0f2] overflow-hidden" aria-hidden="true">
