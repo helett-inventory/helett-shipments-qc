@@ -12,6 +12,20 @@ if (import.meta.env.DEV && 'serviceWorker' in navigator) {
   if ('caches' in window) caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)))
 }
 
+// A fresh start of the app (new tab, reopened window, installed app launched again) always lands on the
+// Calendar page, even if the address still holds the page the person was on last time. A refresh inside the
+// same tab keeps the current page, because sessionStorage survives a refresh but not a new start.
+try {
+  if (!sessionStorage.getItem('helett.started')) {
+    sessionStorage.setItem('helett.started', '1')
+    if (window.location.hash && window.location.hash !== '#/') {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search + '#/')
+    }
+  }
+} catch {
+  /* storage blocked: leave the address alone */
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
