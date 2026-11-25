@@ -265,7 +265,7 @@ export function Calendar() {
                           {units.toLocaleString()} units · {s.box_qty_total} box{s.box_qty_total === 1 ? '' : 'es'}
                         </span>
                       </div>
-                      {!fin && changeDeadline(s) && (
+                      {(profile?.role === 'inventory' || profile?.role === 'wm' || !!profile?.is_admin) && changeDeadline(s) && (
                         <div className="mt-2 flex items-center gap-2 text-[13px]">
                           <span className="text-muted">Cancel or reschedule:</span>
                           <DeadlineBadge shipment={s} />
