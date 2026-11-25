@@ -148,12 +148,14 @@ check('add_line to cancelled shipment refused', !(await as('inv', `select add_li
 check('submit on cancelled line refused', !(await as('qc', `select submit_inspection('${m.iid}','${ok10}')`)).ok)
 check('cancelled shipment stays cancelled', (await q(`select status from shipments where id='${m.sid}'`))[0].status === 'Cancelled')
 
-// ---- receiving remark (patch 033)
+// ---- receiving remark (patch 033): one overall remark per shipment
 m = await mk('L4')
-check('inventory saves received + remark', (await as('inv', `select set_received('${m.lid}',8,'  2 short, damaged  ')`)).ok)
-check('remark stored trimmed', (await q(`select received_remark r, received_qty n from shipment_lines where id='${m.lid}'`))[0].r === '2 short, damaged')
-for (const who of ['qc', 'wm', 'fin', 'mkt', 'anon']) check(`set_received refused for ${who}`, !(await as(who, `select set_received('${m.lid}',1,'x')`)).ok)
-check('remark can be cleared', (await as('inv', `select set_received('${m.lid}',8,null)`)).ok && (await q(`select received_remark r from shipment_lines where id='${m.lid}'`))[0].r === null)
+check('inventory saves remark', (await as('inv', `select set_receiving_remark('${m.sid}','  2 short, damaged  ')`)).ok)
+check('remark stored trimmed with author', (await q(`select receiving_remark r, receiving_remark_by b from shipments where id='${m.sid}'`))[0].r === '2 short, damaged')
+for (const who of ['qc', 'wm', 'fin', 'mkt', 'anon']) check(`set_receiving_remark refused for ${who}`, !(await as(who, `select set_receiving_remark('${m.sid}','x')`)).ok)
+check('unknown shipment refused', !(await as('inv', `select set_receiving_remark('99999999-9999-9999-9999-999999999999','x')`)).ok)
+check('remark can be cleared', (await as('inv', `select set_receiving_remark('${m.sid}','')`)).ok && (await q(`select receiving_remark r from shipments where id='${m.sid}'`))[0].r === null)
+check('set_received still works (2 args)', (await as('inv', `select set_received('${m.lid}',8)`)).ok)
 
 console.log(failed ? `\n${failed} FAILED` : '\nAll passed')
 process.exit(failed ? 1 : 0)

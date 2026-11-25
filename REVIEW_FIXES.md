@@ -40,4 +40,4 @@ Run `supabase/patch_032_logic_fixes.sql` after patch 031. All reproduced locally
 Noted, not changed: a case where QC accepts 0 units leaves the line at "QC Submitted" and the shipment at "QC Done" until Inventory marks the line Not Dispatched or Cancelled. That looks intentional.
 
 ## Feature: receiving remark
-`supabase/patch_033_received_remark.sql` adds `shipment_lines.received_remark` and `set_received(p_line, p_qty, p_remark)`. Inventory and admin only (database enforces; the Update received button is already inventory/admin). Remark shows under each SKU in the Amazon receiving panel and is saved in the audit log. Run the patch before using the new modal field.
+`supabase/patch_033_received_remark.sql` adds one overall remark per shipment (`shipments.receiving_remark`, with author and time) and `set_receiving_remark(p_ship, p_remark)`. Inventory and admin only; the database enforces it. The remark box sits at the bottom of the "Units received by Amazon" modal and shows under the SKU list in the Amazon receiving panel. The patch also removes an earlier per-SKU draft if it was applied. Run it before using the new modal field.

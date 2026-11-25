@@ -44,6 +44,9 @@ export interface Shipment {
   hold_reason: string | null
   hold_by?: string | null // who raised the hold (the person who made the scan)
   hold_at?: string | null
+  receiving_remark?: string | null
+  receiving_remark_by?: string | null
+  receiving_remark_at?: string | null
 }
 
 export interface Inspection {
@@ -80,7 +83,6 @@ export interface ShipmentLine {
   received_qty?: number | null
   received_at?: string | null
   received_by?: string | null
-  received_remark?: string | null
 }
 
 export interface FnskuCheck {
