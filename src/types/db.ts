@@ -80,6 +80,7 @@ export interface ShipmentLine {
   received_qty?: number | null
   received_at?: string | null
   received_by?: string | null
+  received_remark?: string | null
 }
 
 export interface FnskuCheck {

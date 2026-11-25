@@ -371,6 +371,7 @@ export function ShipmentDetail() {
                           {l.received_qty != null && ` · received ${l.received_qty}`}
                           {l.received_at && ` · updated ${fmtDate(l.received_at)}`}
                         </span>
+                        {l.received_remark && <span className="block text-[13px] mt-0.5">Remark: {l.received_remark}</span>}
                       </span>
                       {l.unit_qty - (l.received_qty ?? 0) > 0 ? <Chip tone="new">Pending {l.unit_qty - (l.received_qty ?? 0)}</Chip> : <Chip tone="ok">All received</Chip>}
                     </li>
@@ -568,7 +569,7 @@ export function ShipmentDetail() {
           lines={b.shipment_lines.filter((l) => l.status !== 'Cancelled')}
           onClose={close}
           onSave={async (changes) => {
-            for (const c of changes) await rpc('set_received', { p_line: c.id, p_qty: c.qty })
+            for (const c of changes) await rpc('set_received', { p_line: c.id, p_qty: c.qty, p_remark: c.remark })
           }}
         />
       )}
@@ -1097,18 +1098,20 @@ function ReceiveModal({
 }: {
   lines: ShipmentLine[]
   onClose: () => void
-  onSave: (changes: { id: string; qty: number | null }[]) => Promise<void>
+  onSave: (changes: { id: string; qty: number | null; remark: string }[]) => Promise<void>
 }) {
   const [vals, setVals] = useState<Record<string, string>>(() => Object.fromEntries(lines.map((l) => [l.id, l.received_qty == null ? '' : String(l.received_qty)])))
+  const [remarks, setRemarks] = useState<Record<string, string>>(() => Object.fromEntries(lines.map((l) => [l.id, l.received_remark ?? ''])))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   async function go() {
-    const changes: { id: string; qty: number | null }[] = []
+    const changes: { id: string; qty: number | null; remark: string }[] = []
     for (const l of lines) {
       const raw = vals[l.id].trim()
       const qty = raw === '' ? null : Number(raw)
       if (qty !== null && (!Number.isInteger(qty) || qty < 0)) return setError(`Enter a whole number for ${l.product_name}.`)
-      if (qty !== (l.received_qty ?? null)) changes.push({ id: l.id, qty })
+      const remark = remarks[l.id].trim()
+      if (qty !== (l.received_qty ?? null) || remark !== (l.received_remark ?? '')) changes.push({ id: l.id, qty, remark })
     }
     if (changes.length === 0) return onClose()
     setBusy(true)
@@ -1149,6 +1152,15 @@ function ReceiveModal({
             </Btn>
           </div>
           <span className="block text-[13px] text-muted mt-1">Ordered {l.unit_qty}</span>
+          <textarea
+            aria-label={`Remark for ${l.product_name}`}
+            rows={2}
+            maxLength={500}
+            placeholder="Remark (optional), e.g. short received, damaged, waiting for Amazon"
+            className={`${inputCls} py-2 mt-2`}
+            value={remarks[l.id]}
+            onChange={(e) => setRemarks((v) => ({ ...v, [l.id]: e.target.value }))}
+          />
         </div>
       ))}
       {error && <ErrorBox message={error} />}
