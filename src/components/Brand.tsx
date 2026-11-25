@@ -1,11 +1,11 @@
 // Helett's own loading mark: three cartons hop along a belt, one after another.
-export function CartonLoader({ size = 72, onDark = false }: { size?: number; onDark?: boolean }) {
+export function CartonLoader({ size = 72 }: { size?: number }) {
   return (
     <svg width={size} height={size * 0.5} viewBox="0 0 72 36" fill="none" aria-hidden="true" className="overflow-visible">
       {[0, 1, 2].map((i) => (
-        <rect key={i} className="carton" x={4 + i * 22} y={10} width={16} height={16} rx={3} fill={onDark ? '#ffffff' : '#12161c'} />
+        <rect key={i} className="carton" x={4 + i * 22} y={10} width={16} height={16} rx={3} fill="#12161c" />
       ))}
-      <line className="belt" x1="0" y1="32" x2="72" y2="32" stroke={onDark ? '#3a424d' : '#c3c8d0'} strokeWidth="2" strokeLinecap="round" strokeDasharray="8 8" />
+      <line className="belt" x1="0" y1="32" x2="72" y2="32" stroke="#c3c8d0" strokeWidth="2" strokeLinecap="round" strokeDasharray="8 8" />
     </svg>
   )
 }
@@ -21,13 +21,9 @@ export function LoadingScreen({ full = false }: { full?: boolean }) {
     )
   }
   return (
-    // Continues the Android launch screen (same ink background, same wordmark) so opening the app is one smooth moment.
-    <div role="status" aria-label="Loading" className="min-h-screen relative flex flex-col items-center justify-center bg-ink text-white">
-      <img src="/helett-wordmark.png" alt="Helett" width={147} height={47} className="select-none" draggable={false} />
-      <div className="mt-8">
-        <CartonLoader size={48} onDark />
-      </div>
-      <span className="absolute bottom-0 inset-x-0 text-center text-sm text-white/55 pb-[max(2rem,env(safe-area-inset-bottom))]">Getting your shipments ready</span>
+    // Same white as the launch screen and the app icon, so opening the app is one unbroken screen.
+    <div role="status" aria-label="Loading" className="min-h-screen flex items-center justify-center bg-white">
+      <img src="/helett-wordmark.png" alt="Helett" width={147} height={47} className="select-none invert" draggable={false} />
     </div>
   )
 }
