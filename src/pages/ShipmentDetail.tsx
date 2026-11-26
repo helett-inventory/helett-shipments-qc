@@ -475,8 +475,8 @@ export function ShipmentDetail() {
               <Fact k="Appointment" v={needsAppointment(b.dispatch_mode ?? '') ? (b.appointment_at ? fmtDateTime(b.appointment_at) : '') : 'Not needed'} />
               <Fact k="Transport" v={needsTransport(b.dispatch_mode ?? '') ? b.transport ?? '' : (b.dispatch_mode === 'Bluedart' ? 'Collected by Bluedart' : 'Collected by Amazon')} />
               <Fact k="Dispatch date" v={fmtDate(b.dispatch_date)} />
-              <Fact k="Boxes sent" v={`${boxesSent} of ${b.box_qty_total}`} />
               <LineTotals lines={b.shipment_lines.filter((l) => l.status !== 'Cancelled')} />
+              <Fact k="Boxes sent" v={`${boxesSent} of ${b.box_qty_total}`} />
               <Fact k="Created" v={fmtDate(b.created_at)} />
               {b.remarks && <Fact k="Remarks" v={b.remarks} />}
             </dl>
@@ -1315,8 +1315,7 @@ function LineTotals({ lines }: { lines: { unit_qty: number; box_qty: number | nu
   return (
     <>
       <Fact k="Total SKUs" v={String(lines.length)} />
-      <Fact k="Total units (SKU lines)" v={units.toLocaleString()} />
-      <Fact k="Total boxes (SKU lines)" v={`${boxes.toLocaleString()}${missing ? ` (${missing} SKU${missing === 1 ? ' has' : 's have'} no box count)` : ''}`} />
+      <Fact k="Total qty and boxes (SKU lines)" v={`${units.toLocaleString()} units, ${boxes.toLocaleString()} boxes${missing ? ` (${missing} SKU${missing === 1 ? ' has' : 's have'} no box count)` : ''}`} />
     </>
   )
 }
