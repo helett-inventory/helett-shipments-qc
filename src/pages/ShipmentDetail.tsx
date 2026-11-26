@@ -476,6 +476,7 @@ export function ShipmentDetail() {
               <Fact k="Transport" v={needsTransport(b.dispatch_mode ?? '') ? b.transport ?? '' : (b.dispatch_mode === 'Bluedart' ? 'Collected by Bluedart' : 'Collected by Amazon')} />
               <Fact k="Dispatch date" v={fmtDate(b.dispatch_date)} />
               <Fact k="Boxes sent" v={`${boxesSent} of ${b.box_qty_total}`} />
+              <LineTotals lines={b.shipment_lines.filter((l) => l.status !== 'Cancelled')} />
               <Fact k="Created" v={fmtDate(b.created_at)} />
               {b.remarks && <Fact k="Remarks" v={b.remarks} />}
             </dl>
@@ -1303,5 +1304,19 @@ function DeleteModal({ fbaId, onClose, onDelete }: { fbaId: string; onClose: () 
         </Btn>
       </div>
     </Modal>
+  )
+}
+
+// Totals added up from the SKU lines, to compare with the box count entered when the shipment was created.
+function LineTotals({ lines }: { lines: { unit_qty: number; box_qty: number | null }[] }) {
+  const units = lines.reduce((n, l) => n + l.unit_qty, 0)
+  const boxes = lines.reduce((n, l) => n + (l.box_qty ?? 0), 0)
+  const missing = lines.filter((l) => l.box_qty == null).length
+  return (
+    <>
+      <Fact k="Total SKUs" v={String(lines.length)} />
+      <Fact k="Total units (SKU lines)" v={units.toLocaleString()} />
+      <Fact k="Total boxes (SKU lines)" v={`${boxes.toLocaleString()}${missing ? ` (${missing} SKU${missing === 1 ? ' has' : 's have'} no box count)` : ''}`} />
+    </>
   )
 }
