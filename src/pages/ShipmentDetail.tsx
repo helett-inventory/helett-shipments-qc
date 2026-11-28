@@ -4,10 +4,11 @@ import { useAuth } from '../auth/AuthProvider'
 import { useLive } from '../hooks/useLive'
 import { errText, supabase, callRpc } from '../lib/supabase'
 import { fmtDate, fmtDateTime, fromLocalInput, holdWho, toLocalInput } from '../lib/format'
-import { BackLink, Btn, ModePill, Tip, Choice, Chip, ErrorBox, Field, HoldStamp, Loading, Modal, Notice, Page, StickyHead, PageTitle, Panel, StatusStamp, inputCls } from '../components/ui'
+import { BackLink, Btn, ModePill, Choice, Chip, ErrorBox, Field, HoldStamp, Loading, Modal, Notice, Page, StickyHead, PageTitle, Panel, StatusStamp, inputCls } from '../components/ui'
 import { SearchableSelect } from '../components/SearchableSelect'
 import { DateInput } from '../components/DateInput'
 import { getSkus } from '../services/lookups'
+import { CopyInvoiceData } from '../components/CopyInvoiceData'
 import { changeDeadline, hoursText, urgency } from '../lib/deadline'
 import { DeadlineBadge, useNow } from '../components/DeadlineBadge'
 import { invalidateAll } from '../lib/cache'
@@ -152,7 +153,7 @@ export function ShipmentDetail() {
               {b.ref} · {b.warehouse}
             </span>
             <ModePill mode={b.dispatch_mode} cancelled={b.status === 'Cancelled'} />
-            {(isInv || isWm || isFinance) && <CopyInvoiceData fbaId={b.fba_id} fc={b.warehouse} irn={b.irn ?? ''} lines={b.shipment_lines.filter((l) => l.status !== 'Cancelled')} />}
+            {(isInv || isWm || isFinance) && <CopyInvoiceData shipments={[b]} />}
           </div>
         }
         action={
@@ -1038,68 +1039,6 @@ function IrnPanel({ value, editable, onSave }: { value: string; editable: boolea
 }
 
 // One spreadsheet cell: a tab or line break inside a value would push the rest into the wrong column or row, so flatten them.
-const cell = (v: unknown) => String(v ?? '').replace(/[\t\r\n]+/g, ' ').replace(/"/g, "'").trim()
-
-// Tab-separated rows (one per SKU line) that paste straight into a spreadsheet, for the accounts team's invoice.
-function CopyInvoiceData({ fbaId, fc, irn, lines }: { fbaId: string; fc: string; irn: string; lines: ShipmentLine[] }) {
-  const [state, setState] = useState<'idle' | 'busy' | 'done' | 'failed'>('idle')
-  async function copy() {
-    setState('busy')
-    try {
-      const skus = await getSkus()
-      const rows = [
-        ['FBA number', 'Destination FC', 'ASIN', 'SKU', 'FNSKU', 'Box qty', 'Qty', 'IRN'],
-        ...lines.map((l) => {
-          const m = skus.find((x) => x.asin?.trim().toUpperCase() === l.asin?.trim().toUpperCase())
-          return [fbaId, fc, l.asin, m?.sku ?? '', m?.fnsku ?? '', l.box_qty ?? '', l.unit_qty, irn].map(cell)
-        })
-      ]
-      const text = rows.map((r) => r.join('\t')).join('\n')
-      try {
-        await navigator.clipboard.writeText(text)
-      } catch {
-        const ta = document.createElement('textarea')
-        ta.value = text
-        ta.style.position = 'fixed'
-        ta.style.opacity = '0'
-        document.body.appendChild(ta)
-        ta.select()
-        const ok = document.execCommand('copy')
-        document.body.removeChild(ta)
-        if (!ok) throw new Error('copy failed')
-      }
-      setState('done')
-    } catch {
-      setState('failed')
-    }
-    window.setTimeout(() => setState('idle'), 2200)
-  }
-  return (
-    <Tip label="Copies FBA number, destination FC, ASIN, SKU, FNSKU, box qty, qty and IRN for every SKU, tab separated, ready to paste into a spreadsheet">
-      <button
-        type="button"
-        onClick={copy}
-        disabled={state === 'busy'}
-        className={`inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-[13px] font-semibold ${
-          state === 'done' ? 'bg-[#d8f2e0] text-[#0f6b32]' : state === 'failed' ? 'bg-[#fde8e6] text-fail' : 'bg-[#eceef1] text-ink hover:bg-[#e1e4e8]'
-        }`}
-      >
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          {state === 'done' ? (
-            <path d="M5 12.5 10 17.5 19 7" />
-          ) : (
-            <>
-              <rect x="9" y="9" width="11" height="11" rx="2" />
-              <path d="M5 15V6a2 2 0 0 1 2-2h9" />
-            </>
-          )}
-        </svg>
-        {state === 'done' ? 'Copied' : state === 'failed' ? 'Copy failed' : 'Copy invoice data'}
-      </button>
-    </Tip>
-  )
-}
-
 // Units Amazon checked in, per SKU line. Leave a box empty while it is still pending.
 function ReceiveModal({
   lines,

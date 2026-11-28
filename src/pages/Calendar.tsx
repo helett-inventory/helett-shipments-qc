@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { isViewOnly } from '../lib/roles'
+import { isFinanceOnly, isViewOnly } from '../lib/roles'
 import { useAuth } from '../auth/AuthProvider'
 import { useLive } from '../hooks/useLive'
 import { useNeeds } from '../hooks/useNeeds'
@@ -8,11 +8,12 @@ import { NeedsStrip } from '../components/NeedsStrip'
 import { fetchAll, supabase } from '../lib/supabase'
 import { fmtDate, fmtDayLong, todayISO } from '../lib/format'
 import { ErrorBox, HoldStamp, Loading, ModePill, PageTitle, StatusStamp, StickyHead } from '../components/ui'
+import { CopyInvoiceData } from '../components/CopyInvoiceData'
 import { DeadlineBadge } from '../components/DeadlineBadge'
 import { changeDeadline } from '../lib/deadline'
 import type { Shipment, ShipmentLine } from '../types/db'
 
-type Row = Shipment & { shipment_lines: Pick<ShipmentLine, 'product_name' | 'unit_qty' | 'status' | 'received_qty'>[] }
+type Row = Shipment & { shipment_lines: Pick<ShipmentLine, 'product_name' | 'asin' | 'unit_qty' | 'box_qty' | 'status' | 'received_qty'>[] }
 type Kind = 'dropin' | 'other' | 'late' | 'hold' | 'done'
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -44,7 +45,7 @@ export function Calendar() {
       return fetchAll<Row>((a, b) =>
         supabase
           .from('shipments')
-          .select('*, shipment_lines(product_name, unit_qty, status, received_qty)')
+          .select('*, shipment_lines(product_name, asin, unit_qty, box_qty, status, received_qty)')
           .not('dispatch_date', 'is', null)
           .order('created_at', { ascending: false })
           .order('id')
@@ -52,7 +53,7 @@ export function Calendar() {
       )
     },
     ['shipments', 'shipment_lines'],
-    'calendar'
+    'calendar-v2'
   )
 
   const today = todayISO()
@@ -119,6 +120,8 @@ export function Calendar() {
   const dayRows = picked ? (byDay.get(picked) ?? []) : []
   const dayUnits = dayRows.reduce((n, s) => n + s.shipment_lines.filter((l) => l.status !== 'Cancelled').reduce((u, l) => u + l.unit_qty, 0), 0)
   const dayBoxes = dayRows.reduce((n, s) => n + s.box_qty_total, 0)
+  const dropIns = dayRows.filter((s) => s.dispatch_mode === 'Drop In')
+  const canCopyInvoice = profile?.role === 'inventory' || profile?.role === 'wm' || !!profile?.is_admin || isFinanceOnly(profile)
   const navBtn = 'w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 active:scale-95 transition'
 
   return (
@@ -240,13 +243,20 @@ export function Calendar() {
 
           <aside ref={panel} aria-label="Selected day" className="bg-surface shadow-card rounded-xl overflow-hidden scroll-mt-20 lg:relative">
             <div className="lg:absolute lg:inset-0 lg:flex lg:flex-col">
-            <div className="px-4 py-3 border-b border-line">
+            <div className="px-4 py-3 border-b border-line flex items-end justify-between gap-3">
+              <div className="min-w-0">
               <h2 className="text-lg font-semibold tracking-tight">{picked ? fmtDayLong(picked) : 'Pick a day'}</h2>
               <p className="text-[13px] text-muted">{picked ? `${dayRows.length} shipment${dayRows.length === 1 ? '' : 's'} to dispatch` : 'Tap a day to see its shipments.'}</p>
               {dayRows.length > 0 && (
                 <p className="mt-1 text-[15px] font-semibold tabular-nums">
                   {dayUnits.toLocaleString()} units · {dayBoxes.toLocaleString()} box{dayBoxes === 1 ? '' : 'es'}
                 </p>
+              )}
+              </div>
+              {canCopyInvoice && dropIns.length > 0 && (
+                <div className="shrink-0">
+                  <CopyInvoiceData key={picked} shipments={dropIns} label="Copy" />
+                </div>
               )}
             </div>
             {picked && dayRows.length === 0 && <p className="px-4 py-8 text-sm text-muted text-center">No shipments on this day.</p>}
