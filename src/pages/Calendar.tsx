@@ -243,7 +243,7 @@ export function Calendar() {
 
           <aside ref={panel} aria-label="Selected day" className="bg-surface shadow-card rounded-xl overflow-hidden scroll-mt-20 lg:relative">
             <div className="lg:absolute lg:inset-0 lg:flex lg:flex-col">
-            <div className="px-4 py-3 border-b border-line flex items-end justify-between gap-3">
+            <div className="px-4 py-3 border-b border-line flex items-start justify-between gap-3">
               <div className="min-w-0">
               <h2 className="text-lg font-semibold tracking-tight">{picked ? fmtDayLong(picked) : 'Pick a day'}</h2>
               <p className="text-[13px] text-muted">{picked ? `${dayRows.length} shipment${dayRows.length === 1 ? '' : 's'} to dispatch` : 'Tap a day to see its shipments.'}</p>

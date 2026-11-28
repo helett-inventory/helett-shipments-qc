@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Tip } from './ui'
 import { getSkus } from '../services/lookups'
+import { fmtDate } from '../lib/format'
 import type { Shipment, ShipmentLine } from '../types/db'
 
 const cell = (v: unknown) => String(v ?? '').replace(/[\t\r\n]+/g, ' ').replace(/"/g, "'").trim()
 
-type Source = Pick<Shipment, 'fba_id' | 'warehouse' | 'irn'> & {
+type Source = Pick<Shipment, 'fba_id' | 'warehouse' | 'irn' | 'dispatch_date'> & {
   shipment_lines: Pick<ShipmentLine, 'asin' | 'unit_qty' | 'box_qty' | 'status'>[]
 }
 
@@ -22,11 +23,11 @@ export function CopyInvoiceData({ shipments, label = 'Copy invoice data' }: { sh
           .filter((l) => l.status !== 'Cancelled')
           .map((l) => {
             const m = skus.find((x) => x.asin?.trim().toUpperCase() === l.asin?.trim().toUpperCase())
-            return [s.fba_id, s.warehouse, l.asin, m?.sku ?? '', m?.fnsku ?? '', l.box_qty ?? '', l.unit_qty, s.irn ?? ''].map(cell)
+            return [fmtDate(s.dispatch_date), s.fba_id, s.warehouse, l.asin, m?.sku ?? '', m?.fnsku ?? '', l.box_qty ?? '', l.unit_qty, s.irn ?? ''].map(cell)
           })
       )
       const rows = [
-        ['FBA number', 'Destination FC', 'ASIN', 'SKU', 'FNSKU', 'Box qty', 'Qty', 'IRN'],
+        ['Dispatch date', 'FBA number', 'Destination FC', 'ASIN', 'SKU', 'FNSKU', 'Box qty', 'Qty', 'IRN'],
         ...groups.filter((g) => g.length > 0).flatMap((g, i) => (i === 0 ? g : [[], ...g]))
       ]
       const text = rows.map((r) => r.join('\t')).join('\n')
@@ -50,7 +51,7 @@ export function CopyInvoiceData({ shipments, label = 'Copy invoice data' }: { sh
     window.setTimeout(() => setState('idle'), 2200)
   }
   return (
-    <Tip label="Copies FBA number, destination FC, ASIN, SKU, FNSKU, box qty, qty and IRN for every SKU, tab separated, ready to paste into a spreadsheet">
+    <Tip label="Copies dispatch date, FBA number, destination FC, ASIN, SKU, FNSKU, box qty, qty and IRN for every SKU, tab separated, ready to paste into a spreadsheet">
       <button
         type="button"
         onClick={copy}
