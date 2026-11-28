@@ -8,7 +8,7 @@ import { useScrollMemory } from '../hooks/useScrollMemory'
 import { holdWho } from '../lib/format'
 import { NavCount } from './NeedsStrip'
 import { Tip } from './ui'
-import { isViewOnly } from '../lib/roles'
+import { canSeeDashboard, isViewOnly } from '../lib/roles'
 import type { Shipment } from '../types/db'
 
 const ROLE_LABEL = { inventory: 'Inventory', qc: 'QC', wm: 'Warehouse manager', finance: 'Finance', marketplace: 'Marketplace' } as const
@@ -130,7 +130,7 @@ export function AppShell() {
       }
       return !v
     })
-  const navItems = NAV.filter((n) => !(isViewOnly(profile) && n.to !== '/' && n.to !== '/shipments')) // view-only roles get Calendar and Shipments only
+  const navItems = NAV.filter((n) => !(isViewOnly(profile) && n.to !== '/' && n.to !== '/shipments') && (n.to !== '/dashboard' || canSeeDashboard(profile))) // view-only roles get Calendar and Shipments only
   const countFor = (to: string) => (to === '/shipments' ? needs.ships.length : to === '/qc' ? needs.qc.length : 0)
 
   return (

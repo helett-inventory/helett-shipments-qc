@@ -12,6 +12,7 @@ import { QCRecord } from './pages/QCRecord'
 import { QCFormPrint } from './pages/QCFormPrint'
 import { QCOpenForm } from './pages/QCOpenForm'
 import { Dashboard } from './pages/Dashboard'
+import { canSeeDashboard } from './lib/roles'
 import { Calendar } from './pages/Calendar'
 import { ShipmentReport } from './pages/ShipmentReport'
 import { NotFound } from './pages/NotFound'
@@ -65,7 +66,7 @@ function Gate() {
       </div>
     )
   }
-  const fin = (profile.role === 'finance' || profile.role === 'marketplace') && !profile.is_admin // view-only roles have no QC pages or dashboard
+  const fin = (profile.role === 'finance' || profile.role === 'marketplace') && !profile.is_admin // view-only roles have no QC pages
   return (
     <Routes>
       <Route element={<AppShell />}>
@@ -76,7 +77,7 @@ function Gate() {
         <Route path="/shipments/:id/qc-form" element={(profile.role === 'qc' || fin) && !profile.is_admin ? <Navigate to="/" replace /> : <QCFormPrint />} />
         <Route path="/shipments/:id/report" element={fin ? <Navigate to="/" replace /> : <ShipmentReport />} />
         <Route path="/calendar" element={<Navigate to="/" replace />} />
-        <Route path="/dashboard" element={fin ? <Navigate to="/" replace /> : <Dashboard />} />
+        <Route path="/dashboard" element={canSeeDashboard(profile) ? <Dashboard /> : <Navigate to="/" replace />} />
         <Route path="/qc" element={fin ? <Navigate to="/" replace /> : <QCList />} />
         <Route path="/qc/new-form" element={fin ? <Navigate to="/" replace /> : <QCOpenForm />} />
         <Route path="/qc/:id" element={fin ? <Navigate to="/" replace /> : <QCRecord />} />
