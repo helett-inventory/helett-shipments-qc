@@ -117,6 +117,8 @@ export function Calendar() {
     if (window.matchMedia('(max-width: 1023px)').matches) setTimeout(() => panel.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 60)
   }
   const dayRows = picked ? (byDay.get(picked) ?? []) : []
+  const dayUnits = dayRows.reduce((n, s) => n + s.shipment_lines.filter((l) => l.status !== 'Cancelled').reduce((u, l) => u + l.unit_qty, 0), 0)
+  const dayBoxes = dayRows.reduce((n, s) => n + s.box_qty_total, 0)
   const navBtn = 'w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 active:scale-95 transition'
 
   return (
@@ -241,6 +243,11 @@ export function Calendar() {
             <div className="px-4 py-3 border-b border-line">
               <h2 className="text-lg font-semibold tracking-tight">{picked ? fmtDayLong(picked) : 'Pick a day'}</h2>
               <p className="text-[13px] text-muted">{picked ? `${dayRows.length} shipment${dayRows.length === 1 ? '' : 's'} to dispatch` : 'Tap a day to see its shipments.'}</p>
+              {dayRows.length > 0 && (
+                <p className="mt-1 text-[15px] font-semibold tabular-nums">
+                  {dayUnits.toLocaleString()} units · {dayBoxes.toLocaleString()} box{dayBoxes === 1 ? '' : 'es'}
+                </p>
+              )}
             </div>
             {picked && dayRows.length === 0 && <p className="px-4 py-8 text-sm text-muted text-center">No shipments on this day.</p>}
             <ul key={picked ?? ''} className="divide-y divide-line swap-in lg:flex-1 lg:min-h-0 lg:overflow-y-auto">

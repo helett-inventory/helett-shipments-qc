@@ -186,15 +186,16 @@ export function ShipmentDetail() {
         <div className="space-y-5 min-w-0 order-2 lg:order-1">
           <Panel title="SKU lines" flush>
             <ul>
-              {b.shipment_lines.map((l) => {
+              {[...b.shipment_lines].sort((x, y) => Number(x.status === 'Cancelled') - Number(y.status === 'Cancelled')).map((l) => {
                 const i = fin ? null : insp(l)
+                const off = l.status === 'Cancelled'
                 const sent = dispatchedUnits(b, l.id)
                 return (
-                  <li key={l.id} className="p-4 border-t first:border-t-0 border-line">
+                  <li key={l.id} className={`p-4 border-t first:border-t-0 border-line ${off ? 'bg-red-50' : ''}`}>
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div className="min-w-0">
-                        <div className="font-medium">{l.product_name}</div>
-                        <div className="text-sm text-muted">
+                        <div className={`font-medium ${off ? 'line-through text-fail' : ''}`}>{l.product_name}</div>
+                        <div className={`text-sm ${off ? 'line-through text-fail' : 'text-muted'}`}>
                           {l.unit_qty} units{l.box_qty ? ` · ${l.box_qty} boxes` : ''}
                         </div>
                         <div className="text-sm text-muted">
@@ -250,10 +251,10 @@ export function ShipmentDetail() {
                         <Link
                           to={`/qc/${i.id}`}
                           className={`min-h-[40px] px-3 rounded-lg flex items-center text-sm font-medium ${
-                            i.status === 'Open' && canFillQc ? 'bg-ok text-white hover:bg-ok/90' : 'bg-ink text-white hover:bg-ink/90'
+                            i.status === 'Open' && canFillQc && !off ? 'bg-ok text-white hover:bg-ok/90' : 'bg-ink text-white hover:bg-ink/90'
                           }`}
                         >
-                          {i.status === 'Open' ? (canFillQc ? 'Open QC case' : 'View QC case') : 'View QC record'}
+                          {i.status === 'Open' ? (canFillQc && !off ? 'Open QC case' : 'View QC case') : 'View QC record'}
                         </Link>
                       )}
                       {(isInv || isWm) && !finished && l.status === 'QC Open' && i?.status === 'Open' && (
